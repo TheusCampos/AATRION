@@ -15,7 +15,7 @@ export default async function AppLayout({
 
   return (
     <div className="relative min-h-screen bg-background bg-page-gradient">
-      <header className="sticky top-4 z-30 mx-auto w-full max-w-[1600px] px-4">
+      <header className="sticky top-4 z-30 mx-auto w-full px-4 sm:px-6 lg:px-8">
         <div className="flex h-14 items-center justify-between rounded-2xl border border-border/60 bg-card/80 px-4 shadow-sm backdrop-blur-md">
           <div className="flex items-center gap-6">
             <Link href="/dashboard" className="flex items-center gap-2 font-bold">
@@ -59,7 +59,7 @@ export default async function AppLayout({
         </div>
       </header>
 
-      <main className="container max-w-[1600px] py-6 md:py-8">{children}</main>
+      <main className="w-full px-4 sm:px-6 lg:px-8 py-6 md:py-8">{children}</main>
     </div>
   );
 }

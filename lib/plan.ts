@@ -30,26 +30,26 @@ export type PlanLimits = {
 
 export const PLAN_LIMITS: Record<PlanCode, PlanLimits> = {
   FREE: {
-    maxResumes: 3,
-    aiAnalyzePerMonth: 2,
-    aiAdaptPerMonth: 1,
-    aiAuditPerMonth: 1,
+    maxResumes: 1,
+    aiAnalyzePerMonth: 1,
+    aiAdaptPerMonth: 0,
+    aiAuditPerMonth: 0,
     allowPdfDownload: true,
     allowSettings: true,
   },
   PRO: {
-    maxResumes: 25,
-    aiAnalyzePerMonth: 30,
-    aiAdaptPerMonth: 15,
-    aiAuditPerMonth: 5,
+    maxResumes: 10,
+    aiAnalyzePerMonth: 10,
+    aiAdaptPerMonth: 10,
+    aiAuditPerMonth: 3,
     allowPdfDownload: true,
     allowSettings: true,
   },
   MAX: {
-    maxResumes: -1,
-    aiAnalyzePerMonth: -1,
-    aiAdaptPerMonth: -1,
-    aiAuditPerMonth: -1,
+    maxResumes: 30,
+    aiAnalyzePerMonth: 50,
+    aiAdaptPerMonth: 30,
+    aiAuditPerMonth: 10,
     allowPdfDownload: true,
     allowSettings: true,
   },
@@ -63,8 +63,8 @@ export const PLAN_LABELS: Record<PlanCode, string> = {
 
 export const PLAN_PRICES: Record<PlanCode, { monthly: number; yearly: number }> = {
   FREE: { monthly: 0, yearly: 0 },
-  PRO: { monthly: 29, yearly: 197 },
-  MAX: { monthly: 79, yearly: 590 },
+  PRO: { monthly: 19.90, yearly: 199.00 },
+  MAX: { monthly: 39.90, yearly: 399.00 },
 };
 
 export function normalizePlan(plan: string | null | undefined): PlanCode {

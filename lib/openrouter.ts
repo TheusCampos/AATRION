@@ -26,7 +26,7 @@ export type ChatResponse = {
   };
 };
 
-const DEFAULT_MODEL = 'openrouter/free';
+const DEFAULT_MODEL = 'google/gemini-2.5-flash-lite';
 
 function getApiKey(): string {
   const key = process.env.OPENROUTER_API_KEY;

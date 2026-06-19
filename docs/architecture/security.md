@@ -50,34 +50,36 @@ Aplicado em:
 
 | Endpoint | Algoritmo | Limite | Penalidade |
 |---|---|---|---|
-| `POST /api/auth/login` | Fixed Window | 5 tentativas / 15min por IP+email | Bloquear 30min após exceder |
-| `POST /api/auth/register` | Sliding Window | 10 cadastros / hora por IP | CAPTCHA obrigatório após 3 |
-| `POST /api/ai/*` | Token Bucket | 10 chamadas IA / hora por userId | HTTP 429 + `Retry-After` |
-| `POST /api/pdf/generate` | Fixed Window | 20 PDFs / dia por userId | HTTP 429 |
-| `POST /api/linkedin/audit` | Fixed Window | Free 3/dia, Pro 10/dia | HTTP 429 |
-| `GET /api/resumes` | Sliding Window | 200 req / min por userId | HTTP 429 |
-| `POST /api/auth/mfa` | Fixed Window | 5 tentativas / 10min | Bloquear conta temporariamente |
-| `POST /api/stripe/webhook` | — | Ilimitado | Verificação de assinatura Stripe |
+| `POST /api/auth/*` | Fixed Window / Sliding Window | Varia | Bloquear IP temporariamente |
+| `POST /api/ai/*` | Sliding Window | 5 chamadas / minuto por userId | HTTP 429 + `Retry-After` |
+| `POST /api/upload/*` | Sliding Window | 10 req / minuto por userId | HTTP 429 |
+| `GET /api/jobs` | Sliding Window | 30 req / minuto por userId | HTTP 429 |
+| `POST /api/stripe/checkout`| Sliding Window | 3 req / minuto por userId | HTTP 429 |
+| `POST /api/stripe/webhook`| — | Ilimitado | Verificação de assinatura Stripe |
+| API Geral / CRUD | Sliding Window | 30 req / minuto por userId | HTTP 429 |
 
 ## 4. Headers HTTP de Segurança
 
-Aplicados em **todas** as rotas via `middleware.ts`:
+Aplicados em **todas** as rotas via `next.config.mjs`:
 
-```ts
-res.headers.set('Strict-Transport-Security', 'max-age=63072000; includeSubDomains; preload');
-res.headers.set('X-Frame-Options', 'DENY');
-res.headers.set('X-Content-Type-Options', 'nosniff');
-res.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
-res.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
-res.headers.set('Content-Security-Policy', [
-  "default-src 'self'",
-  "script-src 'self' 'unsafe-inline' https://challenges.cloudflare.com",
-  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-  "img-src 'self' data: https://*.cloudflare.com https://r2.cvforge.com.br",
-  "connect-src 'self' https://api.openai.com https://api.stripe.com",
-  "frame-src https://challenges.cloudflare.com https://js.stripe.com",
-].join('; '));
-```
+- `X-Content-Type-Options: nosniff`
+- `X-Frame-Options: DENY`
+- `X-XSS-Protection: 1; mode=block`
+- `Referrer-Policy: strict-origin-when-cross-origin`
+- `Permissions-Policy: camera=(), microphone=(), geolocation=()`
+- `Strict-Transport-Security: max-age=31536000; includeSubDomains`
+- `Content-Security-Policy`:
+  - `default-src 'self'`
+  - `script-src` / `style-src`: Permite `unsafe-inline`, `js.stripe.com`, `clerk.accounts.dev`
+  - `img-src`: Permite blob, data, Cloudflare R2, LinkedIn media, Clerk.
+  - `connect-src`: Stripe, Clerk, Adzuna, OpenRouter AI.
+  - `frame-src`: Stripe, Clerk.
+
+## 4.1. Prevenção de XSS e Vazamentos
+
+- Renderização de conteúdo de terceiros (como vagas da Adzuna) passa por um utilitário `stripHtml`, prevenindo XSS via `dangerouslySetInnerHTML`.
+- Erros internos detalhados gerados por libs (como pdf-parse) não são expostos em JSON no ambiente de produção.
+- Rotas de visualização de arquivos via R2 (`/api/files/[...key]`) validam a autenticação da sessão e propriedade (`ownership`) conferindo se o UUID da pasta pertence ao usuário.
 
 ## 5. Criptografia de Dados Pessoais
 
@@ -108,6 +110,10 @@ export function decrypt(payload: string): string {
 
 > Rotação de chave possível via **double-encryption** durante migração
 > (criptografa com chave nova + mantém criptografia antiga por janela de transição).
+
+### Mascaramento de PII em Prompts
+
+Todos os envios de currículo para modelos de IA através da API (como Análise ou Adaptação) realizam mascaramento de Identificadores Pessoais (PII). Campos sensíveis, como E-mail e Telefone, são previamente omitidos pelo backend para evitar vazamento em logs de provedores (ex: OpenRouter / OpenAI).
 
 ## 6. Trilha de Auditoria
 

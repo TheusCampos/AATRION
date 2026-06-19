@@ -3,11 +3,22 @@ import { prisma } from '@/lib/prisma';
 import { getCurrentUser } from '@/lib/auth';
 import { updateSettingsSchema } from '@/lib/validations/user-settings';
 import { daysUntilRenewal } from '@/lib/plan';
+import { stripe } from '@/lib/stripe';
 
 export async function GET() {
   const user = await getCurrentUser();
   if (!user) {
     return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
+  }
+
+  let cancelAtPeriodEnd = false;
+  if (user.stripeSubscriptionId) {
+    try {
+      const subscription = await stripe.subscriptions.retrieve(user.stripeSubscriptionId);
+      cancelAtPeriodEnd = subscription.cancel_at_period_end;
+    } catch (e) {
+      console.error('Failed to retrieve subscription', e);
+    }
   }
 
   return NextResponse.json({
@@ -26,6 +37,7 @@ export async function GET() {
       startedAt: user.planStartedAt,
       renewsAt: user.planRenewsAt,
       daysUntilRenewal: daysUntilRenewal(user.planRenewsAt),
+      cancelAtPeriodEnd,
     },
     usage: user.usage,
     limits: user.limits,

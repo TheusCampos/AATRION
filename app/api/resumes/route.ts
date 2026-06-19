@@ -59,7 +59,7 @@ export async function POST(req: NextRequest) {
     if (count >= maxResumes) {
       return NextResponse.json(
         {
-          error: `Limite do plano ${user.plan} atingido (${maxResumes} currículos). Faça upgrade para criar mais.`,
+          error: `Você atingiu o limite do plano Grátis (${maxResumes} currículo). Faça upgrade para o plano Pro para criar, importar e ter acesso a recursos ilimitados!`,
         },
         { status: 403 }
       );

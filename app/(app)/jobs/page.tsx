@@ -5,6 +5,11 @@ import { Search, MapPin, Briefcase, Building, ExternalLink, Loader2 } from 'luci
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 
+// SEC-005: Remove HTML tags from external content to prevent XSS
+function stripHtml(html: string): string {
+  return html.replace(/<[^>]*>/g, '');
+}
+
 interface JobResult {
   id: string;
   title: string;
@@ -133,7 +138,7 @@ export default function JobsPage() {
               {jobs.map((job) => (
                 <div key={job.id} className="border rounded-lg p-5 hover:border-primary/50 transition-colors bg-card flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
                   <div className="space-y-2 flex-1">
-                    <h4 className="font-semibold text-lg text-primary line-clamp-1" dangerouslySetInnerHTML={{ __html: job.title }} />
+                    <h4 className="font-semibold text-lg text-primary line-clamp-1">{stripHtml(job.title)}</h4>
                     
                     <div className="flex flex-wrap gap-3 text-sm text-muted-foreground">
                       {job.company?.display_name && (
@@ -151,7 +156,7 @@ export default function JobsPage() {
                       )}
                     </div>
                     
-                    <p className="text-sm text-foreground/80 line-clamp-2 mt-2" dangerouslySetInnerHTML={{ __html: job.description }} />
+                    <p className="text-sm text-foreground/80 line-clamp-2 mt-2">{stripHtml(job.description)}</p>
                   </div>
                   
                   <div className="shrink-0 mt-2 sm:mt-0">

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentUser } from '@/lib/auth';
+import { checkRateLimit, RATE_LIMITS } from '@/lib/rate-limit';
 
 const ADZUNA_APP_ID = process.env.ADZUNA_APP_ID;
 const ADZUNA_APP_KEY = process.env.ADZUNA_APP_KEY;
@@ -10,6 +11,10 @@ export async function GET(req: NextRequest) {
   if (!user) {
     return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
   }
+
+  // SEC-006: Rate limiting por usuário
+  const rl = await checkRateLimit(`jobs:${user.id}`, RATE_LIMITS.jobs);
+  if (!rl.allowed) return rl.response;
 
   const { searchParams } = new URL(req.url);
   const query = searchParams.get('q') || '';

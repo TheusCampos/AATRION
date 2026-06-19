@@ -5,6 +5,7 @@ import { adaptResumeSchema } from '@/lib/validations/ai-resume';
 import { runAI, safeParseJSON, AIError } from '@/lib/ai';
 import { resumeContentSchema, type ResumeContent } from '@/lib/validations/resume';
 import { checkAIQuota, consumeAIUsage } from '@/lib/plan';
+import { checkRateLimit, RATE_LIMITS } from '@/lib/rate-limit';
 
 type AIAdapted = {
   personal: Partial<ResumeContent['personal']>;
@@ -142,6 +143,10 @@ export async function POST(
   if (!user) {
     return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
   }
+
+  // SEC-006: Rate limiting por usuário
+  const rl = await checkRateLimit(`ai:${user.id}`, RATE_LIMITS.ai);
+  if (!rl.allowed) return rl.response;
 
   // Quota mensal de IA (adaptacao custa mais caro que analise)
   const quota = await checkAIQuota(user.id, user.plan, 'adapt');

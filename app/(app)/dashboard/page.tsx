@@ -1,16 +1,25 @@
-import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { Sparkles, Plus, BarChart3 } from 'lucide-react';
+import Link from 'next/link';
+import { Sparkles, Plus } from 'lucide-react';
+import { Button } from '@/components/ui/Button';
 import { getCurrentUser } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { DashboardResumes } from '@/components/resume/DashboardResumes';
-import { PLAN_LABELS } from '@/lib/plan';
+import { DashboardStats } from '@/components/dashboard/DashboardStats';
+import { PlanUpgradeCard } from '@/components/dashboard/PlanUpgradeCard';
+import { TipsCard } from '@/components/dashboard/TipsCard';
+import { QuickActions } from '@/components/dashboard/QuickActions';
 
 export const dynamic = 'force-dynamic';
 
 export default async function DashboardPage() {
   const user = await getCurrentUser();
   if (!user) redirect('/login');
+
+  // SEC-003: Removida a lógica de session_id que duplicava a verificação de
+  // pagamento do webhook. Agora confiamos exclusivamente no webhook do Stripe
+  // para atualizar planos. O getCurrentUser() já retorna o plano atualizado
+  // pelo webhook.
 
   const resumes = await prisma.resume.findMany({
     where: { userId: user.id },
@@ -27,87 +36,59 @@ export default async function DashboardPage() {
     },
   });
 
-  const total = resumes.length;
-  const max = user.limits.maxResumes;
-  const remaining = max === -1 ? '∞' : Math.max(0, max - total);
+  const lastResumeId = resumes[0]?.id;
 
   return (
-    <div className="space-y-8">
-      <div className="flex flex-wrap items-end justify-between gap-4">
+    <div className="mx-auto max-w-7xl space-y-8">
+      {/* Top Greeting Header */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="font-display text-3xl font-bold tracking-tight md:text-4xl">
+          <span className="text-xs font-semibold uppercase tracking-wider text-indigo-600">
+            Visão Geral
+          </span>
+          <h1 className="mt-1 text-3xl font-bold tracking-tight text-slate-900">
             Olá, {user.name.split(' ')[0]}
           </h1>
-          <p className="mt-1 text-muted-foreground">
-            Plano {PLAN_LABELS[user.plan]} · {total} {total === 1 ? 'currículo' : 'currículos'}
-            {max !== -1 ? ` de ${max}` : ''}
+          <p className="text-sm text-slate-500">
+            Gerencie seus currículos e acompanhe o uso do seu plano.
           </p>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <Link
-            href="/linkedin"
-            className="inline-flex h-10 items-center gap-2 rounded-full border border-border bg-card px-4 text-sm font-medium text-foreground shadow-sm transition-colors hover:bg-accent"
-          >
-            <Sparkles className="h-4 w-4" />
-            Auditar LinkedIn
+        <div className="flex items-center gap-3">
+          <Link href="/linkedin">
+            <Button variant="secondary" className="gap-2 h-11 px-5 rounded-xl border-slate-200 hover:bg-slate-50 font-semibold text-slate-700">
+              <Sparkles className="h-4 w-4 text-indigo-500" />
+              Auditar LinkedIn
+            </Button>
           </Link>
-          <Link
-            href="/resumes/new"
-            className="group inline-flex h-10 items-center gap-2 rounded-full bg-gradient-to-b from-indigo-500 to-indigo-600 px-4 text-sm font-semibold text-white shadow-md shadow-indigo-500/20 transition-shadow hover:shadow-lg hover:shadow-indigo-500/30"
-          >
-            <Plus className="h-4 w-4 transition-transform group-hover:rotate-90" />
-            Novo currículo
+          <Link href="/resumes/new">
+            <Button variant="primary" className="gap-2 h-11 px-5 rounded-xl bg-indigo-600 hover:bg-indigo-700 font-semibold text-white shadow-md shadow-indigo-500/20">
+              <Plus className="h-4 w-4" />
+              Novo currículo
+            </Button>
           </Link>
         </div>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-3">
-        <StatCard
-          icon={<BarChart3 className="h-4 w-4" />}
-          label="Currículos criados"
-          value={String(total)}
-          hint={max === -1 ? 'Ilimitado' : `Restam ${remaining} no seu plano`}
-        />
-        <StatCard
-          icon={<Sparkles className="h-4 w-4" />}
-          label="Análises com IA no mês"
-          value={`${user.usage.analyzeUsed}/${user.limits.aiAnalyzePerMonth === -1 ? '∞' : user.limits.aiAnalyzePerMonth}`}
-        />
-        <StatCard
-          icon={<Sparkles className="h-4 w-4" />}
-          label="Adaptações com IA no mês"
-          value={`${user.usage.adaptUsed}/${user.limits.aiAdaptPerMonth === -1 ? '∞' : user.limits.aiAdaptPerMonth}`}
-        />
-      </div>
+      {/* Top Stats Row */}
+      <DashboardStats user={user} totalResumes={resumes.length} />
 
-      <DashboardResumes
-        resumes={resumes.map((r) => ({ ...r, createdAt: r.createdAt.toISOString(), updatedAt: r.updatedAt.toISOString() }))}
-      />
-    </div>
-  );
-}
+      {/* Main Grid Layout */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        
+        {/* Coluna Esquerda: Ações e Currículos */}
+        <div className="lg:col-span-2 space-y-8">
+          <QuickActions lastResumeId={lastResumeId} userPlan={user.plan} />
+          <DashboardResumes
+            resumes={resumes.map((r) => ({ ...r, createdAt: r.createdAt.toISOString(), updatedAt: r.updatedAt.toISOString() }))}
+          />
+        </div>
 
-function StatCard({
-  icon,
-  label,
-  value,
-  hint,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  value: string;
-  hint?: string;
-}) {
-  return (
-    <div className="rounded-2xl border border-border/60 bg-card/70 p-4 backdrop-blur">
-      <div className="mb-1 flex items-center gap-2 text-xs font-medium text-muted-foreground">
-        <span className="inline-flex h-6 w-6 items-center justify-center rounded-md bg-indigo-500/10 text-indigo-600">
-          {icon}
-        </span>
-        {label}
+        {/* Coluna Direita: Seu plano e Dicas */}
+        <div className="space-y-6">
+          <PlanUpgradeCard user={user} />
+          <TipsCard />
+        </div>
       </div>
-      <p className="font-display text-2xl font-bold tracking-tight">{value}</p>
-      {hint && <p className="mt-0.5 text-xs text-muted-foreground">{hint}</p>}
     </div>
   );
 }

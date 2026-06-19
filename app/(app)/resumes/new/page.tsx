@@ -4,22 +4,31 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
-import { FileText, UploadCloud, Check, ArrowLeft, FileOutput } from 'lucide-react';
+import { FileText, UploadCloud, Check, ArrowLeft, FileOutput, Sparkles } from 'lucide-react';
 import Link from 'next/link';
 import { ResumeCardPreview } from '@/components/resume/ResumeCardPreview';
 import type { ResumeContent } from '@/lib/validations/resume';
+import { AILoader } from '@/components/ui/AILoader';
+
+const IMPORT_STEPS = [
+  'Enviando arquivo de currículo...',
+  'Extraindo texto bruto do documento...',
+  'IA estruturando dados (experiências, educação, skills)...',
+  'Salvando no banco de dados e preparando editor...',
+];
 
 const DUMMY_CONTENT: ResumeContent = {
   personal: {
     name: "Nome Completo",
     jobTitle: "Cargo Profissional",
-    email: "email@exemplo.com",
-    phone: "(11) 99999-9999",
-    location: "São Paulo, SP",
+    email: "[EMAIL_ADDRESS]",
+    phone: "(65) 99999-9999",
+    location: "Cuiabá, MT",
     linkedin: "linkedin.com/in/nome",
     github: "",
     website: "",
     summary: "Resumo profissional direto ao ponto destacando suas principais habilidades, experiências relevantes e objetivos de carreira. Ideal para causar uma boa primeira impressão.",
+    photo: "",
   },
   experience: [
     {
@@ -63,7 +72,10 @@ const DUMMY_CONTENT: ResumeContent = {
 
 const TEMPLATES = [
   { id: 'classic', name: 'Clássico', desc: 'Tradicional e seguro para vagas corporativas' },
+  { id: 'classic-photo', name: 'Clássico com Foto', desc: 'Estrutura tradicional com foto de perfil' },
   { id: 'modern', name: 'Moderno', desc: 'Design atual com foco em leitura dinâmica' },
+  { id: 'modern-photo', name: 'Moderno com Foto', desc: 'Design moderno com foto de perfil' },
+  { id: 'creative-photo', name: 'Criativo com Foto', desc: 'Sidebar elegante com foto de perfil' },
   { id: 'minimalist', name: 'Minimalista', desc: 'Limpo e direto ao ponto' },
   { id: 'creative', name: 'Criativo', desc: 'Para áreas de design, marketing e comunicação' },
   { id: 'executive', name: 'Executivo', desc: 'Foco em resultados e liderança' },
@@ -76,6 +88,8 @@ export default function NewResumePage() {
   const [selectedTemplate, setSelectedTemplate] = useState('classic');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [file, setFile] = useState<File | null>(null);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [modalMessage, setModalMessage] = useState('');
 
   async function handleCreateFromScratch() {
     setIsSubmitting(true);
@@ -88,14 +102,17 @@ export default function NewResumePage() {
           templateId: selectedTemplate,
         }),
       });
+      const data = await res.json().catch(() => ({}));
       if (res.ok) {
-        const { resume } = await res.json();
-        router.push(`/editor/${resume.id}`);
+        router.push(`/editor/${data.resume.id}`);
       } else {
-        alert('Erro ao criar currículo');
+        const errorMsg = data.error || 'Erro ao criar currículo';
+        setModalMessage(errorMsg);
+        setShowUpgradeModal(true);
       }
     } catch {
-      alert('Erro de rede');
+      setModalMessage('Erro de rede. Verifique sua conexão e tente novamente.');
+      setShowUpgradeModal(true);
     } finally {
       setIsSubmitting(false);
     }
@@ -119,205 +136,234 @@ export default function NewResumePage() {
       });
       clearTimeout(timeoutId);
 
+      const data = await res.json().catch(() => ({}));
       if (res.ok) {
-        const { resume } = await res.json();
-        router.push(`/editor/${resume.id}`);
+        router.push(`/editor/${data.resume.id}`);
         return;
       }
 
       // Tenta extrair mensagem útil do servidor
       let message = 'Erro ao importar currículo.';
-      try {
-        const data = await res.json();
-        message = data.error || data.message || message;
-      } catch {
-        // resposta não era JSON
-        if (res.status === 413) {
-          message = 'Arquivo muito grande. Limite: 5MB.';
-        } else if (res.status >= 500) {
-          message = 'Erro interno no servidor. Tente novamente em alguns instantes.';
-        }
+      if (data && data.error) {
+        message = data.error;
+      } else if (res.status === 413) {
+        message = 'Arquivo muito grande. Limite: 5MB.';
+      } else if (res.status >= 500) {
+        message = 'Erro interno no servidor. Tente novamente em alguns instantes.';
       }
-      alert(message);
+      setModalMessage(message);
+      setShowUpgradeModal(true);
     } catch (err) {
       clearTimeout(timeoutId);
       if (err instanceof DOMException && err.name === 'AbortError') {
-        alert('A importação demorou demais. Tente com um arquivo menor ou mais simples.');
+        setModalMessage('A importação demorou demais. Tente com um arquivo menor ou mais simples.');
       } else if (err instanceof TypeError) {
-        alert('Erro de rede. Verifique sua conexão e tente novamente.');
+        setModalMessage('Erro de rede. Verifique sua conexão e tente novamente.');
       } else {
-        alert('Erro inesperado ao importar. Tente novamente.');
+        setModalMessage('Erro inesperado ao importar. Tente novamente.');
       }
+      setShowUpgradeModal(true);
     } finally {
       setIsSubmitting(false);
     }
   }
 
-  if (mode === 'select') {
-    return (
-      <div className="max-w-4xl mx-auto space-y-8">
-        <div className="flex items-center gap-3">
-          <Link
-            href="/dashboard"
-            className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-border bg-card transition-colors hover:bg-accent"
-          >
-            <ArrowLeft className="h-4 w-4" />
-          </Link>
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Criar Currículo</h1>
-            <p className="text-muted-foreground mt-1">Como você prefere começar?</p>
+  return (
+    <>
+      {mode === 'select' && (
+        <div className="max-w-4xl mx-auto space-y-8">
+          <div className="flex items-center gap-3">
+            <Link
+              href="/dashboard"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-border bg-card transition-colors hover:bg-accent"
+            >
+              <ArrowLeft className="h-4 w-4" />
+            </Link>
+            <div>
+              <h1 className="text-3xl font-bold tracking-tight">Criar Currículo</h1>
+              <p className="text-muted-foreground mt-1">Como você prefere começar?</p>
+            </div>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-6">
+            <button
+              onClick={() => setMode('scratch')}
+              className="text-left group rounded-xl border border-border bg-card p-8 shadow-sm transition-all hover:border-primary hover:shadow-md"
+            >
+              <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                <FileText className="h-6 w-6" />
+              </div>
+              <h2 className="mb-2 text-xl font-semibold group-hover:text-primary transition-colors">
+                Criar do zero
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                Comece com um documento em branco. Escolha um dos nossos 6 templates profissionais
+                e preencha suas informações passo a passo.
+              </p>
+            </button>
+
+            <button
+              onClick={() => setMode('import')}
+              className="text-left group rounded-xl border border-border bg-card p-8 shadow-sm transition-all hover:border-primary hover:shadow-md"
+            >
+              <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-lg bg-blue-500/10 text-blue-600">
+                <UploadCloud className="h-6 w-6" />
+              </div>
+              <h2 className="mb-2 text-xl font-semibold group-hover:text-blue-600 transition-colors">
+                Importar arquivo
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                Faça upload do seu currículo atual (PDF ou DOCX). A inteligência artificial
+                vai ler e preencher os campos automaticamente para você.
+              </p>
+            </button>
           </div>
         </div>
+      )}
 
-        <div className="grid md:grid-cols-2 gap-6">
-          <button
-            onClick={() => setMode('scratch')}
-            className="text-left group rounded-xl border border-border bg-card p-8 shadow-sm transition-all hover:border-primary hover:shadow-md"
-          >
-            <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10 text-primary">
-              <FileText className="h-6 w-6" />
+      {mode === 'scratch' && (
+        <div className="max-w-5xl mx-auto space-y-8">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setMode('select')}
+                className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-border bg-card transition-colors hover:bg-accent"
+              >
+                <ArrowLeft className="h-4 w-4" />
+              </button>
+              <div>
+                <h1 className="text-3xl font-bold tracking-tight">Escolha um Template</h1>
+                <p className="text-muted-foreground mt-1">Você pode trocar o template depois se quiser.</p>
+              </div>
             </div>
-            <h2 className="mb-2 text-xl font-semibold group-hover:text-primary transition-colors">
-              Criar do zero
-            </h2>
-            <p className="text-sm text-muted-foreground">
-              Comece com um documento em branco. Escolha um dos nossos 6 templates profissionais
-              e preencha suas informações passo a passo.
-            </p>
-          </button>
+            <Button onClick={handleCreateFromScratch} isLoading={isSubmitting} disabled={isSubmitting}>
+              Continuar com {TEMPLATES.find((t) => t.id === selectedTemplate)?.name}
+            </Button>
+          </div>
 
-          <button
-            onClick={() => setMode('import')}
-            className="text-left group rounded-xl border border-border bg-card p-8 shadow-sm transition-all hover:border-primary hover:shadow-md"
-          >
-            <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-lg bg-blue-500/10 text-blue-600">
-              <UploadCloud className="h-6 w-6" />
-            </div>
-            <h2 className="mb-2 text-xl font-semibold group-hover:text-blue-600 transition-colors">
-              Importar arquivo
-            </h2>
-            <p className="text-sm text-muted-foreground">
-              Faça upload do seu currículo atual (PDF ou DOCX). A inteligência artificial 
-              vai ler e preencher os campos automaticamente para você.
-            </p>
-          </button>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {TEMPLATES.map((tpl) => (
+              <Card
+                key={tpl.id}
+                onClick={() => setSelectedTemplate(tpl.id)}
+                className={`cursor-pointer overflow-hidden transition-all group ${selectedTemplate === tpl.id
+                  ? 'ring-2 ring-primary border-transparent'
+                  : 'hover:border-primary/50'
+                  }`}
+              >
+                <ResumeCardPreview content={DUMMY_CONTENT} templateId={tpl.id} />
+                <div className="p-4 flex items-center justify-between">
+                  <div>
+                    <h3 className="font-semibold">{tpl.name}</h3>
+                    <p className="text-xs text-muted-foreground mt-0.5">{tpl.desc}</p>
+                  </div>
+                  {selectedTemplate === tpl.id && (
+                    <div className="h-5 w-5 rounded-full bg-primary flex items-center justify-center text-primary-foreground flex-shrink-0">
+                      <Check className="h-3 w-3" />
+                    </div>
+                  )}
+                </div>
+              </Card>
+            ))}
+          </div>
         </div>
-      </div>
-    );
-  }
+      )}
 
-  if (mode === 'scratch') {
-    return (
-      <div className="max-w-5xl mx-auto space-y-8">
-        <div className="flex items-center justify-between">
+      {mode === 'import' && (
+        <div className="max-w-2xl mx-auto space-y-8">
           <div className="flex items-center gap-3">
             <button
-              onClick={() => setMode('select')}
+              onClick={() => {
+                setMode('select');
+                setFile(null);
+              }}
               className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-border bg-card transition-colors hover:bg-accent"
             >
               <ArrowLeft className="h-4 w-4" />
             </button>
             <div>
-              <h1 className="text-3xl font-bold tracking-tight">Escolha um Template</h1>
-              <p className="text-muted-foreground mt-1">Você pode trocar o template depois se quiser.</p>
+              <h1 className="text-3xl font-bold tracking-tight">Importar Currículo</h1>
+              <p className="text-muted-foreground mt-1">Faça upload de um arquivo PDF ou DOCX</p>
             </div>
           </div>
-          <Button onClick={handleCreateFromScratch} isLoading={isSubmitting} disabled={isSubmitting}>
-            Continuar com {TEMPLATES.find((t) => t.id === selectedTemplate)?.name}
-          </Button>
-        </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {TEMPLATES.map((tpl) => (
-            <Card
-              key={tpl.id}
-              onClick={() => setSelectedTemplate(tpl.id)}
-              className={`cursor-pointer overflow-hidden transition-all group ${
-                selectedTemplate === tpl.id
-                  ? 'ring-2 ring-primary border-transparent'
-                  : 'hover:border-primary/50'
-              }`}
-            >
-              <ResumeCardPreview content={DUMMY_CONTENT} templateId={tpl.id} />
-              <div className="p-4 flex items-center justify-between">
-                <div>
-                  <h3 className="font-semibold">{tpl.name}</h3>
-                  <p className="text-xs text-muted-foreground mt-0.5">{tpl.desc}</p>
+          <Card className="p-10 border-dashed border-2 flex flex-col items-center justify-center text-center bg-secondary/20">
+            <FileOutput className="h-12 w-12 text-muted-foreground mb-4" />
+            <h3 className="text-lg font-semibold mb-2">Arraste seu arquivo ou clique para buscar</h3>
+            <p className="text-sm text-muted-foreground mb-6">Suporta PDF e DOCX (Máx. 5MB)</p>
+
+            <input
+              type="file"
+              accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+              className="hidden"
+              id="file-upload"
+              onChange={(e) => setFile(e.target.files?.[0] || null)}
+            />
+
+            {file ? (
+              <div className="flex items-center gap-4 bg-background p-4 rounded-lg border border-border w-full max-w-sm">
+                <FileText className="h-8 w-8 text-blue-500 flex-shrink-0" />
+                <div className="min-w-0 flex-1 text-left">
+                  <p className="text-sm font-medium truncate">{file.name}</p>
+                  <p className="text-xs text-muted-foreground">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
                 </div>
-                {selectedTemplate === tpl.id && (
-                  <div className="h-5 w-5 rounded-full bg-primary flex items-center justify-center text-primary-foreground flex-shrink-0">
-                    <Check className="h-3 w-3" />
-                  </div>
-                )}
+                <button onClick={() => setFile(null)} className="text-xs text-destructive hover:underline">
+                  Remover
+                </button>
               </div>
-            </Card>
-          ))}
-        </div>
-      </div>
-    );
-  }
+            ) : (
+              <label
+                htmlFor="file-upload"
+                className="cursor-pointer inline-flex h-10 items-center justify-center rounded-md bg-primary px-6 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+              >
+                Selecionar arquivo
+              </label>
+            )}
+          </Card>
 
-  if (mode === 'import') {
-    return (
-      <div className="max-w-2xl mx-auto space-y-8">
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => {
-              setMode('select');
-              setFile(null);
-            }}
-            className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-border bg-card transition-colors hover:bg-accent"
-          >
-            <ArrowLeft className="h-4 w-4" />
-          </button>
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Importar Currículo</h1>
-            <p className="text-muted-foreground mt-1">Faça upload de um arquivo PDF ou DOCX</p>
+          <div className="flex justify-end">
+            <Button onClick={handleImport} disabled={!file || isSubmitting} isLoading={isSubmitting}>
+              Extrair dados e continuar
+            </Button>
           </div>
         </div>
+      )}
 
-        <Card className="p-10 border-dashed border-2 flex flex-col items-center justify-center text-center bg-secondary/20">
-          <FileOutput className="h-12 w-12 text-muted-foreground mb-4" />
-          <h3 className="text-lg font-semibold mb-2">Arraste seu arquivo ou clique para buscar</h3>
-          <p className="text-sm text-muted-foreground mb-6">Suporta PDF e DOCX (Máx. 5MB)</p>
-          
-          <input
-            type="file"
-            accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-            className="hidden"
-            id="file-upload"
-            onChange={(e) => setFile(e.target.files?.[0] || null)}
-          />
-          
-          {file ? (
-            <div className="flex items-center gap-4 bg-background p-4 rounded-lg border border-border w-full max-w-sm">
-              <FileText className="h-8 w-8 text-blue-500 flex-shrink-0" />
-              <div className="min-w-0 flex-1 text-left">
-                <p className="text-sm font-medium truncate">{file.name}</p>
-                <p className="text-xs text-muted-foreground">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
+      {/* Upgrade Limit Modal */}
+      {showUpgradeModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-sm">
+          <div className="flex w-full max-w-md flex-col rounded-3xl border border-slate-200 bg-white p-6 shadow-2xl animate-in fade-in zoom-in duration-200">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600">
+                <Sparkles className="h-6 w-6" />
               </div>
-              <button onClick={() => setFile(null)} className="text-xs text-destructive hover:underline">
-                Remover
-              </button>
+              <div>
+                <h3 className="text-lg font-bold text-slate-900">Limite de Plano Atingido</h3>
+                <p className="text-xs text-slate-500">Aproveite o máximo do ATRION</p>
+              </div>
             </div>
-          ) : (
-            <label
-              htmlFor="file-upload"
-              className="cursor-pointer inline-flex h-10 items-center justify-center rounded-md bg-primary px-6 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-            >
-              Selecionar arquivo
-            </label>
-          )}
-        </Card>
-
-        <div className="flex justify-end">
-          <Button onClick={handleImport} disabled={!file || isSubmitting} isLoading={isSubmitting}>
-            Extrair dados e continuar
-          </Button>
+            <p className="text-sm text-slate-600 mb-6 leading-relaxed">
+              {modalMessage}
+            </p>
+            <div className="flex justify-end gap-2">
+              <Button variant="secondary" onClick={() => setShowUpgradeModal(false)}>
+                Depois
+              </Button>
+              <Link href="/pricing" onClick={() => setShowUpgradeModal(false)}>
+                <Button variant="primary">
+                  Ver Planos de Upgrade
+                </Button>
+              </Link>
+            </div>
+          </div>
         </div>
-      </div>
-    );
-  }
+      )}
 
-  return null;
+      <AILoader
+        isOpen={isSubmitting && mode === 'import'}
+        title="Importando Currículo"
+        steps={IMPORT_STEPS}
+      />
+    </>
+  );
 }

@@ -26,6 +26,10 @@ type PrismaUserLite = {
   aiAdaptUsed: number;
   aiAuditUsed: number;
   aiUsagePeriod: string | null;
+  stripeCustomerId: string | null;
+  stripeSubscriptionId: string | null;
+  stripePriceId: string | null;
+  stripeCurrentPeriodEnd: Date | null;
   createdAt: Date;
   updatedAt: Date;
 };
@@ -43,6 +47,7 @@ export type AuthUser = {
   allowPdfDownload: boolean;
   planRenewsAt: Date | null;
   planStartedAt: Date | null;
+  stripeSubscriptionId: string | null;
   createdAt: Date;
   updatedAt: Date;
   limits: PlanLimits;
@@ -110,6 +115,7 @@ async function enrich(user: PrismaUserLite): Promise<AuthUser> {
     allowPdfDownload: user.allowPdfDownload,
     planRenewsAt: user.planRenewsAt,
     planStartedAt: user.planStartedAt,
+    stripeSubscriptionId: user.stripeSubscriptionId,
     createdAt: user.createdAt,
     updatedAt: user.updatedAt,
     limits: getPlanLimits(user.plan),

@@ -14,16 +14,35 @@ import {
   FileCheck2,
   Briefcase,
   Save,
+  Lock,
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Textarea, Label, Input } from '@/components/ui/Input';
 import { Card } from '@/components/ui/Card';
 import type { ResumeContent } from '@/lib/validations/resume';
+import Link from 'next/link';
+import { AILoader } from '@/components/ui/AILoader';
+
+const ANALYZE_STEPS = [
+  'Extraindo seções do currículo...',
+  'Avaliando regras de legibilidade ATS...',
+  'Medindo alinhamento de palavras-chave da vaga...',
+  'Calculando pontuação e formulando melhorias...',
+];
+
+const ADAPT_STEPS = [
+  'Lendo descrição da vaga pretendida...',
+  'Identificando habilidades e palavras-chave ausentes...',
+  'Reescrevendo resumo profissional com IA...',
+  'Otimizando descrições de experiências relevantes...',
+];
 
 type Props = {
   resumeId: string;
   content: ResumeContent;
   onApplyAdapted: (next: ResumeContent) => void;
+  initialAction?: string;
+  userPlan?: 'FREE' | 'PRO' | 'MAX';
 };
 
 type AnalyzeResult = {
@@ -37,11 +56,28 @@ type AnalyzeResult = {
   atsTips: string[];
 };
 
-export function AIResumeActions({ resumeId, content, onApplyAdapted }: Props) {
+export function AIResumeActions({ resumeId, content, onApplyAdapted, initialAction, userPlan = 'FREE' }: Props) {
+  const canAdapt = userPlan === 'PRO' || userPlan === 'MAX';
   const [analyzeOpen, setAnalyzeOpen] = useState(false);
   const [adaptOpen, setAdaptOpen] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
   const [adapting, setAdapting] = useState(false);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [modalMessage, setModalMessage] = useState('');
+
+  // Abre os modais automaticamente se especificado na inicialização
+  useEffect(() => {
+    if (initialAction === 'analyze') {
+      setAnalyzeOpen(true);
+    } else if (initialAction === 'adapt') {
+      if (canAdapt) {
+        setAdaptOpen(true);
+      } else {
+        setModalMessage('O recurso de adaptação de currículo para vagas está disponível apenas nos planos Pro e Max. Faça upgrade para usar essa funcionalidade!');
+        setShowUpgradeModal(true);
+      }
+    }
+  }, [initialAction, canAdapt]);
 
   // Analyze state
   const [analyzeTarget, setAnalyzeTarget] = useState('');
@@ -73,7 +109,13 @@ export function AIResumeActions({ resumeId, content, onApplyAdapted }: Props) {
       setAnalyzeProvider(`${data.provider}/${data.model}`);
     } catch (err) {
       console.error(err);
-      alert(err instanceof Error ? err.message : 'Erro ao analisar o curriculo.');
+      const msg = err instanceof Error ? err.message : 'Erro ao analisar o currículo.';
+      if (msg.includes('plano') || msg.includes('limite') || msg.includes('Limite')) {
+        setModalMessage(msg);
+        setShowUpgradeModal(true);
+      } else {
+        alert(msg);
+      }
     } finally {
       setAnalyzing(false);
     }
@@ -81,7 +123,7 @@ export function AIResumeActions({ resumeId, content, onApplyAdapted }: Props) {
 
   async function handleAdapt() {
     if (jobDescription.trim().length < 20) {
-      alert('Cole a descricao da vaga (minimo 20 caracteres).');
+      alert('Cole a descrição da vaga (mínimo 20 caracteres).');
       return;
     }
     setAdapting(true);
@@ -106,7 +148,13 @@ export function AIResumeActions({ resumeId, content, onApplyAdapted }: Props) {
       setAdaptProvider(`${data.provider}/${data.model}`);
     } catch (err) {
       console.error(err);
-      alert(err instanceof Error ? err.message : 'Erro ao adaptar o curriculo.');
+      const msg = err instanceof Error ? err.message : 'Erro ao adaptar o currículo.';
+      if (msg.includes('plano') || msg.includes('limite') || msg.includes('Limite')) {
+        setModalMessage(msg);
+        setShowUpgradeModal(true);
+      } else {
+        alert(msg);
+      }
     } finally {
       setAdapting(false);
     }
@@ -140,10 +188,19 @@ export function AIResumeActions({ resumeId, content, onApplyAdapted }: Props) {
       <Button
         variant="primary"
         size="sm"
-        onClick={() => setAdaptOpen(true)}
-        title="Adaptar para uma vaga"
+        onClick={() => {
+          if (!canAdapt) {
+            setModalMessage('O recurso de adaptação de currículo para vagas está disponível apenas nos planos Pro e Max. Faça upgrade para desbloquear essa funcionalidade!');
+            setShowUpgradeModal(true);
+          } else {
+            setAdaptOpen(true);
+          }
+        }}
+        title={canAdapt ? 'Adaptar para uma vaga' : 'Disponível no plano Pro'}
+        className={!canAdapt ? 'opacity-70' : ''}
       >
         <Wand2 className="h-4 w-4" /> Adaptar para vaga
+        {!canAdapt && <Lock className="h-3 w-3 ml-1" />}
       </Button>
 
       {/* === Modal: Analisar === */}
@@ -362,6 +419,47 @@ export function AIResumeActions({ resumeId, content, onApplyAdapted }: Props) {
           </div>
         </ModalShell>
       )}
+      {/* Upgrade Limit Modal */}
+      {showUpgradeModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-sm">
+          <div className="flex w-full max-w-md flex-col rounded-3xl border border-slate-200 bg-white p-6 shadow-2xl animate-in fade-in zoom-in duration-200">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600">
+                <Sparkles className="h-6 w-6" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-slate-900">Limite de Plano Atingido</h3>
+                <p className="text-xs text-slate-500">Aproveite o máximo do ATRION</p>
+              </div>
+            </div>
+            <p className="text-sm text-slate-600 mb-6 leading-relaxed">
+              {modalMessage}
+            </p>
+            <div className="flex justify-end gap-2">
+              <Button variant="secondary" onClick={() => setShowUpgradeModal(false)}>
+                Depois
+              </Button>
+              <Link href="/pricing" onClick={() => setShowUpgradeModal(false)}>
+                <Button variant="primary">
+                  Ver Planos de Upgrade
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <AILoader
+        isOpen={analyzing}
+        title="Analisando Currículo"
+        steps={ANALYZE_STEPS}
+      />
+
+      <AILoader
+        isOpen={adapting}
+        title="Adaptando para Vaga"
+        steps={ADAPT_STEPS}
+      />
     </>
   );
 }

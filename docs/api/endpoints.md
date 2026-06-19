@@ -55,16 +55,16 @@
 
 | Método | Endpoint | Auth | Rate | Descrição |
 |---|---|---|---|---|
-| POST | `/api/ai/adapt-to-job` | 🔐 💎 | 20/mês | Adapta CV para uma vaga |
-| POST | `/api/ai/cover-letter` | 🔐 💎 | 10/mês | Gera carta de apresentação |
-| POST | `/api/ai/simulator` | 🔐 💎 | 5/mês | Feedback como recrutador |
-| POST | `/api/ai/improve` | 🔐 💎 | incluso | Sugere melhoria em uma seção |
+| POST | `/api/ai/adapt-to-job` | 🔐 💎 | 5/min | Adapta CV para uma vaga |
+| POST | `/api/ai/cover-letter` | 🔐 💎 | 5/min | Gera carta de apresentação |
+| POST | `/api/ai/simulator` | 🔐 💎 | 5/min | Feedback como recrutador |
+| POST | `/api/ai/improve` | 🔐 💎 | 5/min | Sugere melhoria em uma seção |
 
 ## LinkedIn (`/api/linkedin/*`)
 
 | Método | Endpoint | Auth | Rate | Descrição |
 |---|---|---|---|---|
-| POST | `/api/linkedin/audit` | 🔐 🆓 | 1/mês Free, 5 Pro, ∞ Anual | Inicia auditoria |
+| POST | `/api/linkedin/audit` | 🔐 🆓 | 5/min | Inicia auditoria |
 | GET | `/api/linkedin/audit/[id]` | 🔐 | — | Polling de status |
 | GET | `/api/linkedin/audits` | 🔐 | — | Histórico de auditorias |
 | POST | `/api/linkedin/audit/[id]/share` | 🔐 | — | Compartilhar relatório |
@@ -81,9 +81,21 @@
 
 | Método | Endpoint | Auth | Rate | Descrição |
 |---|---|---|---|---|
-| POST | `/api/upload/photo` | 🔐 | — | Upload de foto de perfil (R2 signed URL) |
-| POST | `/api/upload/resume` | 🔐 💎 | 5/mês | Upload de CV existente (PDF) |
-| POST | `/api/upload/parse-pdf` | 🔐 💎 | — | Extrai texto de PDF enviado |
+| POST | `/api/upload/photo` | 🔐 | 10/min | Upload de foto de perfil (R2 signed URL) |
+| POST | `/api/upload/resume` | 🔐 💎 | 10/min | Upload de CV existente (PDF) |
+| POST | `/api/upload/parse-pdf` | 🔐 💎 | 10/min | Extrai texto de PDF enviado |
+
+## Arquivos (`/api/files/*`)
+
+| Método | Endpoint | Auth | Rate | Descrição |
+|---|---|---|---|---|
+| GET | `/api/files/[...key]` | 🔐 | — | Serve arquivos do R2 (exige propriedade do arquivo) |
+
+## Vagas (`/api/jobs/*`)
+
+| Método | Endpoint | Auth | Rate | Descrição |
+|---|---|---|---|---|
+| GET | `/api/jobs` | 🔐 | 30/min | Busca vagas na Adzuna (texto sem HTML) |
 
 ## Stripe (`/api/stripe/*`)
 

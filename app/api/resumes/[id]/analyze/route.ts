@@ -6,6 +6,7 @@ import { runAI, safeParseJSON, AIError } from '@/lib/ai';
 import { resumeContentSchema, type ResumeContent } from '@/lib/validations/resume';
 import { calculateCompleteness } from '@/lib/completeness';
 import { checkAIQuota, consumeAIUsage } from '@/lib/plan';
+import { checkRateLimit, RATE_LIMITS } from '@/lib/rate-limit';
 
 type AIAnalysis = {
   overallScore: number; // 0-100
@@ -23,8 +24,7 @@ function buildResumeText(content: ResumeContent): string {
   const lines: string[] = [];
   if (p.name) lines.push(`NOME: ${p.name}`);
   if (p.jobTitle) lines.push(`CARGO ALVO: ${p.jobTitle}`);
-  if (p.email) lines.push(`EMAIL: ${p.email}`);
-  if (p.phone) lines.push(`TELEFONE: ${p.phone}`);
+  // SEC-014: PII mascarado — email e telefone não são necessários para análise
   if (p.location) lines.push(`LOCALIZACAO: ${p.location}`);
   if (p.summary) lines.push(`\nRESUMO:\n${p.summary}`);
 
@@ -115,6 +115,10 @@ export async function POST(
     return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
   }
 
+  // SEC-006: Rate limiting por usuário
+  const rl = await checkRateLimit(`ai:${user.id}`, RATE_LIMITS.ai);
+  if (!rl.allowed) return rl.response;
+
   // Quota mensal de IA
   const quota = await checkAIQuota(user.id, user.plan, 'analyze');
   if (!quota.allowed) {
@@ -204,6 +208,7 @@ Regras RIGIDAS:
 
   try {
     const aiResp = await runAI({
+      model: 'google/gemini-2.5-flash-lite',
       systemInstruction,
       userText: userPrompt,
       responseJson: true,

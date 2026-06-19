@@ -18,6 +18,7 @@ export const personalInfoSchema = z.object({
   github: strField,
   website: strField,
   summary: strField,
+  photo: strField,
 });
 
 export const experienceItemSchema = z.object({
@@ -124,6 +125,7 @@ export function emptyResumeContent(): ResumeContent {
       github: '',
       website: '',
       summary: '',
+      photo: '',
     },
     experience: [],
     education: [],

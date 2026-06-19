@@ -8,6 +8,12 @@ node_modules/
 # --- Bun
 bun.lockb
 .bun/
+# --- agentes
+.husky/
+.trae/
+.claude/
+.openrouter/
+.agentes
 
 # --- Next.js
 .next/

@@ -5,6 +5,7 @@ import { createAuditSchema } from '@/lib/validations/linkedin';
 import { checkAIQuota, consumeAIUsage } from '@/lib/plan';
 import { runAI, safeParseJSON } from '@/lib/ai';
 import type { AuditResult } from '@/lib/linkedin-analyzer';
+import { checkRateLimit, RATE_LIMITS } from '@/lib/rate-limit';
 
 export async function GET() {
   const user = await getCurrentUser();
@@ -33,6 +34,10 @@ export async function POST(req: NextRequest) {
   if (!user) {
     return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
   }
+
+  // SEC-006: Rate limiting por usuário
+  const rl = await checkRateLimit(`ai:${user.id}`, RATE_LIMITS.ai);
+  if (!rl.allowed) return rl.response;
 
   let body: unknown;
   try {

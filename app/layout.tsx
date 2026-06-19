@@ -1,11 +1,15 @@
 import type { Metadata, Viewport } from 'next';
-import { Inter, Space_Grotesk } from 'next/font/google';
+import { Poppins, Space_Grotesk } from 'next/font/google';
 import { ClerkProvider } from '@clerk/nextjs';
+import { ptBR } from '@clerk/localizations';
 import './globals.css';
 
-const inter = Inter({
+import Script from 'next/script';
+
+const poppins = Poppins({
   subsets: ['latin'],
-  variable: '--font-inter',
+  weight: ['100', '200', '300', '400', '500', '600', '700', '800', '900'],
+  variable: '--font-poppins',
   display: 'swap',
 });
 
@@ -47,13 +51,15 @@ export default function RootLayout({
 }) {
   return (
     <ClerkProvider
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      localization={ptBR as any}
       appearance={{
         variables: {
           colorPrimary: '#6366f1', // indigo-500 (mais moderno)
           colorBackground: '#ffffff',
           colorText: '#0f172a',
-          borderRadius: '0.875rem',
-          fontFamily: 'var(--font-inter), ui-sans-serif, system-ui, sans-serif',
+          borderRadius: '0.5rem',
+          fontFamily: 'var(--font-poppins), ui-sans-serif, system-ui, sans-serif',
         },
         elements: {
           card: 'shadow-2xl border border-border',
@@ -65,9 +71,24 @@ export default function RootLayout({
     >
       <html
         lang="pt-BR"
-        className={`${inter.variable} ${spaceGrotesk.variable}`}
+        className={`${poppins.variable} ${spaceGrotesk.variable}`}
         suppressHydrationWarning
       >
+        <head>
+          <Script
+            src="https://www.googletagmanager.com/gtag/js?id=G-BKJWBMLHEE"
+            strategy="afterInteractive"
+          />
+          <Script id="google-analytics" strategy="afterInteractive">
+            {`
+              window.dataLayer = window.dataLayer || [];
+              function gtag(){dataLayer.push(arguments);}
+              gtag('js', new Date());
+            
+              gtag('config', 'G-BKJWBMLHEE');
+            `}
+          </Script>
+        </head>
         <body className="min-h-screen bg-background font-sans antialiased">
           {children}
         </body>

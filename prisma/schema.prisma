@@ -42,6 +42,12 @@ model User {
   // Periodo de referencia (primeiro dia do mes) dos contadores acima
   aiUsagePeriod  String? // ex: "2026-06"
 
+  // Integracao Stripe
+  stripeCustomerId       String? @unique
+  stripeSubscriptionId   String? @unique
+  stripePriceId          String?
+  stripeCurrentPeriodEnd DateTime?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

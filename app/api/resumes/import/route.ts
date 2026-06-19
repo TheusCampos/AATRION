@@ -5,6 +5,7 @@ import { emptyResumeContent, type ResumeContent } from '@/lib/validations/resume
 import { runAI, safeParseJSON } from '@/lib/ai';
 import mammoth from 'mammoth';
 import { PDFParse } from 'pdf-parse';
+import { checkRateLimit, RATE_LIMITS } from '@/lib/rate-limit';
 
 // Forçar runtime Node.js: pdf-parse v2 + mammoth usam APIs nativas do Node
 export const runtime = 'nodejs';
@@ -70,16 +71,20 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
   }
 
+  // SEC-006: Rate limiting por usuário (import usa IA)
+  const rl = await checkRateLimit(`ai:${user.id}`, RATE_LIMITS.ai);
+  if (!rl.allowed) return rl.response;
 
-  // Plano FREE: limitar a 3 currículos
-  if (user.plan === 'FREE') {
+
+  // Limite de currículos conforme o plano.
+  const { maxResumes } = user.limits;
+  if (maxResumes !== -1) {
     try {
       const count = await prisma.resume.count({ where: { userId: user.id } });
-      if (count >= 3) {
+      if (count >= maxResumes) {
         return NextResponse.json(
           {
-            error:
-              'Limite do plano FREE atingido (3 currículos). Faça upgrade para criar mais.',
+            error: `Você atingiu o limite do plano Grátis (${maxResumes} currículo). Faça upgrade para o plano Pro para criar, importar e ter acesso a recursos ilimitados!`,
           },
           { status: 403 }
         );
@@ -159,14 +164,13 @@ export async function POST(req: NextRequest) {
       extracted = await extractDocxText(buffer);
     }
   } catch (err) {
-    const detail = err instanceof Error ? err.message : String(err);
     console.error(`[IMPORT] Falha ao extrair texto (${isPdf ? 'PDF' : 'DOCX'}):`, err);
+    // SEC-011: Não expor detalhes internos ao cliente
     return NextResponse.json(
       {
         error: isPdf
           ? 'Falha ao processar o PDF. O arquivo pode estar corrompido, protegido por senha ou conter apenas imagens sem texto.'
           : 'Falha ao processar o DOCX. O arquivo pode estar corrompido ou em formato não suportado.',
-        detail,
       },
       { status: 422 }
     );
@@ -189,23 +193,29 @@ export async function POST(req: NextRequest) {
   initialContent.personal.summary = text.substring(0, 1500);
 
   try {
-    const systemInstruction = `Você é um extrator de dados de currículos altamente preciso.
-Seu trabalho é analisar o texto extraído de um arquivo de currículo do usuário e estruturar os dados rigorosamente no formato JSON especificado abaixo.
-As chaves do JSON são: personal, experience, education, skills, projects, languages, certifications.
-Os IDs devem ser strings aleatórias simples (ex: "exp-1", "edu-2").
+    const systemInstruction = `Você é um extrator de dados de currículos profissional de altíssima precisão.
+Seu trabalho é analisar o texto extraído de um currículo do usuário e estruturar os dados rigorosamente no formato JSON especificado.
 
-Estrutura EXATA esperada (retorne APENAS JSON, sem markdown):
+Instruções importantes para garantir a integridade dos dados e evitar falhas de validação:
+1. Datas de início e fim: Converta todas as datas extraídas para o formato "YYYY-MM" (ex: "2021-03"). Se for o emprego atual ou se o ano de conclusão não estiver especificado (ex: "Atualmente", "Presente", "Atual"), defina "current" como true e "end" como "".
+2. Níveis de habilidades (skills.level): Deve ser obrigatoriamente um destes valores: "basic", "intermediate" ou "advanced".
+3. Níveis de idiomas (languages.level): Deve ser obrigatoriamente um destes valores: "basic", "intermediate", "advanced" ou "native".
+4. Descrição de experiências (experience.description): Extraia as realizações e responsabilidades principais, formatando em tópicos limpos por linha (começando com "• ").
+5. IDs: Gere identificadores simples e únicos por categoria (ex: "exp-1", "edu-1", "ski-1", "prj-1").
+
+Estrutura JSON EXATA esperada (retorne APENAS o JSON puro, sem blocos de código markdown ou explicações):
 {
   "personal": { "name": "", "email": "", "phone": "", "location": "", "jobTitle": "", "linkedin": "", "github": "", "website": "", "summary": "" },
-  "experience": [ { "id": "1", "company": "", "role": "", "start": "YYYY-MM", "end": "YYYY-MM", "current": false, "description": "" } ],
-  "education": [ { "id": "1", "institution": "", "course": "", "level": "", "start": "YYYY-MM", "end": "YYYY-MM" } ],
-  "skills": [ { "id": "1", "name": "", "level": "intermediate" } ],
-  "projects": [ { "id": "1", "name": "", "description": "", "tech": [], "url": "" } ],
-  "languages": [ { "id": "1", "language": "", "level": "intermediate" } ],
-  "certifications": [ { "id": "1", "name": "", "issuer": "", "date": "YYYY-MM" } ]
+  "experience": [ { "id": "exp-1", "company": "", "role": "", "start": "YYYY-MM", "end": "YYYY-MM", "current": false, "description": "" } ],
+  "education": [ { "id": "edu-1", "institution": "", "course": "", "level": "", "start": "YYYY-MM", "end": "YYYY-MM" } ],
+  "skills": [ { "id": "ski-1", "name": "", "level": "intermediate" } ],
+  "projects": [ { "id": "prj-1", "name": "", "description": "", "tech": [], "url": "" } ],
+  "languages": [ { "id": "lng-1", "language": "", "level": "intermediate" } ],
+  "certifications": [ { "id": "crt-1", "name": "", "issuer": "", "date": "YYYY-MM" } ]
 }`;
 
     const aiResponse = await runAI({
+      model: 'google/gemini-2.5-flash-lite',
       systemInstruction,
       userText: `Extraia as informações do seguinte currículo:\n\n${text.substring(0, 8000)}`,
       responseJson: true,

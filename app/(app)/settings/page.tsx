@@ -37,6 +37,7 @@ type PlanInfo = {
   startedAt: string | null;
   renewsAt: string | null;
   daysUntilRenewal: number | null;
+  cancelAtPeriodEnd: boolean;
 };
 
 type Limits = {
@@ -69,8 +70,8 @@ const PLAN_LABEL: Record<PlanCode, string> = {
 
 const PLAN_PRICE: Record<PlanCode, string> = {
   FREE: 'R$ 0',
-  PRO: 'R$ 29/mês',
-  MAX: 'R$ 79/mês',
+  PRO: 'R$ 19,90/mês',
+  MAX: 'R$ 39,90/mês',
 };
 
 export default function SettingsPage() {
@@ -178,11 +179,10 @@ export default function SettingsPage() {
 
       {toast && (
         <div
-          className={`flex items-center gap-2 rounded-md border p-3 text-sm ${
-            toast.type === 'success'
-              ? 'border-emerald-200 bg-emerald-50 text-emerald-800'
-              : 'border-rose-200 bg-rose-50 text-rose-800'
-          }`}
+          className={`flex items-center gap-2 rounded-md border p-3 text-sm ${toast.type === 'success'
+            ? 'border-emerald-200 bg-emerald-50 text-emerald-800'
+            : 'border-rose-200 bg-rose-50 text-rose-800'
+            }`}
         >
           {toast.type === 'success' ? (
             <CheckCircle2 className="h-4 w-4" />
@@ -229,50 +229,119 @@ function PlanSection({ data }: { data: SettingsPayload }) {
   const { plan } = data;
   const planLabel = PLAN_LABEL[plan.code];
   const planPrice = PLAN_PRICE[plan.code];
+  const [isPortalLoading, setIsPortalLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleManageSubscription = async () => {
+    setIsPortalLoading(true);
+    setError(null);
+    try {
+      const res = await fetch('/api/stripe/portal', {
+        method: 'POST',
+      });
+      const resData = await res.json();
+      if (!res.ok) {
+        throw new Error(resData.error || 'Erro ao carregar o portal financeiro.');
+      }
+      window.location.href = resData.url;
+    } catch (err) {
+      console.error(err);
+      const errMsg = err instanceof Error ? err.message : 'Falha ao conectar com o Stripe. Tente novamente.';
+      setError(errMsg);
+    } finally {
+      setIsPortalLoading(false);
+    }
+  };
 
   return (
     <motion.div variants={fadeUp}>
-    <Card className="overflow-hidden p-6">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h2 className="text-lg font-semibold flex items-center gap-2">
-            <CreditCard className="h-4 w-4 text-primary" />
-            Seu plano
-          </h2>
-          <p className="text-sm text-muted-foreground">
-            Plano atual, status e próxima cobrança.
-          </p>
+      <Card className="overflow-hidden p-6">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <h2 className="text-lg font-semibold flex items-center gap-2">
+              <CreditCard className="h-4 w-4 text-primary" />
+              Seu plano
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              Plano atual, status e próxima cobrança.
+            </p>
+          </div>
+          <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
+            {planLabel} · {planPrice}
+          </span>
         </div>
-        <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
-          {planLabel} · {planPrice}
-        </span>
-      </div>
 
-      <div className="mt-5 grid gap-4 sm:grid-cols-3">
-        <Stat
-          label="Status"
-          value={plan.code === 'FREE' ? 'Grátis vitalício' : 'Assinatura ativa'}
-        />
-        <Stat
-          label="Início do plano"
-          value={plan.startedAt ? new Date(plan.startedAt).toLocaleDateString('pt-BR') : '—'}
-        />
-        <RenewalStat daysUntil={plan.daysUntilRenewal} renewsAt={plan.renewsAt} />
-      </div>
-
-      {plan.code !== 'MAX' && (
-        <div className="mt-5 flex flex-wrap items-center justify-between gap-3 rounded-md border border-dashed border-primary/30 bg-primary/5 p-4">
-          <p className="text-sm text-muted-foreground">
-            Precisa de mais currículos ou mais análises com IA?
-          </p>
-          <a href="/pricing">
-            <Button variant="primary" size="sm">
-              Ver planos
-            </Button>
-          </a>
+        <div className="mt-5 grid gap-4 sm:grid-cols-3">
+          <Stat
+            label="Status"
+            value={
+              plan.code === 'FREE'
+                ? 'Grátis vitalício'
+                : plan.cancelAtPeriodEnd
+                  ? 'Cancelada'
+                  : 'Assinatura ativa'
+            }
+          />
+          <Stat
+            label="Início do plano"
+            value={plan.startedAt ? new Date(plan.startedAt).toLocaleDateString('pt-BR') : '—'}
+          />
+          <RenewalStat daysUntil={plan.daysUntilRenewal} renewsAt={plan.renewsAt} cancelAtPeriodEnd={plan.cancelAtPeriodEnd} />
         </div>
-      )}
-    </Card>
+
+        {plan.code !== 'FREE' ? (
+          <div className="mt-5 flex flex-col gap-2">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 rounded-xl border border-border bg-card/50 p-5 shadow-sm transition-all hover:shadow-md">
+              <div>
+                <p className="text-sm font-semibold text-foreground">Gerenciamento de Assinatura</p>
+                {plan.cancelAtPeriodEnd ? (
+                  <p className="text-xs text-amber-600 font-medium mt-1">
+                    Sua assinatura foi cancelada, mas você ainda tem acesso até o dia {plan.renewsAt ? new Date(plan.renewsAt).toLocaleDateString('pt-BR') : '—'}.
+                  </p>
+                ) : (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Altere seu plano ou gerencie sua assinatura pelo portal seguro da Stripe.
+                  </p>
+                )}
+              </div>
+              <div className="flex flex-col sm:flex-row w-full sm:w-auto gap-2">
+                <a href="/pricing" className="w-full sm:w-auto">
+                  <Button variant="secondary" size="sm" className="w-full sm:w-auto">
+                    Contratar um plano diferente
+                  </Button>
+                </a>
+                <Button 
+                  variant="primary" 
+                  size="sm" 
+                  onClick={handleManageSubscription}
+                  disabled={isPortalLoading}
+                  className="w-full sm:w-auto"
+                >
+                  {isPortalLoading ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin mr-1.5" /> Carregando...
+                    </>
+                  ) : (
+                    'Gerenciar Assinatura'
+                  )}
+                </Button>
+              </div>
+            </div>
+            {error && <p className="text-xs text-destructive mt-1">{error}</p>}
+          </div>
+        ) : (
+          <div className="mt-5 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-primary/20 bg-primary/5 p-5 shadow-sm">
+            <p className="text-sm text-foreground font-medium">
+              Precisa de mais currículos ou mais análises com IA?
+            </p>
+            <a href="/pricing">
+              <Button variant="primary" size="sm">
+                Ver planos de upgrade
+              </Button>
+            </a>
+          </div>
+        )}
+      </Card>
     </motion.div>
   );
 }
@@ -291,20 +360,35 @@ function Stat({ label, value }: { label: string; value: string }) {
 function RenewalStat({
   daysUntil,
   renewsAt,
+  cancelAtPeriodEnd,
 }: {
   daysUntil: number | null;
   renewsAt: string | null;
+  cancelAtPeriodEnd?: boolean;
 }) {
   if (daysUntil === null) {
     return <Stat label="Próxima renovação" value="Sem renovação" />;
   }
   const dateStr = renewsAt ? new Date(renewsAt).toLocaleDateString('pt-BR') : '—';
+  
+  if (cancelAtPeriodEnd) {
+    return (
+      <div className="rounded-md border border-amber-200 bg-amber-50 dark:bg-amber-950/20 dark:border-amber-900/50 p-3">
+        <p className="text-xs font-semibold uppercase tracking-wider text-amber-800 dark:text-amber-500 flex items-center gap-1.5">
+          <CalendarClock className="h-3.5 w-3.5" /> Acesso até
+        </p>
+        <p className="mt-1 text-2xl font-bold text-amber-600 dark:text-amber-400">{daysUntil} dias</p>
+        <p className="text-xs text-amber-700/80 dark:text-amber-500/80">termina em {dateStr}</p>
+      </div>
+    );
+  }
+
   const tone =
     daysUntil <= 3
-      ? 'text-rose-600'
+      ? 'text-rose-600 dark:text-rose-400'
       : daysUntil <= 10
-        ? 'text-amber-600'
-        : 'text-emerald-600';
+        ? 'text-amber-600 dark:text-amber-400'
+        : 'text-emerald-600 dark:text-emerald-400';
   return (
     <div className="rounded-md border border-border bg-card p-3">
       <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
@@ -349,7 +433,7 @@ function PersonalSection(props: {
           <Input
             value={props.phone}
             onChange={(e) => props.setPhone(e.target.value)}
-            placeholder="(11) 99999-9999"
+            placeholder="(65) 99999-9999"
           />
         </Field>
         <Field label="Cargo pretendido">

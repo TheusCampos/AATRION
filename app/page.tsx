@@ -38,9 +38,10 @@ export default function HomePage() {
             <Image src="/Logo-atrion.png" alt="ATRION" width={100} height={24} className="h-6 w-auto" />
           </Link>
           <nav className="hidden items-center gap-1 md:flex">
+            <NavLink href="/">Início</NavLink>
             <NavLink href="#features">Recursos</NavLink>
             <NavLink href="#pricing">Planos</NavLink>
-            <NavLink href="/docs">Docs</NavLink>
+            <NavLink href="#contato">Contato</NavLink>
           </nav>
           <div className="flex items-center gap-2">
             <SignedOut>
@@ -194,8 +195,8 @@ export default function HomePage() {
           {[
             {
               icon: <FileText className="h-5 w-5" />,
-              title: 'Editor inteligente',
-              desc: '7 passos, preview em tempo real, autosave a cada 2 segundos e PDF de alta qualidade.',
+              title: 'Análise de currículo',
+              desc: 'A IA avalia o currículo e mostra problemas, pontuação e melhorias detalhadas passo a passo.',
             },
             {
               icon: <Sparkles className="h-5 w-5" />,
@@ -248,20 +249,26 @@ export default function HomePage() {
           <Plan
             name="Free"
             price="R$ 0"
-            features={['3 currículos', 'Análise com IA (2/mês)', '1 adaptação/mês', 'Templates modernos']}
+            features={['1 currículo ativo', 'Análise básica com pontuação e 3 sugestões', '3 templates', "Marca d'água discreta"]}
+            cta="Começar grátis"
+            href="/register"
           />
           <Plan
             name="Pro"
-            price="R$ 29"
+            price="R$ 19,90"
             suffix="/mês"
             highlight
-            features={['25 currículos', '30 análises/mês', '15 adaptações/mês', '5 auditorias LinkedIn', 'Suporte prioritário']}
+            features={['10 currículos ativos', '10 análises completas', '10 adaptações para vagas', '3 auditorias LinkedIn', 'Suporte prioritário']}
+            cta="Assinar Pro"
+            href="/pricing"
           />
           <Plan
             name="Max"
-            price="R$ 79"
+            price="R$ 39,90"
             suffix="/mês"
-            features={['Currículos ilimitados', 'IA ilimitada', 'Auditorias ilimitadas', 'Acesso antecipado a novos recursos']}
+            features={['30 currículos', '50 ações de IA completas', '10 auditorias LinkedIn', 'Acesso antecipado a recursos']}
+            cta="Assinar Max"
+            href="/pricing"
           />
         </motion.div>
       </section>
@@ -316,7 +323,7 @@ export default function HomePage() {
         <div className="flex flex-col items-center justify-between gap-3 text-sm text-muted-foreground md:flex-row">
           <p>© {new Date().getFullYear()} ATRION · Construído com Next.js, Tailwind, Framer Motion e Clerk.</p>
           <div className="flex items-center gap-4">
-            <Link href="/docs" className="hover:text-foreground">Documentação</Link>
+            <Link href="#contato" className="hover:text-foreground">Contato</Link>
             <Link href="/pricing" className="hover:text-foreground">Planos</Link>
             <SignedOut>
               <Link href="/login" className="hover:text-foreground">Entrar</Link>
@@ -368,21 +375,24 @@ function Plan({
   suffix,
   features,
   highlight = false,
+  cta,
+  href,
 }: {
   name: string;
   price: string;
   suffix?: string;
   features: string[];
   highlight?: boolean;
+  cta: string;
+  href: string;
 }) {
   return (
     <motion.div variants={fadeUp} {...hoverLift}>
       <div
-        className={`relative h-full rounded-2xl border p-6 transition-colors ${
-          highlight
+        className={`relative flex flex-col h-full rounded-2xl border p-6 transition-colors ${highlight
             ? 'border-transparent bg-foreground text-background shadow-2xl shadow-indigo-500/20'
             : 'border-border/60 bg-card/70 text-foreground backdrop-blur'
-        }`}
+          }`}
       >
         {highlight && (
           <span className="absolute -top-3 right-6 rounded-full bg-gradient-to-r from-indigo-500 to-fuchsia-500 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-white shadow">
@@ -394,7 +404,7 @@ function Plan({
           <span className="text-3xl font-bold tracking-tight">{price}</span>
           {suffix && <span className={`text-sm ${highlight ? 'text-background/60' : 'text-muted-foreground'}`}>{suffix}</span>}
         </div>
-        <ul className="space-y-2.5 text-sm">
+        <ul className="mb-6 flex-1 space-y-2.5 text-sm">
           {features.map((f) => (
             <li key={f} className="flex items-start gap-2.5">
               <Check className={`mt-0.5 h-4 w-4 flex-shrink-0 ${highlight ? 'text-emerald-400' : 'text-indigo-500'}`} />
@@ -402,6 +412,9 @@ function Plan({
             </li>
           ))}
         </ul>
+        <Link href={href} className={`mt-auto inline-flex h-10 w-full items-center justify-center rounded-lg text-sm font-semibold transition-colors ${highlight ? 'bg-background text-foreground hover:bg-background/90' : 'bg-foreground text-background hover:bg-foreground/90'}`}>
+          {cta}
+        </Link>
       </div>
     </motion.div>
   );

@@ -7,15 +7,16 @@ const isPublicRoute = createRouteMatcher([
   '/',
   '/login(.*)',
   '/register(.*)',
+  '/pricing(.*)',
   '/api/webhooks(.*)',
-  '/api/jobs(.*)',
+  // SEC-013: /api/jobs removido — a rota exige autenticação
 ]);
 
 export default clerkMiddleware((auth, req) => {
   if (!isPublicRoute(req)) {
     auth().protect();
   }
-}, { clockSkewInMs: 100000 });
+}, { clockSkewInMs: 10000 }); // SEC-018: Reduzido de 100s para 10s
 
 export const config = {
   matcher: [
