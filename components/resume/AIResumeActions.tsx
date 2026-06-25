@@ -177,14 +177,16 @@ export function AIResumeActions({ resumeId, content, onApplyAdapted, initialActi
 
   return (
     <>
-      <Button
-        variant="secondary"
-        size="sm"
-        onClick={() => setAnalyzeOpen(true)}
-        title="Analisar com IA"
-      >
-        <Sparkles className="h-4 w-4" /> Analisar com IA
-      </Button>
+      {userPlan !== 'FREE' && (
+        <Button
+          variant="secondary"
+          size="sm"
+          onClick={() => setAnalyzeOpen(true)}
+          title="Analisar com IA"
+        >
+          <Sparkles className="h-4 w-4" /> Analisar com IA
+        </Button>
+      )}
       <Button
         variant="primary"
         size="sm"
@@ -233,9 +235,6 @@ export function AIResumeActions({ resumeId, content, onApplyAdapted, initialActi
                       Nota geral
                     </p>
                     <p className="text-sm text-slate-700 mt-1">{analyzeResult.summary}</p>
-                    <p className="text-[10px] text-muted-foreground mt-2">
-                      Provider: {analyzeProvider}
-                    </p>
                   </div>
                   <div className={`text-5xl font-extrabold ${scoreColor}`}>
                     {analyzeResult.overallScore}
@@ -385,7 +384,6 @@ export function AIResumeActions({ resumeId, content, onApplyAdapted, initialActi
                     <CheckCircle2 className="inline h-4 w-4 mr-1" />
                     Adaptacao pronta! Revise no preview e clique em &quot;Aplicar ao curriculo&quot; para aceitar.
                   </p>
-                  <p className="mt-1 text-xs text-muted-foreground">Provider: {adaptProvider}</p>
                 </Card>
 
                 {adaptedChanges.length > 0 && (

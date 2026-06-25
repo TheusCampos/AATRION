@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getCurrentUser } from '@/lib/auth';
 import { adaptResumeSchema } from '@/lib/validations/ai-resume';
-import { runAI, safeParseJSON, AIError } from '@/lib/ai';
+import { runAI, safeParseJSON } from '@/lib/ai';
 import { resumeContentSchema, type ResumeContent } from '@/lib/validations/resume';
 import { checkAIQuota, consumeAIUsage } from '@/lib/plan';
 import { checkRateLimit, RATE_LIMITS } from '@/lib/rate-limit';
@@ -279,7 +279,7 @@ Adapte o curriculo acima para esta vaga. Mantenha o que existe, ajuste linguagem
 
   try {
     const aiResp = await runAI({
-      model: 'google/gemini-2.5-flash-lite',
+      model: 'google/gemini-2.5-flash',
       systemInstruction,
       userText: userPrompt,
       responseJson: true,
@@ -291,18 +291,18 @@ Adapte o curriculo acima para esta vaga. Mantenha o que existe, ajuste linguagem
       adaptedJson = parsedJson;
       provider = aiResp.provider;
       model = aiResp.model;
+    } else {
+      console.error('[/adapt] Falha no parse JSON. Retorno puro:', aiResp.text);
     }
   } catch (err) {
-    if (!(err instanceof AIError)) {
-      console.error('[/adapt] erro inesperado:', err);
-    }
+    console.error('[/adapt] Erro no runAI:', err);
   }
 
   if (!adaptedJson) {
     return NextResponse.json(
       {
         error:
-          'Não foi possível gerar uma adaptação via IA no momento. Verifique as chaves GEMINI_API_KEY / OPENROUTER_API_KEY no .env e tente novamente.',
+          'Não foi possível gerar uma adaptação via IA no momento. Tente novamente em alguns instantes.',
       },
       { status: 502 }
     );

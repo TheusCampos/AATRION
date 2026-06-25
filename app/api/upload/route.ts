@@ -38,9 +38,19 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const userName = formData.get('userName') as string || 'usuario';
+    const resumeId = formData.get('resumeId') as string || 'geral';
+
+    // Remove acentos e caracteres especiais para não dar erro no R2
+    const safeUserName = userName
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-zA-Z0-9]/g, '-')
+      .toLowerCase();
+
     const fileExtension = file.name.split('.').pop() || 'png';
     const cleanFileName = `${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${fileExtension}`;
-    const key = `photos/${user.id}/${cleanFileName}`;
+    const key = `photos/${user.id}/${safeUserName}/${resumeId}/${cleanFileName}`;
 
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);

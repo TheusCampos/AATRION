@@ -40,14 +40,22 @@ export async function GET(request: Request) {
 
     // 3. Determina o Price ID correto com base no plano
     let priceId = '';
+    let mode: 'subscription' | 'payment' = 'subscription'; // Planos PRO e MAX são assinaturas mensais
+    
     if (plan === 'PRO') {
-      priceId = process.env.STRIPE_PRICE_ID_PRO || 'price_1TjkNyCjuX2Xhw9UbqujHlRg';
+      priceId = process.env.STRIPE_PRICE_ID_PRO || 'price_1TlVNECoGEvJit5egeiseWbK';
     } else if (plan === 'MAX') {
-      priceId = process.env.STRIPE_PRICE_ID_MAX || 'price_1TjkRDCjuX2Xhw9UucLIvTL2';
+      priceId = process.env.STRIPE_PRICE_ID_MAX || 'price_1TlVMtCoGEvJit5ebp8OVM4X';
+    } else if (plan === 'UNIC') {
+      priceId = process.env.STRIPE_PRICE_ID_UNIC || 'price_1TlVOPCoGEvJit5edLEVS6WN';
+      mode = 'payment'; // Pagamento único
+    } else if (plan === 'CANDIDATURA' || plan === 'PC_PRO') {
+      priceId = process.env.STRIPE_PRICE_ID_PC_PRO || 'price_1TlVP4CoGEvJit5eQ7kqnFO7';
+      mode = 'payment'; // Pagamento único
     } else {
       console.warn(`[Stripe Checkout] Invalid plan param: ${plan}`);
       return NextResponse.json(
-        { error: 'Plano inválido. Utilize PRO ou MAX.' },
+        { error: 'Plano inválido. Utilize PRO, MAX, UNIC ou CANDIDATURA.' },
         { status: 400 }
       );
     }
@@ -58,16 +66,29 @@ export async function GET(request: Request) {
     const originUrl = request.headers.get('origin') || `${protocol}//${host}`;
     const appUrl = originUrl || process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, '');
 
-    // 4. Cria a sessão de checkout dinâmica no Stripe
-    const session = await stripe.checkout.sessions.create({
-      payment_method_types: ['card'],
-      line_items: [
-        {
+    // 4. Prepara o line item (suporta tanto Price ID quanto Product ID com preços dinâmicos)
+    const isProduct = priceId.startsWith('prod_');
+    const unitAmount = (plan === 'CANDIDATURA' || plan === 'PC_PRO') ? 1490 : 990;
+    
+    const lineItem = isProduct 
+      ? {
+          price_data: {
+            currency: 'brl',
+            product: priceId,
+            unit_amount: unitAmount,
+          },
+          quantity: 1,
+        }
+      : {
           price: priceId,
           quantity: 1,
-        },
-      ],
-      mode: 'subscription',
+        };
+
+    // 5. Cria a sessão de checkout dinâmica no Stripe
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ['card'],
+      line_items: [lineItem],
+      mode,
       success_url: `${appUrl}/dashboard?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${appUrl}/pricing`,
       client_reference_id: user.id,

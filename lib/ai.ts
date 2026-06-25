@@ -14,7 +14,7 @@ export type AIRequest = {
   responseJson?: boolean;
   temperature?: number;
   maxOutputTokens?: number;
-  model?: 'google/gemini-2.5-flash-lite' | 'openrouter/free';
+  model?: 'google/gemini-2.5-flash' | 'google/gemini-2.5-flash-lite' | 'openrouter/free';
 };
 
 export type AIResponse = {

@@ -11,7 +11,7 @@
 
 import { NextResponse } from 'next/server';
 
-// Lazy imports para evitar falha se as credenciais não existirem
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 let _ratelimit: any = null;
 
 function getRateLimiter(

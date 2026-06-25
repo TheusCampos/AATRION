@@ -33,6 +33,9 @@ export const metadata: Metadata = {
     siteName: 'ATRION',
   },
   robots: { index: true, follow: true },
+  icons: {
+    icon: '/Logo-atrion-A-fundo.png',
+  },
 };
 
 export const viewport: Viewport = {
@@ -50,49 +53,49 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <ClerkProvider
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      localization={ptBR as any}
-      appearance={{
-        variables: {
-          colorPrimary: '#6366f1', // indigo-500 (mais moderno)
-          colorBackground: '#ffffff',
-          colorText: '#0f172a',
-          borderRadius: '0.5rem',
-          fontFamily: 'var(--font-poppins), ui-sans-serif, system-ui, sans-serif',
-        },
-        elements: {
-          card: 'shadow-2xl border border-border',
-          formButtonPrimary:
-            'bg-gradient-to-b from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 text-white shadow-sm',
-          footerActionLink: 'text-indigo-600 hover:text-indigo-700 font-medium',
-        },
-      }}
+    <html
+      lang="pt-BR"
+      className={`${poppins.variable} ${spaceGrotesk.variable}`}
+      suppressHydrationWarning
     >
-      <html
-        lang="pt-BR"
-        className={`${poppins.variable} ${spaceGrotesk.variable}`}
-        suppressHydrationWarning
-      >
-        <head>
-          <Script
-            src="https://www.googletagmanager.com/gtag/js?id=G-BKJWBMLHEE"
-            strategy="afterInteractive"
-          />
-          <Script id="google-analytics" strategy="afterInteractive">
-            {`
-              window.dataLayer = window.dataLayer || [];
-              function gtag(){dataLayer.push(arguments);}
-              gtag('js', new Date());
-            
-              gtag('config', 'G-BKJWBMLHEE');
-            `}
-          </Script>
-        </head>
-        <body className="min-h-screen bg-background font-sans antialiased">
+      <head>
+        <Script
+          src="https://www.googletagmanager.com/gtag/js?id=G-BKJWBMLHEE"
+          strategy="afterInteractive"
+        />
+        <Script id="google-analytics" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+          
+            gtag('config', 'G-BKJWBMLHEE');
+          `}
+        </Script>
+      </head>
+      <body className="min-h-screen bg-background font-sans antialiased">
+        <ClerkProvider
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          localization={ptBR as any}
+          appearance={{
+            variables: {
+              colorPrimary: '#6366f1', // indigo-500 (mais moderno)
+              colorBackground: '#ffffff',
+              colorText: '#0f172a',
+              borderRadius: '0.5rem',
+              fontFamily: 'var(--font-poppins), ui-sans-serif, system-ui, sans-serif',
+            },
+            elements: {
+              card: 'shadow-2xl border border-border',
+              formButtonPrimary:
+                'bg-gradient-to-b from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 text-white shadow-sm',
+              footerActionLink: 'text-indigo-600 hover:text-indigo-700 font-medium',
+            },
+          }}
+        >
           {children}
-        </body>
-      </html>
-    </ClerkProvider>
+        </ClerkProvider>
+      </body>
+    </html>
   );
 }

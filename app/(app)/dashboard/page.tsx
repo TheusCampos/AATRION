@@ -9,17 +9,79 @@ import { DashboardStats } from '@/components/dashboard/DashboardStats';
 import { PlanUpgradeCard } from '@/components/dashboard/PlanUpgradeCard';
 import { TipsCard } from '@/components/dashboard/TipsCard';
 import { QuickActions } from '@/components/dashboard/QuickActions';
+import { logUserAction } from '@/lib/logger';
+import { stripe } from '@/lib/stripe';
 
 export const dynamic = 'force-dynamic';
 
-export default async function DashboardPage() {
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: { [key: string]: string | string[] | undefined };
+}) {
   const user = await getCurrentUser();
   if (!user) redirect('/login');
 
-  // SEC-003: Removida a lógica de session_id que duplicava a verificação de
-  // pagamento do webhook. Agora confiamos exclusivamente no webhook do Stripe
-  // para atualizar planos. O getCurrentUser() já retorna o plano atualizado
-  // pelo webhook.
+  await logUserAction({
+    userId: user.id,
+    action: 'VIEWED_DASHBOARD',
+  });
+
+  // SEC-003(Modificado): Fallback de Sincronização Local.
+  // Como webhooks podem falhar no ambiente local (localhost), faremos
+  // uma checagem manual do session_id para forçar a atualização imediata.
+  const sessionId = searchParams?.session_id as string | undefined;
+  if (sessionId) {
+    try {
+      const session = await stripe.checkout.sessions.retrieve(sessionId, {
+        expand: ['line_items', 'subscription'],
+      });
+      if (session.payment_status === 'paid') {
+        const stripePrice = session.line_items?.data[0]?.price;
+        const customerId = session.customer as string;
+        
+        let plan = 'FREE';
+        const priceId = stripePrice?.id;
+        if (priceId === process.env.STRIPE_PRICE_ID_MAX) plan = 'MAX';
+        else if (priceId === process.env.STRIPE_PRICE_ID_PRO) plan = 'PRO';
+        else if (priceId === process.env.STRIPE_PRICE_ID_UNIC) plan = 'UNIC';
+        else if (priceId === process.env.STRIPE_PRICE_ID_PC_PRO) plan = 'PC_PRO';
+        else {
+          const unitAmount = stripePrice?.unit_amount ?? 0;
+          if (unitAmount >= 3990) plan = 'MAX';
+          else if (unitAmount >= 1990) plan = 'PRO';
+          else if (unitAmount >= 990) plan = 'UNIC';
+        }
+
+        let planRenewsAt = null;
+        let stripeSubscriptionId = null;
+
+        if (session.mode === 'subscription' && session.subscription) {
+          const sub = session.subscription as any;
+          planRenewsAt = new Date(sub.current_period_end * 1000);
+          stripeSubscriptionId = sub.id;
+        }
+
+        await prisma.user.update({
+          where: { id: user.id },
+          data: {
+            plan,
+            stripeCustomerId: customerId,
+            stripePriceId: priceId,
+            stripeSubscriptionId,
+            planStartedAt: new Date(),
+            planRenewsAt,
+            stripeCurrentPeriodEnd: planRenewsAt,
+          },
+        });
+        
+        // Redirecionar para limpar o session_id da URL
+        redirect('/dashboard');
+      }
+    } catch (e) {
+      console.error('[Dashboard] Falha ao verificar session_id:', e);
+    }
+  }
 
   const resumes = await prisma.resume.findMany({
     where: { userId: user.id },

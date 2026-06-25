@@ -131,40 +131,46 @@ export default async function PricingPage() {
           />
         </div>
 
-        {/* Compras avulsas */}
+        {/* Planos Semanais */}
         <div className="mx-auto mt-20 max-w-5xl">
           <div className="text-center mb-10">
-            <h2 className="text-2xl font-bold tracking-tight md:text-3xl">Pacotes Avulsos</h2>
-            <p className="text-sm text-muted-foreground mt-2">Sem assinatura. Compre apenas o que precisar.</p>
+            <h2 className="text-2xl font-bold tracking-tight md:text-3xl">Planos Semanais</h2>
+            <p className="text-sm text-muted-foreground mt-2">Acesso por 7 dias. Compre apenas o período que precisar, sem renovação automática.</p>
           </div>
           <div className="grid gap-6 md:grid-cols-2">
             <PlanCard
-              name="Auditoria Única"
+              name="Plano Semanal"
               price="R$ 9,90"
-              suffix="/avulso"
-              description="Análise profunda e profissional"
+              suffix="/semana"
+              description="Acesso completo aos recursos de auditoria por 7 dias"
               features={[
                 '1 auditoria completa de LinkedIn/Currículo',
                 'Pontuação ATS detalhada',
                 'Diagnóstico de pontos fortes e fracos',
                 'Palavras-chave recomendadas para o seu setor',
+                'Sem renovação automática',
               ]}
-              cta="Comprar Auditoria"
-              href="/register?buy=audit"
+              cta="Contratar Plano Semanal"
+              href="/api/stripe/checkout?plan=UNIC"
+              requiresAuth
+              isLoggedIn={isLoggedIn}
             />
             <PlanCard
-              name="Pacote Candidatura"
+              name="Plano PC Max Semanal"
               price="R$ 14,90"
-              suffix="/avulso"
-              description="Preparo absoluto para a vaga dos seus sonhos"
+              suffix="/semana"
+              description="Preparo absoluto para a vaga dos seus sonhos por 7 dias"
               features={[
                 '1 adaptação de currículo para a vaga',
                 '1 análise ATS completa',
                 '1 carta de apresentação personalizada',
                 '1 versão final otimizada para download',
+                'Sem renovação automática',
               ]}
-              cta="Comprar Pacote"
-              href="/register?buy=bundle"
+              cta="Contratar PC Max Semanal"
+              href="/api/stripe/checkout?plan=CANDIDATURA"
+              requiresAuth
+              isLoggedIn={isLoggedIn}
             />
           </div>
         </div>

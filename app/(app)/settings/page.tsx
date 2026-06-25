@@ -160,7 +160,7 @@ export default function SettingsPage() {
       initial="hidden"
       animate="visible"
       variants={staggerContainer(0.08, 0.05)}
-      className="space-y-8"
+      className="mx-auto max-w-7xl space-y-8"
     >
       <motion.header variants={fadeUp} className="flex flex-wrap items-end justify-between gap-4">
         <div>

@@ -24,6 +24,7 @@ import {
   Sparkles,
   CheckCircle2,
   Circle,
+  Lock,
 } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/Button';
@@ -63,6 +64,10 @@ const TEMPLATES = [
   { id: 'creative', name: 'Criativo', desc: 'Sidebar colorida' },
   { id: 'executive', name: 'Executivo', desc: 'Serifado elegante' },
   { id: 'tech', name: 'Tech', desc: 'Estilo terminal/code' },
+  { id: 'brown-sidebar', name: 'Marrom Executivo', desc: 'Sidebar bege claro e título marrom' },
+  { id: 'minimal-grey', name: 'Cinza Minimalista', desc: 'Clean, focado em texto e separadores' },
+  { id: 'yellow-header', name: 'Amarelo Criativo', desc: 'Destaque no cabeçalho amarelo com foto' },
+  { id: 'blue-right-sidebar', name: 'Azul Profissional', desc: 'Elegante com sidebar na direita' },
 ] as const;
 
 const FONT_OPTIONS = ['Inter', 'Georgia', 'Roboto', 'Lato', 'Merriweather', 'Courier', 'Poppins', 'Montserrat'];
@@ -112,6 +117,8 @@ export function ResumeEditor({
   const [pdfInstance, setPdfInstance] = useState<any | null>(null);
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
   const [previewScale, setPreviewScale] = useState(100);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [modalMessage, setModalMessage] = useState('');
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
   const printFrameTitleRef = useRef<string | null>(null);
 
@@ -119,7 +126,7 @@ export function ResumeEditor({
 
   // Autosave com debounce de 2s
   const save = useCallback(
-    async (payload: { title: string; content: ResumeContent; templateId?: string }) => {
+    async (payload: { title: string; content: ResumeContent; templateId?: string; colorScheme?: string }) => {
       setSaveStatus('saving');
       try {
         const res = await fetch(`/api/resumes/${resumeId}`, {
@@ -142,7 +149,7 @@ export function ResumeEditor({
     if (debounceRef.current) {
       clearTimeout(debounceRef.current);
     }
-    await save({ title, content, templateId });
+    await save({ title, content, templateId, colorScheme: style.primaryColor });
     router.refresh();
   }
 
@@ -200,8 +207,9 @@ export function ResumeEditor({
         remainingHeight -= pageHeight;
       }
 
-      const blobUrl = pdf.output('bloburl');
-      setPdfPreviewUrl(blobUrl.toString());
+      const blob = pdf.output('blob');
+      const blobUrl = URL.createObjectURL(blob);
+      setPdfPreviewUrl(blobUrl);
       setPdfInstance(pdf);
       setIsPreviewModalOpen(true);
     } catch (error) {
@@ -249,12 +257,12 @@ export function ResumeEditor({
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
-      save({ title, content, templateId });
+      save({ title, content, templateId, colorScheme: style.primaryColor });
     }, 2000);
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
-  }, [title, content, templateId, save]);
+  }, [title, content, templateId, style.primaryColor, save]);
 
   // Persistir style no content via colorScheme
   useEffect(() => {
@@ -428,6 +436,11 @@ export function ResumeEditor({
             style={style}
             setStyle={setStyle}
             onClose={() => setShowStylePanel(false)}
+            userPlan={userPlan}
+            onUpgradeRequired={(msg) => {
+              setModalMessage(msg);
+              setShowUpgradeModal(true);
+            }}
           />
         )}
         <div className="flex-1 overflow-y-auto p-6 md:p-8 flex justify-center">
@@ -441,7 +454,7 @@ export function ResumeEditor({
         </div>
         <div
           aria-hidden="true"
-          className="resume-export-root pointer-events-none fixed left-[-10000px] top-0 bg-white"
+          className="resume-export-root pointer-events-none fixed -left-[10000px] top-0 bg-white"
           style={{ width: '210mm', minHeight: '297mm' }}
         >
           <ResumePreview content={content} templateId={templateId} style={style} fullscreen userPlan={userPlan} />
@@ -503,6 +516,11 @@ export function ResumeEditor({
           style={style}
           setStyle={setStyle}
           onClose={() => setShowStylePanel(false)}
+          userPlan={userPlan}
+          onUpgradeRequired={(msg) => {
+            setModalMessage(msg);
+            setShowUpgradeModal(true);
+          }}
         />
       )}
 
@@ -670,9 +688,14 @@ export function ResumeEditor({
                 onChange={(e) => setTemplateId(e.target.value)}
                 className="h-8 rounded-full border border-slate-200 bg-white px-3 text-xs font-medium text-slate-700 shadow-sm outline-none"
               >
-                {TEMPLATES.map(t => (
-                  <option key={t.id} value={t.id}>{t.name}</option>
-                ))}
+                {TEMPLATES.map((t, index) => {
+                  const isLocked = userPlan === 'FREE' && index >= 3;
+                  return (
+                    <option key={t.id} value={t.id} disabled={isLocked}>
+                      {t.name} {isLocked ? '🔒 (PRO)' : ''}
+                    </option>
+                  );
+                })}
               </select>
             </div>
           </div>
@@ -690,7 +713,7 @@ export function ResumeEditor({
       </div>
       <div
         aria-hidden="true"
-        className="resume-export-root pointer-events-none fixed left-[-10000px] top-0 bg-white"
+        className="resume-export-root pointer-events-none fixed -left-[10000px] top-0 bg-white"
         style={{ width: '210mm', minHeight: '297mm' }}
       >
         <ResumePreview content={content} templateId={templateId} style={style} fullscreen userPlan={userPlan} />
@@ -740,6 +763,36 @@ export function ResumeEditor({
           </div>
         </div>
       )}
+
+      {/* Upgrade Limit Modal */}
+      {showUpgradeModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-sm">
+          <div className="flex w-full max-w-md flex-col rounded-3xl border border-slate-200 bg-white p-6 shadow-2xl animate-in fade-in zoom-in duration-200">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600">
+                <Sparkles className="h-6 w-6" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-slate-900">Upgrade do Plano</h3>
+                <p className="text-xs text-slate-500">Aproveite o máximo do ATRION</p>
+              </div>
+            </div>
+            <p className="text-sm text-slate-600 mb-6 leading-relaxed">
+              {modalMessage}
+            </p>
+            <div className="flex justify-end gap-2">
+              <Button variant="secondary" onClick={() => setShowUpgradeModal(false)}>
+                Depois
+              </Button>
+              <Link href="/pricing" onClick={() => setShowUpgradeModal(false)}>
+                <Button variant="primary">
+                  Ver Planos de Upgrade
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -750,12 +803,16 @@ function StylePanel({
   style,
   setStyle,
   onClose,
+  userPlan = 'FREE',
+  onUpgradeRequired,
 }: {
   templateId: string;
   setTemplateId: (id: string) => void;
   style: ResumeStyle;
   setStyle: (s: ResumeStyle) => void;
   onClose: () => void;
+  userPlan?: PlanCode;
+  onUpgradeRequired: (msg: string) => void;
 }) {
   return (
     <Card className="p-4 bg-secondary/20 border-dashed">
@@ -771,20 +828,34 @@ function StylePanel({
         <div>
           <Label className="text-xs mb-2 block">Modelo</Label>
           <div className="grid grid-cols-3 gap-2">
-            {TEMPLATES.map((t) => (
-              <button
-                key={t.id}
-                onClick={() => setTemplateId(t.id)}
-                className={`text-left rounded-md border p-2 text-xs transition-all ${
-                  templateId === t.id
-                    ? 'border-primary bg-primary/5 ring-1 ring-primary'
-                    : 'border-border bg-card hover:border-primary/50'
-                }`}
-              >
-                <div className="font-medium">{t.name}</div>
-                <div className="text-[10px] text-muted-foreground">{t.desc}</div>
-              </button>
-            ))}
+            {TEMPLATES.map((t, index) => {
+              const isLocked = userPlan === 'FREE' && index >= 3;
+              return (
+                <button
+                  key={t.id}
+                  onClick={() => {
+                    if (isLocked) {
+                      onUpgradeRequired('Este modelo de currículo está disponível apenas nos planos Pro e Max. Faça o upgrade agora para ter acesso a todos os modelos e recursos!');
+                      return;
+                    }
+                    setTemplateId(t.id);
+                  }}
+                  className={`text-left rounded-md border p-2 text-xs transition-all relative ${
+                    isLocked
+                      ? 'opacity-60 bg-secondary/10 border-border cursor-not-allowed'
+                      : templateId === t.id
+                      ? 'border-primary bg-primary/5 ring-1 ring-primary'
+                      : 'border-border bg-card hover:border-primary/50'
+                  }`}
+                >
+                  <div className="font-medium flex items-center gap-1 justify-between">
+                    <span>{t.name}</span>
+                    {isLocked && <Lock className="h-3.5 w-3.5 text-amber-500 flex-shrink-0" />}
+                  </div>
+                  <div className="text-[10px] text-muted-foreground">{t.desc}</div>
+                </button>
+              );
+            })}
           </div>
         </div>
 
@@ -920,8 +991,8 @@ function PersonalForm({
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (file.size > 2 * 1024 * 1024) {
-      alert("A imagem é muito grande. O limite máximo é 2MB.");
+    if (file.size > 5 * 1024 * 1024) {
+      alert("A imagem original é muito grande. O limite máximo é 5MB antes de redimensionar.");
       return;
     }
 
@@ -932,10 +1003,64 @@ function PersonalForm({
     }
 
     setIsUploading(true);
-    const formData = new FormData();
-    formData.append('file', file);
-
+    
     try {
+      // Redimensionar e comprimir a imagem no lado do cliente
+      const resizeImage = (file: File): Promise<File> => {
+        return new Promise((resolve, reject) => {
+          const img = new Image();
+          img.src = URL.createObjectURL(file);
+          img.onload = () => {
+            URL.revokeObjectURL(img.src);
+            const canvas = document.createElement('canvas');
+            const MAX_SIZE = 400; // Tamanho máximo de 400x400 para foto de perfil
+            let width = img.width;
+            let height = img.height;
+
+            if (width > height) {
+              if (width > MAX_SIZE) {
+                height = Math.round(height * (MAX_SIZE / width));
+                width = MAX_SIZE;
+              }
+            } else {
+              if (height > MAX_SIZE) {
+                width = Math.round(width * (MAX_SIZE / height));
+                height = MAX_SIZE;
+              }
+            }
+
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            if (!ctx) return reject(new Error('Canvas não suportado'));
+            
+            // Fundo branco caso seja um PNG transparente e estejamos salvando como JPEG
+            ctx.fillStyle = '#FFFFFF';
+            ctx.fillRect(0, 0, width, height);
+            ctx.drawImage(img, 0, 0, width, height);
+
+            canvas.toBlob((blob) => {
+              if (!blob) return reject(new Error('Falha ao comprimir imagem'));
+              // Mantém a extensão original ou troca pra jpg
+              const fileName = file.name.replace(/\.[^/.]+$/, "") + ".jpg";
+              const newFile = new File([blob], fileName, {
+                type: 'image/jpeg',
+                lastModified: Date.now(),
+              });
+              resolve(newFile);
+            }, 'image/jpeg', 0.85); // 85% de qualidade (ótima para foto de perfil)
+          };
+          img.onerror = reject;
+        });
+      };
+
+      const compressedFile = await resizeImage(file);
+
+      const formData = new FormData();
+      formData.append('file', compressedFile);
+      formData.append('userName', content.personal.name || 'usuario');
+      formData.append('resumeId', resumeId);
+
       const res = await fetch('/api/upload', {
         method: 'POST',
         body: formData,

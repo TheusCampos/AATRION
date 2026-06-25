@@ -86,11 +86,11 @@ export function ResumePreview({ content, templateId = 'classic', style = DEFAULT
   } : {};
 
   const containerClass = fullscreen
-    ? 'w-full bg-white overflow-hidden flex flex-col break-words'
-    : 'w-full max-w-[210mm] mx-auto bg-white shadow-lg overflow-hidden flex flex-col break-words';
+    ? 'w-full bg-white flex flex-col break-words'
+    : 'w-full max-w-[210mm] mx-auto bg-white shadow-lg flex flex-col break-words';
   const containerStyle = fullscreen
     ? { fontFamily, fontSize, lineHeight, letterSpacing, color: '#1e293b', minHeight: '297mm', ...watermarkStyle }
-    : { fontFamily, fontSize, lineHeight, letterSpacing, color: '#1e293b', aspectRatio: '210/297', ...watermarkStyle };
+    : { fontFamily, fontSize, lineHeight, letterSpacing, color: '#1e293b', minHeight: '297mm', ...watermarkStyle };
 
   // Renderização condicional por template
   if (templateId === 'modern') {
@@ -116,6 +116,18 @@ export function ResumePreview({ content, templateId = 'classic', style = DEFAULT
   }
   if (templateId === 'tech') {
     return <TechLayout containerClass={containerClass} containerStyle={containerStyle} primary={primary} sectionSpacing={sectionSpacing} personal={personal} experience={experience} education={education} skills={skills} projects={projects} languages={languages} certifications={certifications} />;
+  }
+  if (templateId === 'brown-sidebar') {
+    return <BrownSidebarLayout containerClass={containerClass} containerStyle={containerStyle} primary={primary} sectionSpacing={sectionSpacing} personal={personal} experience={experience} education={education} skills={skills} projects={projects} languages={languages} certifications={certifications} />;
+  }
+  if (templateId === 'minimal-grey') {
+    return <MinimalGreyLayout containerClass={containerClass} containerStyle={containerStyle} primary={primary} sectionSpacing={sectionSpacing} personal={personal} experience={experience} education={education} skills={skills} projects={projects} languages={languages} certifications={certifications} />;
+  }
+  if (templateId === 'yellow-header') {
+    return <YellowHeaderLayout containerClass={containerClass} containerStyle={containerStyle} primary={primary} sectionSpacing={sectionSpacing} personal={personal} experience={experience} education={education} skills={skills} projects={projects} languages={languages} certifications={certifications} />;
+  }
+  if (templateId === 'blue-right-sidebar') {
+    return <BlueRightSidebarLayout containerClass={containerClass} containerStyle={containerStyle} primary={primary} sectionSpacing={sectionSpacing} personal={personal} experience={experience} education={education} skills={skills} projects={projects} languages={languages} certifications={certifications} />;
   }
   // Default: classic
   return <ClassicLayout containerClass={containerClass} containerStyle={containerStyle} primary={primary} sectionSpacing={sectionSpacing} personal={personal} experience={experience} education={education} skills={skills} projects={projects} languages={languages} certifications={certifications} />;
@@ -695,46 +707,23 @@ interface ResumeAvatarProps {
 }
 
 function ResumeAvatar({ photo, name, size = '90px', borderColor }: ResumeAvatarProps) {
-  if (photo) {
-    return (
-      <div
-        className="relative overflow-hidden rounded-full flex-shrink-0"
-        style={{
-          width: size,
-          height: size,
-          border: borderColor ? `2px solid ${borderColor}` : '2px solid #e2e8f0',
-        }}
-      >
-        <img
-          src={photo}
-          alt={name || 'Foto de perfil'}
-          className="w-full h-full object-cover"
-          crossOrigin="anonymous"
-        />
-      </div>
-    );
-  }
-
-  const initials = name
-    ? name
-        .split(' ')
-        .slice(0, 2)
-        .map((n) => n[0])
-        .join('')
-        .toUpperCase()
-    : '?';
+  if (!photo) return null;
 
   return (
     <div
-      className="flex items-center justify-center rounded-full flex-shrink-0 bg-slate-200 text-slate-700 font-semibold"
+      className="relative overflow-hidden rounded-full flex-shrink-0"
       style={{
         width: size,
         height: size,
         border: borderColor ? `2px solid ${borderColor}` : '2px solid #e2e8f0',
-        fontSize: `calc(${size} * 0.38)`,
       }}
     >
-      {initials}
+      <img
+        src={photo}
+        alt={name || 'Foto de perfil'}
+        className="w-full h-full object-cover"
+        crossOrigin="anonymous"
+      />
     </div>
   );
 }
@@ -972,9 +961,11 @@ function CreativePhotoLayout(p: LayoutProps) {
     <div className={p.containerClass} style={p.containerStyle}>
       <div className="flex-1 overflow-y-auto print:overflow-visible grid md:grid-cols-12">
         <aside className="md:col-span-4 p-8 text-white flex flex-col items-center text-center" style={{ backgroundColor: p.primary }}>
-          <div className="mb-6 flex justify-center">
-            <ResumeAvatar photo={p.personal.photo} name={p.personal.name} size="105px" borderColor="rgba(255,255,255,0.25)" />
-          </div>
+          {p.personal.photo && (
+            <div className="mb-6 flex justify-center">
+              <ResumeAvatar photo={p.personal.photo} name={p.personal.name} size="105px" borderColor="rgba(255,255,255,0.25)" />
+            </div>
+          )}
 
           <h1 className="text-2xl font-extrabold leading-tight text-white">{p.personal.name || 'Seu Nome'}</h1>
           {p.personal.jobTitle && <p className="text-xs font-light opacity-90 mt-2 uppercase tracking-widest text-slate-100">{p.personal.jobTitle}</p>}
@@ -1054,6 +1045,632 @@ function CreativePhotoLayout(p: LayoutProps) {
             </section>
           )}
         </main>
+      </div>
+    </div>
+  );
+}
+// ============== BROWN SIDEBAR ==============
+function BrownSidebarLayout(p: LayoutProps) {
+  // Use primary color for the header background, or fallback to the brown from the image
+  const headerBg = p.primary !== DEFAULT_STYLE.primaryColor ? p.primary : '#8B7A66';
+  const sidebarBg = '#EFECE5';
+
+  return (
+    <div className={p.containerClass} style={p.containerStyle}>
+      <div className="flex-1 flex overflow-y-auto print:overflow-visible">
+        {/* Left Sidebar */}
+        <aside className="w-[32%] p-6 text-slate-800 flex flex-col gap-6" style={{ backgroundColor: sidebarBg }}>
+          {p.personal.photo && (
+             <div className="mb-2">
+               <ResumeAvatar photo={p.personal.photo} name={p.personal.name} size="120px" borderColor={headerBg} />
+             </div>
+          )}
+
+          <section>
+            <h2 className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: headerBg }}>Contato</h2>
+            <div className="space-y-2 text-xs font-medium">
+              {p.personal.phone && <div className="flex items-center gap-2 bg-slate-800 text-white px-2 py-1 rounded w-fit"><Phone className="w-3 h-3" /> {p.personal.phone}</div>}
+              {p.personal.email && <div className="flex items-center gap-2 bg-slate-800 text-white px-2 py-1 rounded w-fit"><Mail className="w-3 h-3" /> {p.personal.email}</div>}
+              {p.personal.location && <div className="flex items-center gap-2 text-slate-700 mt-2"><MapPin className="w-3 h-3" /> {p.personal.location}</div>}
+              {p.personal.linkedin && <div className="flex items-center gap-2 text-slate-700"><Linkedin className="w-3 h-3" /> {p.personal.linkedin}</div>}
+            </div>
+          </section>
+
+          {p.education.length > 0 && (
+            <section>
+              <h2 className="text-xs font-bold uppercase tracking-widest mb-3 border-b border-slate-300 pb-1" style={{ color: headerBg }}>Formação Acadêmica</h2>
+              <div className="space-y-3">
+                {p.education.map((edu) => (
+                  <div key={edu.id}>
+                    <h3 className="font-bold text-slate-800 text-xs italic">{edu.institution}</h3>
+                    <p className="text-[10px] text-slate-600 mb-0.5">| {edu.start} — {edu.end}</p>
+                    <p className="font-bold text-xs underline decoration-2 underline-offset-2">{edu.course}</p>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {p.skills.length > 0 && (
+            <section>
+              <h2 className="text-xs font-bold uppercase tracking-widest mb-3 border-b border-slate-300 pb-1" style={{ color: headerBg }}>Habilidades</h2>
+              <ul className="space-y-2 text-xs">
+                {p.skills.map((skill) => (
+                  <li key={skill.id} className="flex items-start gap-2">
+                    <span className="mt-1" style={{ color: headerBg }}>•</span>
+                    <span className="leading-tight">{skill.name}</span>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+
+          {p.languages.length > 0 && (
+            <section>
+              <h2 className="text-xs font-bold uppercase tracking-widest mb-3 border-b border-slate-300 pb-1" style={{ color: headerBg }}>Idiomas</h2>
+              <ul className="space-y-1 text-xs">
+                {p.languages.map((lang) => (
+                  <li key={lang.id} className="flex justify-between">
+                    <span className="font-bold">{lang.language}</span>
+                    <span>{lang.level}</span>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+        </aside>
+
+        {/* Right Main Content */}
+        <main className="w-[68%] flex flex-col bg-white">
+          <header className="px-8 py-10 text-white" style={{ backgroundColor: headerBg }}>
+            <h1 className="text-4xl font-serif font-bold tracking-tight">{p.personal.name || 'Nome Completo'}</h1>
+            {p.personal.summary && (
+              <p className="mt-4 text-sm leading-relaxed font-medium text-white/90 whitespace-pre-wrap">{p.personal.summary}</p>
+            )}
+          </header>
+
+          <div className="p-8 flex flex-col" style={{ gap: p.sectionSpacing }}>
+            {p.experience.length > 0 && (
+              <section>
+                <h2 className="text-sm font-bold uppercase tracking-wider mb-4" style={{ color: headerBg }}>Histórico Profissional</h2>
+                <div className="space-y-5">
+                  {p.experience.map((exp) => (
+                    <div key={exp.id}>
+                      <h3 className="font-bold text-slate-800 text-sm">
+                        <span className="italic">{exp.company}</span> — {exp.role}
+                      </h3>
+                      <p className="text-xs text-slate-600 mb-2">
+                        {p.personal.location ? `${p.personal.location} | ` : ''}{exp.start} — {exp.current ? 'Atual' : exp.end}
+                      </p>
+                      {exp.description && (
+                        <p className="text-xs text-slate-700 leading-relaxed whitespace-pre-wrap pl-3 border-l" style={{ borderColor: headerBg }}>
+                          {exp.description}
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {p.projects.length > 0 && (
+              <section>
+                <h2 className="text-sm font-bold uppercase tracking-wider mb-4" style={{ color: headerBg }}>Projetos</h2>
+                <div className="space-y-4">
+                  {p.projects.map((proj) => (
+                    <div key={proj.id}>
+                      <h3 className="font-bold text-slate-800 text-sm">{proj.name}</h3>
+                      {proj.description && (
+                        <p className="text-xs text-slate-700 leading-relaxed whitespace-pre-wrap mt-1 pl-3 border-l" style={{ borderColor: headerBg }}>
+                          {proj.description}
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {p.certifications.length > 0 && (
+              <section>
+                <h2 className="text-sm font-bold uppercase tracking-wider mb-4" style={{ color: headerBg }}>Certificações</h2>
+                <ul className="space-y-2 text-xs text-slate-700">
+                  {p.certifications.map((cert) => (
+                    <li key={cert.id} className="flex items-start gap-2">
+                      <span className="mt-1" style={{ color: headerBg }}>•</span>
+                      <span><span className="font-bold">{cert.name}</span> — {cert.issuer} ({cert.date})</span>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
+          </div>
+        </main>
+      </div>
+    </div>
+  );
+}
+
+// ============== MINIMAL GREY ==============
+function MinimalGreyLayout(p: LayoutProps) {
+  const accent = p.primary !== DEFAULT_STYLE.primaryColor ? p.primary : '#333333';
+  const greyBar = '#e5e7eb'; // Tailwind gray-200
+
+  const SectionHeader = ({ title }: { title: string }) => (
+    <div className="flex items-center gap-4 mb-3">
+      <h2 className="text-sm font-bold uppercase tracking-widest whitespace-nowrap" style={{ color: accent }}>{title}</h2>
+      <div className="flex-1 h-3" style={{ backgroundColor: greyBar }}></div>
+    </div>
+  );
+
+  return (
+    <div className={p.containerClass} style={p.containerStyle}>
+      <div className="flex-1 p-8 overflow-y-auto print:overflow-visible text-slate-800">
+        <div className="w-full h-8 mb-6" style={{ backgroundColor: accent }}></div>
+        
+        <header className="mb-6 flex justify-between items-start">
+          <div>
+            <h1 className="text-4xl font-bold uppercase tracking-tighter" style={{ color: accent }}>{p.personal.name || 'Nome Completo'}</h1>
+            {p.personal.jobTitle && <p className="text-sm uppercase tracking-widest mt-1 text-slate-600 font-semibold">{p.personal.jobTitle}</p>}
+          </div>
+          {p.personal.photo && (
+            <ResumeAvatar photo={p.personal.photo} name={p.personal.name} size="80px" borderColor={greyBar} />
+          )}
+        </header>
+
+        <div className="grid grid-cols-12 gap-8">
+          {/* Left Column */}
+          <div className="col-span-7 flex flex-col" style={{ gap: p.sectionSpacing }}>
+            {p.personal.summary && (
+              <section>
+                <SectionHeader title="Sobre Mim" />
+                <p className="text-xs text-slate-700 leading-relaxed whitespace-pre-wrap">{p.personal.summary}</p>
+              </section>
+            )}
+
+            {p.experience.length > 0 && (
+              <section>
+                <SectionHeader title="Experiência" />
+                <div className="space-y-4">
+                  {p.experience.map((exp) => (
+                    <div key={exp.id}>
+                      <h3 className="font-bold text-slate-800 text-xs">
+                        {exp.role} <span className="font-normal text-slate-500">— {exp.start} a {exp.current ? 'Atual' : exp.end}</span>
+                      </h3>
+                      <p className="font-bold text-slate-800 text-xs mb-1">{exp.company}</p>
+                      {exp.description && (
+                        <ul className="text-xs text-slate-700 leading-relaxed list-disc list-inside whitespace-pre-wrap">
+                          {exp.description.split('\n').filter(Boolean).map((line, i) => (
+                            <li key={i}>{line.replace(/^[•\-\*]\s*/, '')}</li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {p.projects.length > 0 && (
+              <section>
+                <SectionHeader title="Projetos" />
+                <div className="space-y-3">
+                  {p.projects.map((proj) => (
+                    <div key={proj.id}>
+                      <h3 className="font-bold text-slate-800 text-xs">{proj.name}</h3>
+                      {proj.description && (
+                        <ul className="text-xs text-slate-700 leading-relaxed list-disc list-inside whitespace-pre-wrap mt-0.5">
+                          {proj.description.split('\n').filter(Boolean).map((line, i) => (
+                            <li key={i}>{line.replace(/^[•\-\*]\s*/, '')}</li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
+          </div>
+
+          {/* Right Column */}
+          <div className="col-span-5 flex flex-col" style={{ gap: p.sectionSpacing }}>
+            <section>
+              <SectionHeader title="Contato" />
+              <div className="space-y-2 text-xs text-slate-700">
+                {p.personal.phone && <div className="flex items-center gap-2"><Phone className="w-3.5 h-3.5" /> {p.personal.phone}</div>}
+                {p.personal.email && <div className="flex items-center gap-2"><Mail className="w-3.5 h-3.5" /> {p.personal.email}</div>}
+                {p.personal.location && <div className="flex items-center gap-2"><MapPin className="w-3.5 h-3.5" /> {p.personal.location}</div>}
+                {p.personal.linkedin && <div className="flex items-center gap-2"><Linkedin className="w-3.5 h-3.5" /> {p.personal.linkedin}</div>}
+              </div>
+            </section>
+
+            {p.education.length > 0 && (
+              <section>
+                <SectionHeader title="Educação" />
+                <div className="space-y-3">
+                  {p.education.map((edu) => (
+                    <div key={edu.id}>
+                      <p className="text-[10px] text-slate-600 font-bold mb-0.5">{edu.course}, {edu.start} — {edu.end}</p>
+                      <h3 className="font-bold text-slate-800 text-xs">{edu.institution}</h3>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {p.skills.length > 0 && (
+              <section>
+                <SectionHeader title="Habilidades" />
+                <ul className="space-y-1.5 text-xs text-slate-700 list-disc list-inside">
+                  {p.skills.map((skill) => (
+                    <li key={skill.id}>{skill.name}</li>
+                  ))}
+                </ul>
+              </section>
+            )}
+
+            {p.languages.length > 0 && (
+              <section>
+                <SectionHeader title="Idiomas" />
+                <ul className="space-y-1 text-xs text-slate-700">
+                  {p.languages.map((lang) => (
+                    <li key={lang.id} className="flex justify-between">
+                      <span className="font-bold">{lang.language}</span>
+                      <span>{lang.level}</span>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
+
+            {p.certifications.length > 0 && (
+              <section>
+                <SectionHeader title="Certificações" />
+                <ul className="space-y-2 text-xs text-slate-700">
+                  {p.certifications.map((cert) => (
+                    <li key={cert.id}>
+                      <p className="font-bold text-slate-800">{cert.name}</p>
+                      <p className="text-[10px] text-slate-500">{cert.issuer} ({cert.date})</p>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ============== YELLOW HEADER ==============
+function YellowHeaderLayout(p: LayoutProps) {
+  const accent = p.primary !== DEFAULT_STYLE.primaryColor ? p.primary : '#D99A1A';
+  const sidebarBg = '#F6EDD9'; // Light beige
+
+  return (
+    <div className={p.containerClass} style={p.containerStyle}>
+      <div className="flex-1 flex overflow-y-auto print:overflow-visible">
+        {/* Left Column */}
+        <aside className="w-[35%] flex flex-col">
+          {/* Top Photo Area (White) */}
+          <div className="bg-white p-6 flex justify-center items-center" style={{ minHeight: '220px' }}>
+            <ResumeAvatar photo={p.personal.photo} name={p.personal.name} size="140px" />
+          </div>
+          
+          {/* Bottom Sidebar Area (Beige) */}
+          <div className="flex-1 p-6 text-slate-800 flex flex-col" style={{ backgroundColor: sidebarBg, gap: p.sectionSpacing }}>
+            <section>
+              <h2 className="text-[13px] font-bold uppercase tracking-widest mb-3">Contato</h2>
+              <div className="space-y-3 text-xs font-medium">
+                {p.personal.location && (
+                  <div className="flex items-center gap-3">
+                    <div className="bg-slate-800 text-white p-1.5 rounded-md"><MapPin className="w-3.5 h-3.5" /></div>
+                    <span className="truncate">{p.personal.location}</span>
+                  </div>
+                )}
+                {p.personal.phone && (
+                  <div className="flex items-center gap-3">
+                    <div className="bg-slate-800 text-white p-1.5 rounded-md"><Phone className="w-3.5 h-3.5" /></div>
+                    <span className="truncate">{p.personal.phone}</span>
+                  </div>
+                )}
+                {p.personal.email && (
+                  <div className="flex items-center gap-3">
+                    <div className="bg-slate-800 text-white p-1.5 rounded-md"><Mail className="w-3.5 h-3.5" /></div>
+                    <span className="truncate">{p.personal.email}</span>
+                  </div>
+                )}
+                {p.personal.linkedin && (
+                  <div className="flex items-center gap-3">
+                    <div className="bg-slate-800 text-white p-1.5 rounded-md"><Linkedin className="w-3.5 h-3.5" /></div>
+                    <span className="truncate">{p.personal.linkedin}</span>
+                  </div>
+                )}
+              </div>
+            </section>
+
+            {p.education.length > 0 && (
+              <section>
+                <h2 className="text-[13px] font-bold uppercase tracking-widest mb-3">Formação Acadêmica</h2>
+                <div className="space-y-4 text-xs">
+                  {p.education.map((edu) => (
+                    <div key={edu.id}>
+                      <h3 className="font-bold text-slate-800 italic leading-tight mb-1">{edu.institution}</h3>
+                      <p className="text-[10px] text-slate-600 mb-1">{edu.start} — {edu.end}</p>
+                      <p className="font-bold underline decoration-2 underline-offset-2">{edu.course}</p>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {p.skills.length > 0 && (
+              <section>
+                <h2 className="text-[13px] font-bold uppercase tracking-widest mb-3">Habilidades</h2>
+                <ul className="space-y-2 text-xs">
+                  {p.skills.map((skill) => (
+                    <li key={skill.id} className="flex items-start gap-2">
+                      <span className="mt-1 font-bold text-slate-500">•</span>
+                      <span className="leading-tight">{skill.name}</span>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
+
+            {p.languages.length > 0 && (
+              <section>
+                <h2 className="text-[13px] font-bold uppercase tracking-widest mb-3">Idiomas</h2>
+                <div className="space-y-3 text-xs">
+                  {p.languages.map((lang) => (
+                    <div key={lang.id}>
+                      <div className="flex justify-between mb-1">
+                        <span className="font-bold">{lang.language}:</span>
+                        <span>{lang.level}</span>
+                      </div>
+                      <div className="w-full bg-slate-300 h-1.5 rounded-full overflow-hidden">
+                        <div className="h-full" style={{ backgroundColor: accent, width: lang.level.toLowerCase() === 'nativo' ? '100%' : lang.level.toLowerCase() === 'fluente' ? '80%' : lang.level.toLowerCase() === 'avançado' ? '60%' : '40%' }}></div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
+          </div>
+        </aside>
+
+        {/* Right Column */}
+        <main className="w-[65%] flex flex-col bg-white">
+          {/* Header Area (Yellow) */}
+          <header className="p-8 text-white flex flex-col justify-center" style={{ backgroundColor: accent, minHeight: '220px' }}>
+            <h1 className="text-4xl font-serif font-bold tracking-tight">{p.personal.name || 'Nome Completo'}</h1>
+            {p.personal.summary && (
+              <p className="mt-4 text-xs leading-relaxed font-medium text-white/95 whitespace-pre-wrap">{p.personal.summary}</p>
+            )}
+          </header>
+
+          {/* Main Content Area */}
+          <div className="p-8 flex flex-col" style={{ gap: p.sectionSpacing }}>
+            {p.experience.length > 0 && (
+              <section>
+                <h2 className="text-sm font-bold uppercase tracking-widest mb-4 text-slate-700">Experiência Profissional</h2>
+                <div className="space-y-5">
+                  {p.experience.map((exp) => (
+                    <div key={exp.id}>
+                      <h3 className="font-bold text-slate-800 text-xs italic">
+                        {exp.company} <span className="font-normal not-italic">— {exp.role}</span>
+                      </h3>
+                      <p className="text-[10px] text-slate-500 mb-2 mt-0.5">
+                        {exp.start} — {exp.current ? 'Atual' : exp.end}
+                      </p>
+                      {exp.description && (
+                        <ul className="text-xs text-slate-700 leading-relaxed list-disc list-inside whitespace-pre-wrap">
+                          {exp.description.split('\n').filter(Boolean).map((line, i) => (
+                            <li key={i}>{line.replace(/^[•\-\*]\s*/, '')}</li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {p.projects.length > 0 && (
+              <section>
+                <h2 className="text-sm font-bold uppercase tracking-widest mb-4 text-slate-700">Projetos</h2>
+                <div className="space-y-4">
+                  {p.projects.map((proj) => (
+                    <div key={proj.id}>
+                      <h3 className="font-bold text-slate-800 text-xs italic">{proj.name}</h3>
+                      {proj.description && (
+                        <p className="text-xs text-slate-700 leading-relaxed whitespace-pre-wrap mt-1">
+                          {proj.description}
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {p.certifications.length > 0 && (
+              <section>
+                <h2 className="text-sm font-bold uppercase tracking-widest mb-4 text-slate-700">Certificações</h2>
+                <ul className="space-y-2 text-xs text-slate-700">
+                  {p.certifications.map((cert) => (
+                    <li key={cert.id} className="flex items-start gap-2">
+                      <span className="mt-1" style={{ color: accent }}>•</span>
+                      <span><span className="font-bold">{cert.name}</span> — {cert.issuer} ({cert.date})</span>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
+          </div>
+        </main>
+      </div>
+    </div>
+  );
+}
+
+// ============== BLUE RIGHT SIDEBAR ==============
+function BlueRightSidebarLayout(p: LayoutProps) {
+  const sidebarBg = p.primary !== DEFAULT_STYLE.primaryColor ? p.primary : '#0f172a'; // Dark slate blue
+  
+  return (
+    <div className={p.containerClass} style={p.containerStyle}>
+      <div className="flex-1 flex overflow-y-auto print:overflow-visible">
+        
+        {/* Left Main Content (White) */}
+        <main className="w-[65%] p-8 flex flex-col bg-white">
+          <header className="flex items-center gap-4 border-b border-slate-200 pb-6 mb-6">
+            {p.personal.photo && (
+              <ResumeAvatar photo={p.personal.photo} name={p.personal.name} size="70px" />
+            )}
+            <div>
+              <h1 className="text-3xl font-bold tracking-tight text-slate-900">{p.personal.name || 'Nome Completo'}</h1>
+              {p.personal.jobTitle && <p className="text-xs font-semibold uppercase tracking-widest text-slate-500 mt-1">{p.personal.jobTitle}</p>}
+            </div>
+          </header>
+
+          <div className="flex flex-col" style={{ gap: p.sectionSpacing }}>
+            {p.personal.summary && (
+              <section>
+                <h2 className="text-sm font-bold text-slate-900 mb-2">Resumo Profissional</h2>
+                <p className="text-xs text-slate-700 leading-relaxed whitespace-pre-wrap">{p.personal.summary}</p>
+              </section>
+            )}
+
+            {p.experience.length > 0 && (
+              <section>
+                <h2 className="text-sm font-bold text-slate-900 mb-3">Experiência Profissional</h2>
+                <div className="space-y-4">
+                  {p.experience.map((exp) => (
+                    <div key={exp.id}>
+                      <h3 className="font-bold text-slate-800 text-xs">
+                        {exp.role}{exp.company ? `, ${exp.company}` : ''}
+                      </h3>
+                      <p className="text-[10px] text-slate-400 uppercase tracking-wider mb-2 mt-0.5">
+                        {exp.start} — {exp.current ? 'ATUAL' : exp.end}
+                      </p>
+                      {exp.description && (
+                        <ul className="text-xs text-slate-700 leading-relaxed list-disc list-inside whitespace-pre-wrap">
+                          {exp.description.split('\n').filter(Boolean).map((line, i) => (
+                            <li key={i}>{line.replace(/^[•\-\*]\s*/, '')}</li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {p.education.length > 0 && (
+              <section>
+                <h2 className="text-sm font-bold text-slate-900 mb-3">Formação</h2>
+                <div className="space-y-3">
+                  {p.education.map((edu) => (
+                    <div key={edu.id}>
+                      <h3 className="font-bold text-slate-800 text-xs">
+                        {edu.course}{edu.institution ? `, ${edu.institution}` : ''}
+                      </h3>
+                      <p className="text-[10px] text-slate-400 uppercase tracking-wider mt-0.5">
+                        {edu.start} — {edu.end}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {p.projects.length > 0 && (
+              <section>
+                <h2 className="text-sm font-bold text-slate-900 mb-3">Projetos</h2>
+                <div className="space-y-4">
+                  {p.projects.map((proj) => (
+                    <div key={proj.id}>
+                      <h3 className="font-bold text-slate-800 text-xs">{proj.name}</h3>
+                      {proj.description && (
+                        <p className="text-xs text-slate-700 leading-relaxed whitespace-pre-wrap mt-1">
+                          {proj.description}
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
+          </div>
+        </main>
+
+        {/* Right Sidebar Area (Dark Blue) */}
+        <aside className="w-[35%] p-8 text-white flex flex-col" style={{ backgroundColor: sidebarBg, gap: p.sectionSpacing }}>
+          
+          <section>
+            <h2 className="text-xs font-semibold mb-4 text-white/90">Dados Pessoais</h2>
+            <div className="space-y-2 text-[11px] font-light text-white/80">
+              {p.personal.location && <div>{p.personal.location}</div>}
+              {p.personal.phone && <div>{p.personal.phone}</div>}
+              {p.personal.email && <div className="break-words">{p.personal.email}</div>}
+              {p.personal.linkedin && <div className="break-words">{p.personal.linkedin}</div>}
+            </div>
+          </section>
+
+          {p.skills.length > 0 && (
+            <section>
+              <h2 className="text-xs font-semibold mb-4 text-white/90">Competências</h2>
+              <div className="space-y-3">
+                {p.skills.map((skill, index) => {
+                  // Simulate different levels just for visuals, since we only have names
+                  const levels = ['w-full', 'w-[85%]', 'w-[90%]', 'w-[75%]', 'w-[80%]'];
+                  const levelClass = levels[index % levels.length];
+                  
+                  return (
+                    <div key={skill.id} className="text-[11px] text-white/90">
+                      <div className="mb-1">{skill.name}</div>
+                      <div className="w-full bg-white/20 h-0.5 rounded-full">
+                        <div className={`bg-white h-full rounded-full ${levelClass}`}></div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </section>
+          )}
+
+          {p.languages.length > 0 && (
+            <section>
+              <h2 className="text-xs font-semibold mb-4 text-white/90">Idiomas</h2>
+              <ul className="space-y-2 text-[11px] text-white/80">
+                {p.languages.map((lang) => (
+                  <li key={lang.id} className="flex justify-between">
+                    <span>{lang.language}</span>
+                    <span className="font-semibold text-white/90">{lang.level}</span>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+
+          {p.certifications.length > 0 && (
+            <section>
+              <h2 className="text-xs font-semibold mb-4 text-white/90">Certificações</h2>
+              <ul className="space-y-3 text-[11px] text-white/80">
+                {p.certifications.map((cert) => (
+                  <li key={cert.id}>
+                    <p className="font-semibold text-white/90">{cert.name}</p>
+                    <p className="mt-0.5">{cert.issuer}</p>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+
+        </aside>
+
       </div>
     </div>
   );

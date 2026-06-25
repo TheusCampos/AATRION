@@ -149,25 +149,3 @@ export const getCurrentUser = cache(async (): Promise<AuthUser | null> => {
   }
 });
 
-export async function getClerkId(): Promise<string | null> {
-  return auth().userId ?? null;
-}
-
-// Stubs para imports legados — login e logout sao gerenciados pelo Clerk.
-export const SESSION_COOKIE_NAME = '__session';
-export type SessionPayload = { userId: string; sessionId: string };
-export async function signSessionToken(): Promise<never> {
-  throw new Error('signSessionToken nao e mais usado: autenticacao via Clerk.');
-}
-export async function verifySessionToken(): Promise<null> {
-  return null;
-}
-export async function createSession(): Promise<never> {
-  throw new Error('createSession nao mais usado: autenticacao via Clerk.');
-}
-export async function destroySession(): Promise<void> {
-  /* logout via <SignOutButton/> do Clerk */
-}
-export async function getSession(): Promise<null> {
-  return null;
-}

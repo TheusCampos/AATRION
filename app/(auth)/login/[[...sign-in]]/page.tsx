@@ -5,7 +5,8 @@ import { SignIn } from '@clerk/nextjs';
  *
  * Renderiza o componente oficial do Clerk com aparencia customizada
  * para casar com a identidade visual da plataforma. Apos o login
- * bem-sucedido, o usuario e redirecionado para /dashboard.
+ * bem-sucedido, o usuario e redirecionado para /dashboard via
+ * a variavel NEXT_PUBLIC_CLERK_SIGN_IN_FALLBACK_REDIRECT_URL.
  */
 export default function LoginPage() {
   return (
@@ -19,7 +20,7 @@ export default function LoginPage() {
         },
       }}
       signUpUrl="/register"
-      forceRedirectUrl="/dashboard"
+      fallbackRedirectUrl="/dashboard"
     />
   );
 }

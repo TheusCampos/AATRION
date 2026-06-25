@@ -1,10 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
-import { FileText, UploadCloud, Check, ArrowLeft, FileOutput, Sparkles } from 'lucide-react';
+import { FileText, UploadCloud, Check, ArrowLeft, FileOutput, Sparkles, Lock } from 'lucide-react';
 import Link from 'next/link';
 import { ResumeCardPreview } from '@/components/resume/ResumeCardPreview';
 import type { ResumeContent } from '@/lib/validations/resume';
@@ -71,16 +71,20 @@ const DUMMY_CONTENT: ResumeContent = {
 };
 
 const TEMPLATES = [
-  { id: 'classic', name: 'Clássico', desc: 'Tradicional e seguro para vagas corporativas' },
-  { id: 'classic-photo', name: 'Clássico com Foto', desc: 'Estrutura tradicional com foto de perfil' },
-  { id: 'modern', name: 'Moderno', desc: 'Design atual com foco em leitura dinâmica' },
-  { id: 'modern-photo', name: 'Moderno com Foto', desc: 'Design moderno com foto de perfil' },
-  { id: 'creative-photo', name: 'Criativo com Foto', desc: 'Sidebar elegante com foto de perfil' },
-  { id: 'minimalist', name: 'Minimalista', desc: 'Limpo e direto ao ponto' },
-  { id: 'creative', name: 'Criativo', desc: 'Para áreas de design, marketing e comunicação' },
-  { id: 'executive', name: 'Executivo', desc: 'Foco em resultados e liderança' },
-  { id: 'tech', name: 'Tech', desc: 'Estrutura otimizada para desenvolvedores e TI' },
-];
+  { id: 'classic', name: 'Clássico', desc: 'Tradicional corporativo', image: '/templates/classic.png' },
+  { id: 'classic-photo', name: 'Clássico com Foto', desc: 'Corporativo com foto', image: '/templates/classic-photo.png' },
+  { id: 'modern', name: 'Moderno', desc: 'Cabeçalho colorido', image: '/templates/modern.png' },
+  { id: 'modern-photo', name: 'Moderno com Foto', desc: 'Colorido com foto', image: '/templates/modern-photo.png' },
+  { id: 'creative-photo', name: 'Criativo com Foto', desc: 'Foto e sidebar', image: '/templates/creative-photo.png' },
+  { id: 'minimalist', name: 'Minimalista', desc: 'Clean e direto', image: '/templates/minimalist.png' },
+  { id: 'creative', name: 'Criativo', desc: 'Sidebar colorida', image: '/templates/creative.png' },
+  { id: 'executive', name: 'Executivo', desc: 'Serifado elegante', image: '/templates/executive.png' },
+  { id: 'tech', name: 'Tech', desc: 'Estilo terminal/code', image: '/templates/tech.png' },
+  { id: 'brown-sidebar', name: 'Marrom Executivo', desc: 'Sidebar bege claro e título marrom', image: '/templates/classic.png' },
+  { id: 'minimal-grey', name: 'Cinza Minimalista', desc: 'Clean, focado em texto', image: '/templates/minimalist.png' },
+  { id: 'yellow-header', name: 'Amarelo Criativo', desc: 'Destaque no cabeçalho com foto', image: '/templates/creative-photo.png' },
+  { id: 'blue-right-sidebar', name: 'Azul Profissional', desc: 'Sidebar na direita', image: '/templates/creative.png' },
+] as const;
 
 export default function NewResumePage() {
   const router = useRouter();
@@ -90,8 +94,20 @@ export default function NewResumePage() {
   const [file, setFile] = useState<File | null>(null);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [modalMessage, setModalMessage] = useState('');
+  const [userPlan, setUserPlan] = useState<'FREE' | 'PRO' | 'MAX'>('FREE');
 
-  async function handleCreateFromScratch() {
+  useEffect(() => {
+    fetch('/api/user/settings')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data?.plan?.code) {
+          setUserPlan(data.plan.code);
+        }
+      })
+      .catch((err) => console.error('Failed to load user plan', err));
+  }, []);
+
+  async function handleCreateFromScratch(overrideTemplateId?: string) {
     setIsSubmitting(true);
     try {
       const res = await fetch('/api/resumes', {
@@ -99,7 +115,7 @@ export default function NewResumePage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           title: 'Meu novo currículo',
-          templateId: selectedTemplate,
+          templateId: overrideTemplateId || selectedTemplate,
         }),
       });
       const data = await res.json().catch(() => ({}));
@@ -236,35 +252,65 @@ export default function NewResumePage() {
                 <p className="text-muted-foreground mt-1">Você pode trocar o template depois se quiser.</p>
               </div>
             </div>
-            <Button onClick={handleCreateFromScratch} isLoading={isSubmitting} disabled={isSubmitting}>
+            <Button onClick={() => handleCreateFromScratch()} isLoading={isSubmitting} disabled={isSubmitting}>
               Continuar com {TEMPLATES.find((t) => t.id === selectedTemplate)?.name}
             </Button>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {TEMPLATES.map((tpl) => (
-              <Card
-                key={tpl.id}
-                onClick={() => setSelectedTemplate(tpl.id)}
-                className={`cursor-pointer overflow-hidden transition-all group ${selectedTemplate === tpl.id
-                  ? 'ring-2 ring-primary border-transparent'
-                  : 'hover:border-primary/50'
+            {TEMPLATES.map((tpl, index) => {
+              const isLocked = userPlan === 'FREE' && index >= 3;
+              return (
+                <Card
+                  key={tpl.id}
+                  onClick={() => {
+                    if (isLocked) {
+                      setModalMessage('Este modelo de currículo está disponível apenas nos planos Pro e Max. Faça o upgrade agora para ter acesso a todos os modelos e recursos!');
+                      setShowUpgradeModal(true);
+                      return;
+                    }
+                    setSelectedTemplate(tpl.id);
+                  }}
+                  onDoubleClick={() => {
+                    if (isLocked) return;
+                    setSelectedTemplate(tpl.id);
+                    handleCreateFromScratch(tpl.id);
+                  }}
+                  className={`cursor-pointer overflow-hidden transition-all group relative ${
+                    !isLocked && selectedTemplate === tpl.id
+                      ? 'ring-2 ring-primary border-transparent'
+                      : 'hover:border-primary/50'
                   }`}
-              >
-                <ResumeCardPreview content={DUMMY_CONTENT} templateId={tpl.id} />
-                <div className="p-4 flex items-center justify-between">
-                  <div>
-                    <h3 className="font-semibold">{tpl.name}</h3>
-                    <p className="text-xs text-muted-foreground mt-0.5">{tpl.desc}</p>
+                >
+                  <div className={isLocked ? 'opacity-70 grayscale-[20%]' : ''}>
+                    <ResumeCardPreview content={DUMMY_CONTENT} templateId={tpl.id} />
                   </div>
-                  {selectedTemplate === tpl.id && (
-                    <div className="h-5 w-5 rounded-full bg-primary flex items-center justify-center text-primary-foreground flex-shrink-0">
-                      <Check className="h-3 w-3" />
+                  {isLocked && (
+                    <div className="absolute top-3 right-3 bg-slate-900/80 backdrop-blur-sm text-white p-1.5 rounded-full shadow-md z-10">
+                      <Lock className="h-4 w-4 text-amber-400" />
                     </div>
                   )}
-                </div>
-              </Card>
-            ))}
+                  <div className="p-4 flex items-center justify-between">
+                    <div>
+                      <h3 className="font-semibold flex items-center gap-1.5">
+                        {tpl.name}
+                        {isLocked && (
+                          <span className="inline-flex items-center rounded-md bg-amber-50 px-1.5 py-0.5 text-[10px] font-medium text-amber-800 ring-1 ring-inset ring-amber-600/20">
+                            PRO
+                          </span>
+                        )}
+                      </h3>
+                      <p className="text-xs text-muted-foreground mt-0.5">{tpl.desc}</p>
+                    </div>
+                    {!isLocked && selectedTemplate === tpl.id && (
+                      <div className="h-5 w-5 rounded-full bg-primary flex items-center justify-center text-primary-foreground flex-shrink-0">
+                        <Check className="h-3 w-3" />
+                      </div>
+                    )}
+                  </div>
+                </Card>
+              );
+            })}
           </div>
         </div>
       )}

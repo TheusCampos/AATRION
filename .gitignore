@@ -13,7 +13,8 @@ bun.lockb
 .trae/
 .claude/
 .openrouter/
-.agentes
+.agentes/
+.hermes/
 
 # --- Next.js
 .next/
@@ -51,6 +52,7 @@ lerna-debug.log*
 # --- docs
 .projeto/
 .dbg/
+.docs/
 .docs/
 
 # --- Editor
