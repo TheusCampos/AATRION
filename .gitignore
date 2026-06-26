@@ -15,6 +15,18 @@ bun.lockb
 .openrouter/
 .agentes/
 .hermes/
+.cursor/
+.windsurf/
+.agent/
+.kiro/
+.opencode/
+.roo/
+.codex/
+.qoder/
+.gemini/
+.continue/
+.codebuddy/
+.github/
 
 # --- Next.js
 .next/
@@ -107,3 +119,8 @@ fly.toml.local
 
 # --- Docker
 docker-compose.override.yml
+
+# --- Binaries & dev logs
+*.exe
+stripe.exe
+webhook.log

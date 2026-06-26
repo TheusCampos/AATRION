@@ -1,9 +1,4 @@
-/**
- * Wrapper de IA usando OpenRouter.
- *
- * Utiliza o SDK @openrouter/sdk
- */
-
+// Wrapper de IA via OpenRouter.
 import { openrouterChat } from './openrouter';
 
 export type AIProvider = 'openrouter';
@@ -25,7 +20,6 @@ export type AIResponse = {
     inputTokens?: number;
     outputTokens?: number;
     totalTokens?: number;
-    // Metadados adicionais de provedores (nao obrigatorios)
     prompt_tokens?: number;
     completion_tokens?: number;
     total_tokens?: number;
@@ -46,33 +40,22 @@ function hasOpenRouter(): boolean {
   return !!process.env.OPENROUTER_API_KEY;
 }
 
-/**
- * Tenta extrair e parsear um JSON valido de uma resposta de LLM,
- * mesmo que o modelo tenha incluido texto em volta (```json, prosa, etc).
- */
 export function safeParseJSON<T = unknown>(text: string): T | null {
   if (!text) return null;
-  // Tentativa direta
   try {
     return JSON.parse(text) as T;
   } catch {
-    // Tenta encontrar o primeiro bloco {...}
     const match = text.match(/\{[\s\S]*\}/);
     if (match) {
       try {
         return JSON.parse(match[0]) as T;
-      } catch {
-        // continua
-      }
+      } catch { /* ignore */ }
     }
-    // Tenta extrair de bloco markdown ```json
     const fence = text.match(/```(?:json)?\s*([\s\S]*?)```/i);
     if (fence) {
       try {
         return JSON.parse(fence[1].trim()) as T;
-      } catch {
-        // ignora
-      }
+      } catch { /* ignore */ }
     }
     return null;
   }
@@ -81,6 +64,11 @@ export function safeParseJSON<T = unknown>(text: string): T | null {
 export async function runAI(req: AIRequest): Promise<AIResponse> {
   if (!hasOpenRouter()) {
     throw new AIError('OPENROUTER_API_KEY não está configurada.');
+  }
+
+  const MAX_TEXT_LENGTH = 20000;
+  if (req.userText.length > MAX_TEXT_LENGTH) {
+    throw new AIError(`Texto do usuário excede o limite de segurança (${MAX_TEXT_LENGTH} caracteres).`);
   }
 
   try {

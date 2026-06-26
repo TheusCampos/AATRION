@@ -23,6 +23,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(function Inp
         invalid && 'border-destructive focus-visible:ring-destructive',
         className
       )}
+      aria-invalid={invalid ? 'true' : undefined}
       {...props}
     />
   );
@@ -47,6 +48,7 @@ export const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(fun
         invalid && 'border-destructive focus-visible:ring-destructive',
         className
       )}
+      aria-invalid={invalid ? 'true' : undefined}
       {...props}
     />
   );

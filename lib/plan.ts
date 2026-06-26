@@ -1,30 +1,14 @@
-/**
- * Central de regras de plano (FREE / PRO / MAX).
- *
- * Onde usar:
- *   - lib/auth.ts        -> getCurrentUser() enriquece o retorno com `planInfo`
- *   - /api/resumes       -> valida limite de curriculos
- *   - /api/linkedin/audit-> valida limite mensal
- *   - /api/resumes/[id]/analyze | adapt -> valida quota de IA
- *   - /settings          -> renderiza contadores e data de renovacao
- */
-
+// Regras de plano (FREE / PRO / MAX) e controle de uso de IA.
 import { prisma } from './prisma';
 
 export type PlanCode = 'FREE' | 'PRO' | 'MAX';
 
 export type PlanLimits = {
-  /** Numero maximo de curriculos ativos. -1 = ilimitado. */
   maxResumes: number;
-  /** Cota mensal de analises com IA (endpoint /analyze). -1 = ilimitado. */
   aiAnalyzePerMonth: number;
-  /** Cota mensal de adaptacoes com IA (endpoint /adapt). -1 = ilimitado. */
   aiAdaptPerMonth: number;
-  /** Cota mensal de auditorias LinkedIn. -1 = ilimitado. */
   aiAuditPerMonth: number;
-  /** Permite exportar PDF. */
   allowPdfDownload: boolean;
-  /** Permite editar preferencias de usuario em /settings. */
   allowSettings: boolean;
 };
 
@@ -76,20 +60,12 @@ export function getPlanLimits(plan: string | null | undefined): PlanLimits {
   return PLAN_LIMITS[normalizePlan(plan)];
 }
 
-/**
- * Retorna o periodo corrente no formato "YYYY-MM" no fuso local.
- * Usado como chave de reset dos contadores de uso de IA.
- */
 export function currentPeriod(now: Date = new Date()): string {
   const year = now.getFullYear();
   const month = String(now.getMonth() + 1).padStart(2, '0');
   return `${year}-${month}`;
 }
 
-/**
- * Garante que os contadores de uso de IA estao com o periodo atual.
- * Se o usuario tem o periodo antigo, zera os contadores (nova janela mensal).
- */
 export async function ensureFreshUsagePeriod(userId: string) {
   const period = currentPeriod();
   const user = await prisma.user.findUnique({
@@ -105,7 +81,6 @@ export async function ensureFreshUsagePeriod(userId: string) {
       period,
     };
   }
-  // Reset: o periodo novo nao bate com o gravado
   await prisma.user.update({
     where: { id: userId },
     data: { aiUsagePeriod: period, aiAnalyzeUsed: 0, aiAdaptUsed: 0, aiAuditUsed: 0 },
@@ -127,10 +102,6 @@ function fieldFor(kind: UsageKind) {
   return 'aiAuditUsed' as const;
 }
 
-/**
- * Verifica se o usuario tem quota disponivel para um recurso de IA.
- * NAO consome a cota — para isso chame `consumeAIUsage` em seguida.
- */
 export async function checkAIQuota(
   userId: string,
   plan: string | null,
@@ -151,20 +122,12 @@ export async function checkAIQuota(
   };
 }
 
-/**
- * Incrementa o contador de uso apos uma chamada bem sucedida a IA.
- * Idempotente nao — chame uma vez por request concluido.
- */
 export async function consumeAIUsage(userId: string, kind: UsageKind) {
   await ensureFreshUsagePeriod(userId);
   const data = { [fieldFor(kind)]: { increment: 1 } } as const;
   return prisma.user.update({ where: { id: userId }, data });
 }
 
-/**
- * Calcula quantos dias faltam ate a renovacao do plano.
- * Retorna null se o plano nao tem data de renovacao (ex: FREE vitalicio).
- */
 export function daysUntilRenewal(planRenewsAt: Date | null | undefined, now: Date = new Date()): number | null {
   if (!planRenewsAt) return null;
   const diffMs = planRenewsAt.getTime() - now.getTime();

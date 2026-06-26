@@ -310,9 +310,9 @@ function PlanSection({ data }: { data: SettingsPayload }) {
                     Contratar um plano diferente
                   </Button>
                 </a>
-                <Button 
-                  variant="primary" 
-                  size="sm" 
+                <Button
+                  variant="primary"
+                  size="sm"
                   onClick={handleManageSubscription}
                   disabled={isPortalLoading}
                   className="w-full sm:w-auto"
@@ -370,7 +370,7 @@ function RenewalStat({
     return <Stat label="Próxima renovação" value="Sem renovação" />;
   }
   const dateStr = renewsAt ? new Date(renewsAt).toLocaleDateString('pt-BR') : '—';
-  
+
   if (cancelAtPeriodEnd) {
     return (
       <div className="rounded-md border border-amber-200 bg-amber-50 dark:bg-amber-950/20 dark:border-amber-900/50 p-3">
@@ -584,7 +584,6 @@ function UsageBar({ label, used, limit }: { label: string; used: number; limit: 
 }
 
 function formatPeriod(period: string): string {
-  // "2026-06" -> "junho/2026"
   const [year, month] = period.split('-');
   const date = new Date(Number(year), Number(month) - 1, 1);
   return date.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });

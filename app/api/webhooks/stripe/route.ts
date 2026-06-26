@@ -176,6 +176,26 @@ export async function POST(request: Request) {
         console.log(`[Stripe Webhook] Cancelamento de assinatura para customer ${customerId}`);
         break;
       }
+
+      case 'charge.refunded': {
+        const charge = event.data.object as Stripe.Charge;
+        const customerId = typeof charge.customer === 'string' ? charge.customer : charge.customer?.id;
+
+        if (customerId) {
+          await prisma.user.updateMany({
+            where: { stripeCustomerId: customerId },
+            data: {
+              plan: 'FREE',
+              stripeSubscriptionId: null,
+              stripePriceId: null,
+              planRenewsAt: null,
+              stripeCurrentPeriodEnd: null,
+            },
+          });
+          console.log(`[Stripe Webhook] Estorno (Refund) processado. Conta rebaixada para FREE do customer ${customerId}`);
+        }
+        break;
+      }
     }
   } catch (error) {
     console.error('[Stripe Webhook] Erro no processamento:', error);

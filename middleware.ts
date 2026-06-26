@@ -1,23 +1,19 @@
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
 
-// Define as rotas publicas que NAO exigem autenticacao.
 const isPublicRoute = createRouteMatcher([
   '/',
   '/login(.*)',
   '/register(.*)',
   '/pricing(.*)',
   '/api/webhooks(.*)',
-  '/docs(.*)',
 ]);
 
-// Configuração do Rate Limit (Em memória para Edge Runtime)
 const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
-const RATE_LIMIT = 100; // Máximo de requisições
-const WINDOW_MS = 60 * 1000; // Por 1 minuto
+const RATE_LIMIT = 100;
+const WINDOW_MS = 60 * 1000;
 
 export default clerkMiddleware((auth, req) => {
-  // 1. Aplica o Rate Limit Global
   const ip = req.headers.get('x-forwarded-for') ?? req.ip ?? '127.0.0.1';
   const now = Date.now();
   const rateData = rateLimitMap.get(ip);
@@ -25,18 +21,15 @@ export default clerkMiddleware((auth, req) => {
   if (rateData && rateData.resetAt > now) {
     rateData.count += 1;
     if (rateData.count > RATE_LIMIT) {
-      console.warn(`[Rate Limit] IP ${ip} bloqueado. Limite excedido.`);
       return NextResponse.json(
         { error: 'Muitas requisições. Tente novamente mais tarde.' },
         { status: 429 }
       );
     }
   } else {
-    // Reseta ou cria o rate limit para este IP
     rateLimitMap.set(ip, { count: 1, resetAt: now + WINDOW_MS });
   }
 
-  // Opcional: Limpeza simples do Map a cada ~1000 requisições para evitar memory leak no Edge
   if (rateLimitMap.size > 1000) {
     for (const [key, val] of rateLimitMap.entries()) {
       if (val.resetAt < now) {
@@ -45,21 +38,36 @@ export default clerkMiddleware((auth, req) => {
     }
   }
 
-  // 2. Proteção de Rotas pelo Clerk
   if (!isPublicRoute(req)) {
     auth().protect();
   }
+
+  const response = NextResponse.next();
+  response.headers.set('X-Frame-Options', 'DENY');
+  response.headers.set('X-Content-Type-Options', 'nosniff');
+  response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+  response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+
+  const cspHeader = `
+    default-src 'self';
+    script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.clerk.accounts.dev https://*.clerk.com https://www.googletagmanager.com https://js.stripe.com;
+    connect-src 'self' https://*.clerk.accounts.dev https://*.clerk.com https://api.stripe.com https://www.google-analytics.com https://*.posthog.com https://openrouter.ai;
+    img-src 'self' blob: data: https://img.clerk.com https://r2.cvforge.com.br https://media.licdn.com https://*.cloudflare.com;
+    style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+    font-src 'self' data: https://fonts.gstatic.com;
+    frame-src 'self' https://js.stripe.com https://challenges.cloudflare.com;
+  `.replace(/\s{2,}/g, ' ').trim();
+
+  response.headers.set('Content-Security-Policy', cspHeader);
+
+  return response;
 }, {
-  // O relógio do sistema está ~48s atrasado em relação ao Clerk.
-  // Toleramos até 120s para evitar falhas de autenticação.
   clockSkewInMs: 120_000,
 });
 
 export const config = {
   matcher: [
-    // Skip Next.js internals and all static files
     '/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
-    // Always run for API routes
     '/(api|trpc)(.*)',
   ],
 };

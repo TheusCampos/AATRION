@@ -59,13 +59,11 @@
     text-rendering: optimizeLegibility;
   }
 
-  /* Refinamento: selecao de texto com cor da marca */
   ::selection {
     background-color: hsl(var(--primary) / 0.18);
     color: hsl(var(--foreground));
   }
 
-  /* Scrollbar minimalista (Webkit) */
   ::-webkit-scrollbar {
     width: 10px;
     height: 10px;
@@ -82,14 +80,12 @@
     background: hsl(var(--muted-foreground) / 0.4);
   }
 
-  /* Icones minimalistas */
   .lucide {
     stroke-width: 1.5px !important;
   }
 }
 
 @layer components {
-  /* Gradiente sutil de fundo, aplicado opcionalmente via classe */
   .bg-page-gradient {
     background-image:
       radial-gradient(ellipse 80% 50% at 50% -20%, hsl(var(--primary) / 0.12), transparent 60%),
@@ -102,7 +98,6 @@
       radial-gradient(ellipse 60% 40% at 80% 30%, hsl(243 90% 70% / 0.08), transparent 70%);
   }
 
-  /* Borda com gradiente (usado em cards de destaque) */
   .border-gradient {
     position: relative;
     background: hsl(var(--card));
@@ -134,7 +129,6 @@
   }
 }
 
-/* Respeita a preferencia do usuario: desativa todas as animacoes */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -146,7 +140,6 @@
   }
 }
 
-/* Estilos de impressao para geracao de PDF */
 @media print {
   html,
   body {

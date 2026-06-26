@@ -34,13 +34,13 @@ export function TipsCard() {
     // Pick 3 tips for the card based on rotationIndex
     const startIdx = (rotationIndex * 3) % ALL_TIPS.length;
     
-    let mainTips = [];
+    const mainTips = [];
     for (let i = 0; i < 3; i++) {
       mainTips.push(ALL_TIPS[(startIdx + i) % ALL_TIPS.length]);
     }
     
     // Pick 5 more tips for the modal
-    let moreTips = [];
+    const moreTips = [];
     for (let i = 3; i < 8; i++) {
       moreTips.push(ALL_TIPS[(startIdx + i) % ALL_TIPS.length]);
     }

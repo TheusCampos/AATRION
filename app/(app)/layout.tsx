@@ -12,9 +12,6 @@ export default async function AppLayout({
 }: {
   children: React.ReactNode;
 }) {
-  // Primeiro verifica se existe sessão Clerk válida.
-  // Se não existir, o middleware já redirecionou. 
-  // Isso é um fallback de segurança.
   const { userId } = auth();
   if (!userId) redirect('/login');
 

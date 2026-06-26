@@ -5,10 +5,11 @@ import { ptBR } from '@clerk/localizations';
 import './globals.css';
 
 import Script from 'next/script';
+import { PostHogProvider } from './providers';
 
 const poppins = Poppins({
   subsets: ['latin'],
-  weight: ['100', '200', '300', '400', '500', '600', '700', '800', '900'],
+  weight: ['300', '400', '500', '600', '700', '800'],
   variable: '--font-poppins',
   display: 'swap',
 });
@@ -26,7 +27,16 @@ export const metadata: Metadata = {
   },
   description:
     'Plataforma de currículos profissionais com IA + auditoria de LinkedIn. Crie, adapte e otimize seu currículo em minutos.',
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'),
+  keywords: [
+    'currículo', 'currículo profissional', 'gerador de currículo', 'currículo com IA',
+    'ATS', 'otimização ATS', 'LinkedIn auditoria', 'recolocação profissional',
+    'emprego', 'vagas', 'resume builder', 'ATRION',
+  ],
+  authors: [{ name: 'ATRION' }],
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? 'https://cvforge.com.br'),
+  alternates: {
+    canonical: '/',
+  },
   openGraph: {
     type: 'website',
     locale: 'pt_BR',
@@ -59,6 +69,9 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <head>
+        <link rel="dns-prefetch" href="https://js.stripe.com" />
+      </head>
+      <body className="min-h-screen bg-background font-sans antialiased">
         <Script
           src="https://www.googletagmanager.com/gtag/js?id=G-BKJWBMLHEE"
           strategy="afterInteractive"
@@ -68,18 +81,15 @@ export default function RootLayout({
             window.dataLayer = window.dataLayer || [];
             function gtag(){dataLayer.push(arguments);}
             gtag('js', new Date());
-          
             gtag('config', 'G-BKJWBMLHEE');
           `}
         </Script>
-      </head>
-      <body className="min-h-screen bg-background font-sans antialiased">
         <ClerkProvider
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           localization={ptBR as any}
           appearance={{
             variables: {
-              colorPrimary: '#6366f1', // indigo-500 (mais moderno)
+              colorPrimary: '#6366f1',
               colorBackground: '#ffffff',
               colorText: '#0f172a',
               borderRadius: '0.5rem',
@@ -93,7 +103,7 @@ export default function RootLayout({
             },
           }}
         >
-          {children}
+          <PostHogProvider>{children}</PostHogProvider>
         </ClerkProvider>
       </body>
     </html>

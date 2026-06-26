@@ -1,22 +1,12 @@
-/**
- * ATRION — LinkedIn Profile Analyzer (V1: heurístico, sem IA)
- *
- * Recebe o texto colado do perfil do LinkedIn pelo usuário e produz:
- *  - overallScore (0-100)
- *  - sections[]  — nota e observações por seção detectada
- *  - issues[]    — problemas priorizados (high / medium / low)
- *  - suggestions[] — ações práticas sugeridas
- *  - postIdeas[] — 3 ideias de post alinhadas à área/targetJob
- *
- * Substituir por análise com LLM na V2 (ATRION roadmap).
- */
+// LinkedIn Profile Analyzer (heurístico, sem IA).
+// Recebe texto do perfil e retorna score, seções, issues e sugestões.
 
 export type AuditSeverity = 'high' | 'medium' | 'low';
 
 export type AuditIssue = {
   id: string;
   severity: AuditSeverity;
-  area: string;       // ex: "Headline", "About", "Experience"
+  area: string;
   message: string;
 };
 
@@ -30,7 +20,7 @@ export type AuditSection = {
   key: string;
   label: string;
   present: boolean;
-  score: number;       // 0-100
+  score: number;
   notes: string[];
 };
 
@@ -74,8 +64,6 @@ const TECH_SKILL_PATTERNS: RegExp[] = [
   /\b(react|next\.?js|vue|angular|svelte|node\.?js|typescript|javascript|python|java|kotlin|swift|go|rust|c\+\+|c#|ruby|php|laravel|django|flask|fastapi|spring|\.net|aws|gcp|azure|docker|kubernetes|terraform|graphql|rest|sql|postgresql|mysql|mongodb|redis|kafka|rabbitmq|airflow|spark|hadoop|scikit-learn|pytorch|tensorflow|tableau|power\s?bi|excel|figma|adobe|illustrator|photoshop|after\s?effects|premiere|jira|confluence|git|github|gitlab|ci\/cd|scrum|kanban|agile|seo|sem|google\s?ads|meta\s?ads)\b/gi,
 ];
 
-// ============== Helpers ==============
-
 function clamp(n: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, n));
 }
@@ -106,15 +94,12 @@ function detectLinks(text: string): boolean {
   return /(https?:\/\/|www\.|linkedin\.com|github\.com|behance\.net|dribbble\.com)/i.test(text);
 }
 
-// ============== Section detection ==============
-
 function checkHeadline(text: string): {
   present: boolean;
   score: number;
   notes: string[];
   headline: string;
 } {
-  // Heurística: primeira linha não-vazia é tratada como headline
   const firstLine = text.split('\n').map((l) => l.trim()).find(Boolean) ?? '';
   const headline = firstLine.slice(0, 120);
   const lower = headline.toLowerCase();
@@ -127,7 +112,7 @@ function checkHeadline(text: string): {
   if (present) score += 30;
   if (headline.length >= 30 && headline.length <= 120) score += 30;
   if (hasKeywords) score += 40;
-  if (/[\|·•@]/.test(headline)) score += 5;
+  if (/[|·•@]/.test(headline)) score += 5;
 
   const notes: string[] = [];
   if (!present) notes.push('Headline vazia.');
@@ -139,7 +124,6 @@ function checkHeadline(text: string): {
 }
 
 function checkAbout(text: string): { present: boolean; score: number; notes: string[]; length: number } {
-  // Tenta achar uma seção "Sobre" / "About"
   const match = text.match(/(sobre|about|resumo)[\s\S]{0,2500}/i);
   const snippet = match ? match[0] : '';
   const length = snippet.length;
@@ -245,23 +229,15 @@ function checkProjects(text: string): { present: boolean; score: number; notes: 
   return { present, score: clamp(score, 0, 100), notes, count: present ? 1 : 0 };
 }
 
-// ============== Issues & Suggestions ==============
-
 function buildIssues(sections: AuditSection[]): AuditIssue[] {
   const issues: AuditIssue[] = [];
   for (const s of sections) {
     if (s.score >= 80) continue;
     const severity: AuditSeverity = !s.present ? 'high' : s.score < 50 ? 'high' : s.score < 75 ? 'medium' : 'low';
     for (const n of s.notes) {
-      issues.push({
-        id: uid('iss'),
-        severity,
-        area: s.label,
-        message: n,
-      });
+      issues.push({ id: uid('iss'), severity, area: s.label, message: n });
     }
   }
-  // ordena: high > medium > low
   const order: Record<AuditSeverity, number> = { high: 0, medium: 1, low: 2 };
   issues.sort((a, b) => order[a.severity] - order[b.severity]);
   return issues.slice(0, 20);
@@ -297,17 +273,12 @@ function buildPostIdeas(input: AnalyzeInput): string[] {
   ];
 }
 
-function buildSummary(overall: number, sections: AuditSection[]): string {
+function buildSummary(overall: number): string {
   if (overall >= 85) return 'Perfil forte e bem estruturado — pequenos ajustes podem elevá-lo ainda mais.';
   if (overall >= 70) return 'Bom perfil, com boas bases. Foque nos pontos médios abaixo para chegar ao próximo nível.';
   if (overall >= 50) return 'Perfil razoável, mas com lacunas importantes. Recomendamos revisar as seções marcadas em amarelo/vermelho.';
   return 'Perfil precisa de atenção. Sugerimos reescrever a headline, expandir o "Sobre" e adicionar resultados quantificados nas experiências.';
-
-  // unreachable
-  void sections;
 }
-
-// ============== Main ==============
 
 export function analyzeLinkedInProfile(input: AnalyzeInput): AuditResult {
   const text = (input.profileText || '').trim();
@@ -329,7 +300,6 @@ export function analyzeLinkedInProfile(input: AnalyzeInput): AuditResult {
     { key: 'projects', label: 'Projetos', present: projects.present, score: projects.score, notes: projects.notes },
   ];
 
-  // Pesos por seção
   const weights: Record<string, number> = {
     headline: 0.18,
     about: 0.20,
@@ -349,7 +319,7 @@ export function analyzeLinkedInProfile(input: AnalyzeInput): AuditResult {
 
   return {
     overallScore,
-    summary: buildSummary(overallScore, sections),
+    summary: buildSummary(overallScore),
     sections,
     issues,
     suggestions,

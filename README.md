@@ -1,6 +1,6 @@
 # ATRION — Gerador de Currículos Profissionais com IA
 
-<img src="./public/Logo-atrion.png" alt="Logo do ATRION" width="250" height="250" style="border-radius: 50%;">
+<img src="./public/Logo-atrion-fundo.png" alt="Logo do ATRION" width="250" height="250" style="border-radius: 50%; align: center;">
 
 O **ATRION** é um SaaS completo e inteligente projetado para alavancar a recolocação profissional e o desenvolvimento de carreira. A plataforma permite criar currículos profissionais de alta conversão, analisá-los contra sistemas de triagem (ATS), adaptá-los cirurgicamente para vagas de emprego usando inteligência artificial, auditar perfis do LinkedIn e buscar vagas reais integradas.
 

@@ -94,10 +94,26 @@ export function DashboardResumes({ resumes }: { resumes: ResumeListItem[] }) {
                       )}
                       <h3 className="font-bold text-lg tracking-tight text-slate-900">{resume.title}</h3>
                     </div>
-                    <p className="text-sm text-slate-500 mb-1">Importado de PDF</p>
-                    <p className="text-sm text-slate-500">
-                      Atualizado em {new Date(resume.updatedAt).toLocaleDateString('pt-BR')}
-                    </p>
+                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-slate-500 mb-1">
+                      <span>Importado de PDF</span>
+                      <span>•</span>
+                      <span>Atualizado em {new Date(resume.updatedAt).toLocaleDateString('pt-BR')}</span>
+                      <span>•</span>
+                      <span className="inline-flex items-center gap-1">
+                        <span className={`h-1.5 w-1.5 rounded-full ${
+                          resume.atsScore !== null
+                            ? resume.atsScore >= 75
+                              ? 'bg-emerald-500'
+                              : resume.atsScore >= 50
+                              ? 'bg-amber-500'
+                              : 'bg-rose-500'
+                            : 'bg-slate-300'
+                        }`} />
+                        <span className="font-medium">
+                          ATS: {resume.atsScore !== null ? `${resume.atsScore}%` : 'Não analisado'}
+                        </span>
+                      </span>
+                    </div>
                   </div>
                   
                   <DeleteResumeButton resumeId={resume.id} title={resume.title} />

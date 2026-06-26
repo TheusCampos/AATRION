@@ -82,7 +82,6 @@ export function AIResumeActions({ resumeId, content, onApplyAdapted, initialActi
   // Analyze state
   const [analyzeTarget, setAnalyzeTarget] = useState('');
   const [analyzeResult, setAnalyzeResult] = useState<AnalyzeResult | null>(null);
-  const [analyzeProvider, setAnalyzeProvider] = useState<string>('');
 
   // Adapt state
   const [jobTitle, setJobTitle] = useState('');
@@ -90,7 +89,6 @@ export function AIResumeActions({ resumeId, content, onApplyAdapted, initialActi
   const [jobDescription, setJobDescription] = useState('');
   const [adaptedContent, setAdaptedContent] = useState<ResumeContent | null>(null);
   const [adaptedChanges, setAdaptedChanges] = useState<string[]>([]);
-  const [adaptProvider, setAdaptProvider] = useState<string>('');
 
   async function handleAnalyze() {
     setAnalyzing(true);
@@ -106,7 +104,6 @@ export function AIResumeActions({ resumeId, content, onApplyAdapted, initialActi
         throw new Error(data?.error || 'Falha ao analisar');
       }
       setAnalyzeResult(data.result);
-      setAnalyzeProvider(`${data.provider}/${data.model}`);
     } catch (err) {
       console.error(err);
       const msg = err instanceof Error ? err.message : 'Erro ao analisar o currículo.';
@@ -145,7 +142,6 @@ export function AIResumeActions({ resumeId, content, onApplyAdapted, initialActi
       }
       setAdaptedContent(data.content as ResumeContent);
       setAdaptedChanges(data.changesLog || []);
-      setAdaptProvider(`${data.provider}/${data.model}`);
     } catch (err) {
       console.error(err);
       const msg = err instanceof Error ? err.message : 'Erro ao adaptar o currículo.';

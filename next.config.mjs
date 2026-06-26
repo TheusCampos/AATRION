@@ -3,7 +3,17 @@ const nextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
   experimental: {
-    serverComponentsExternalPackages: ['pdf-parse', 'pdfjs-dist', 'mammoth'],
+    serverComponentsExternalPackages: [
+      'pdf-parse',
+      '@opentelemetry/sdk-node',
+      '@opentelemetry/resources',
+      '@opentelemetry/instrumentation',
+      '@opentelemetry/exporter-logs-otlp-http',
+      '@opentelemetry/exporter-trace-otlp-http',
+      '@traceloop/instrumentation-google-generativeai',
+      'require-in-the-middle',
+    ],
+    instrumentationHook: true,
   },
   images: {
     remotePatterns: [
@@ -14,7 +24,6 @@ const nextConfig = {
   },
   async headers() {
     return [
-      // SEC-009: Headers de segurança globais
       {
         source: '/:path*',
         headers: [
@@ -31,12 +40,12 @@ const nextConfig = {
             key: 'Content-Security-Policy',
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://js.stripe.com https://*.clerk.accounts.dev",
+              "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://js.stripe.com https://*.clerk.accounts.dev https://www.googletagmanager.com",
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               "font-src 'self' https://fonts.gstatic.com",
               "img-src 'self' data: blob: https://r2.cvforge.com.br https://media.licdn.com https://*.cloudflare.com https://img.clerk.com",
               "frame-src 'self' blob: https://js.stripe.com https://*.clerk.accounts.dev",
-              "connect-src 'self' ws: wss: webpack: https://api.stripe.com https://*.clerk.accounts.dev https://api.adzuna.com https://openrouter.ai",
+              "connect-src 'self' ws: wss: webpack: https://api.stripe.com https://*.clerk.accounts.dev https://api.adzuna.com https://openrouter.ai https://www.google-analytics.com https://*.posthog.com",
               "worker-src 'self' blob:",
               "object-src 'none'",
               "base-uri 'self'",
@@ -44,7 +53,6 @@ const nextConfig = {
           },
         ],
       },
-      // SEC-010: CORS para API com Vary: Origin
       {
         source: '/api/:path*',
         headers: [

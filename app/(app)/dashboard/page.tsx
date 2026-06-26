@@ -57,6 +57,7 @@ export default async function DashboardPage({
         let stripeSubscriptionId = null;
 
         if (session.mode === 'subscription' && session.subscription) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const sub = session.subscription as any;
           planRenewsAt = new Date(sub.current_period_end * 1000);
           stripeSubscriptionId = sub.id;

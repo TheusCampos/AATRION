@@ -12,43 +12,106 @@ import {
   Zap,
   Target,
   ShieldCheck,
-  BarChart3,
-  Globe2,
-  Briefcase,
+  Instagram,
 } from 'lucide-react';
 import { SignInButton, SignUpButton, SignedIn, SignedOut } from '@clerk/nextjs';
 import { fadeUp, fadeIn, fadeDown, staggerContainer, hoverLift, scaleIn } from '@/lib/animations';
+import { useState } from 'react';
+import { ResumeCardPreview } from '@/components/resume/ResumeCardPreview';
+import type { ResumeContent } from '@/lib/validations/resume';
+
+const DUMMY_CONTENT: ResumeContent = {
+  personal: {
+    name: "Nome Completo",
+    jobTitle: "Cargo Profissional",
+    email: "contato@email.com",
+    phone: "(11) 99999-9999",
+    location: "São Paulo, SP",
+    linkedin: "linkedin.com/in/nome",
+    github: "",
+    website: "",
+    summary: "Resumo profissional direto ao ponto destacando suas principais habilidades, experiências relevantes e objetivos de carreira. Ideal para causar uma boa primeira impressão.",
+    photo: "",
+  },
+  experience: [
+    {
+      id: "1",
+      company: "Empresa Exemplo S.A.",
+      role: "Cargo Principal",
+      start: "2021-01",
+      end: "",
+      current: true,
+      description: "• Liderança e execução de projetos estratégicos.\n• Colaboração em equipes multidisciplinares.\n• Foco em entrega de resultados e qualidade.",
+    }
+  ],
+  education: [
+    {
+      id: "1",
+      institution: "Universidade Global",
+      course: "Bacharelado Completo",
+      level: "Graduação",
+      start: "2014-02",
+      end: "2017-12",
+    }
+  ],
+  skills: [
+    { id: "1", name: "Habilidade Técnica 1", level: "advanced" },
+    { id: "2", name: "Habilidade Técnica 2", level: "advanced" },
+    { id: "3", name: "Liderança", level: "intermediate" }
+  ],
+  projects: [],
+  languages: [],
+  certifications: []
+};
 
 export default function HomePage() {
   const reduce = useReducedMotion();
+  const [selectedTemplate, setSelectedTemplate] = useState<'modern' | 'classic' | 'creative' | 'sidebar'>('modern');
+
   const motionProps = (variants: Parameters<typeof motion.div>[0]['variants']) =>
     reduce ? undefined : { initial: 'hidden', animate: 'visible', variants };
 
+  const inViewProps = (variants: Parameters<typeof motion.div>[0]['variants']) =>
+    reduce ? undefined : { initial: 'hidden', whileInView: 'visible', viewport: { once: true, margin: "-50px" }, variants };
+
   return (
-    <main className="relative min-h-screen overflow-x-hidden bg-background bg-page-gradient">
-      {/* === Header / Navbar (minimalista, flutuante) === */}
+    <main className="relative min-h-screen overflow-x-hidden bg-[#F8FAFC] text-slate-900 selection:bg-blue-500/10 selection:text-blue-600">
+      <div className="absolute inset-0 -z-10 bg-[linear-gradient(to_right,#e2e8f0_1px,transparent_1px),linear-gradient(to_bottom,#e2e8f0_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:polygon(0_0,100%_0,100%_100%,0_100%)] opacity-40" />
+      <motion.div 
+        animate={reduce ? undefined : { y: [0, -15, 0], rotate: [12, 16, 12] }}
+        transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
+        className="absolute top-20 left-10 -z-10 w-32 h-32 rotate-12 border border-blue-500/10 rounded-lg pointer-events-none" 
+      />
+      <motion.div 
+        animate={reduce ? undefined : { y: [0, 15, 0], rotate: [-12, -18, -12] }}
+        transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
+        className="absolute top-60 right-20 -z-10 w-24 h-24 -rotate-12 bg-blue-500/5 rounded-lg pointer-events-none" 
+      />
       <motion.header
         variants={reduce ? undefined : fadeDown}
         initial={reduce ? false : 'hidden'}
         animate={reduce ? false : 'visible'}
-        className="sticky top-4 z-40 mx-auto w-full max-w-5xl px-4"
+        className="sticky top-4 z-40 mx-auto w-full max-w-6xl px-4"
       >
-        <div className="flex h-14 items-center justify-between rounded-2xl border border-border/60 bg-card/80 px-4 shadow-sm backdrop-blur-md">
-          <Link href="/" className="flex items-center gap-2 font-bold">
-            <Image src="/Logo-atrion.png" alt="ATRION" width={100} height={24} className="h-6 w-auto" />
+        <div className="flex h-16 items-center justify-between rounded-2xl border border-slate-200/80 bg-white/80 px-6 shadow-sm backdrop-blur-md">
+          <Link href="/" className="flex items-center gap-2 font-bold transition-opacity hover:opacity-95">
+            <Image src="/Logo-atrion.png" alt="ATRION" width={110} height={26} className="h-6 w-auto" />
           </Link>
+
           <nav className="hidden items-center gap-1 md:flex">
             <NavLink href="/">Início</NavLink>
-            <NavLink href="#features">Recursos</NavLink>
-            <NavLink href="#pricing">Planos</NavLink>
-            <NavLink href="#contato">Contato</NavLink>
+            <NavLink href="/#templates">Templates</NavLink>
+            <NavLink href="/#curriculo">Exemplo</NavLink>
+            <NavLink href="/#features">Recursos</NavLink>
+            <NavLink href="/#pricing">Planos</NavLink>
           </nav>
-          <div className="flex items-center gap-2">
+
+          <div className="flex items-center gap-3">
             <SignedOut>
               <SignInButton mode="modal" forceRedirectUrl="/dashboard">
                 <button
                   type="button"
-                  className="hidden h-9 items-center justify-center rounded-full px-4 text-sm font-medium text-foreground/80 transition-colors hover:text-foreground sm:inline-flex"
+                  className="hidden h-10 items-center justify-center rounded-full px-4 text-sm font-semibold text-slate-700 transition-colors hover:text-slate-950 sm:inline-flex"
                 >
                   Entrar
                 </button>
@@ -56,281 +119,581 @@ export default function HomePage() {
               <SignUpButton mode="modal" forceRedirectUrl="/dashboard">
                 <button
                   type="button"
-                  className="inline-flex h-9 items-center justify-center gap-1.5 rounded-full bg-foreground px-4 text-sm font-medium text-background shadow-sm transition-transform hover:scale-[1.02] active:scale-95"
+                  className="inline-flex h-10 items-center justify-center gap-1.5 rounded-full bg-blue-600 px-5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-blue-700 hover:scale-[1.01] active:scale-95 cursor-pointer"
                 >
-                  Começar grátis <ArrowRight className="h-3.5 w-3.5" />
+                  Começar grátis <ArrowRight className="h-4 w-4" />
                 </button>
               </SignUpButton>
             </SignedOut>
             <SignedIn>
               <Link
                 href="/dashboard"
-                className="inline-flex h-9 items-center justify-center gap-1.5 rounded-full bg-foreground px-4 text-sm font-medium text-background shadow-sm transition-transform hover:scale-[1.02] active:scale-95"
+                className="inline-flex h-10 items-center justify-center gap-1.5 rounded-full bg-blue-600 px-5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-blue-700 hover:scale-[1.01] active:scale-95 cursor-pointer"
               >
-                Acessar Painel <ArrowRight className="h-3.5 w-3.5" />
+                Acessar Painel <ArrowRight className="h-4 w-4" />
               </Link>
             </SignedIn>
           </div>
         </div>
       </motion.header>
 
-      {/* === Hero === */}
-      <section className="container relative flex flex-col items-center justify-center gap-7 pt-20 pb-20 text-center md:pt-28">
-        <motion.div
-          {...motionProps(fadeUp)}
-          className="inline-flex items-center gap-2 rounded-full border border-border bg-card/70 px-4 py-1.5 text-xs font-medium text-muted-foreground shadow-sm backdrop-blur"
-        >
-          <span className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500" />
-          SaaS de currículos com IA · 100% em português
-        </motion.div>
+      <section className="mx-auto max-w-6xl px-4 pt-16 pb-20 md:pt-24 md:pb-28">
+        <div className="grid gap-12 lg:grid-cols-12 lg:items-center">
 
-        <motion.h1
-          {...motionProps(fadeUp)}
-          className="max-w-4xl text-balance font-display text-4xl font-bold leading-[1.05] tracking-tight md:text-6xl lg:text-7xl"
-        >
-          Currículos que{' '}
-          <span className="bg-gradient-to-br from-indigo-500 via-violet-500 to-fuchsia-500 bg-clip-text text-transparent">
-            passam no ATS
-          </span>{' '}
-          e conquistam recrutadores.
-        </motion.h1>
-
-        <motion.p
-          {...motionProps(fadeUp)}
-          className="max-w-2xl text-pretty text-base text-muted-foreground md:text-lg"
-        >
-          Crie currículos em minutos, adapte para cada vaga com IA e audite seu
-          LinkedIn — tudo em um só lugar, com templates profissionais prontos.
-        </motion.p>
-
-        <motion.div
-          {...motionProps(fadeUp)}
-          className="flex flex-col items-center gap-3 sm:flex-row"
-        >
-          <SignedOut>
-            <SignUpButton mode="modal" forceRedirectUrl="/dashboard">
-              <motion.button
-                {...hoverLift}
-                type="button"
-                className="group inline-flex h-12 items-center justify-center gap-2 rounded-full bg-gradient-to-b from-indigo-500 to-indigo-600 px-6 text-sm font-semibold text-white shadow-lg shadow-indigo-500/20 transition-shadow hover:shadow-xl hover:shadow-indigo-500/30"
-              >
-                Começar grátis
-                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-              </motion.button>
-            </SignUpButton>
-          </SignedOut>
-          <SignedIn>
-            <Link href="/dashboard">
-              <motion.button
-                {...hoverLift}
-                type="button"
-                className="group inline-flex h-12 items-center justify-center gap-2 rounded-full bg-gradient-to-b from-indigo-500 to-indigo-600 px-6 text-sm font-semibold text-white shadow-lg shadow-indigo-500/20 transition-shadow hover:shadow-xl hover:shadow-indigo-500/30"
-              >
-                Ir para o Painel
-                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-              </motion.button>
-            </Link>
-          </SignedIn>
-          <Link href="#pricing" className="inline-flex h-12 items-center px-2 text-sm font-medium text-muted-foreground hover:text-foreground">
-            Ver planos →
-          </Link>
-        </motion.div>
-
-        <motion.p
-          {...motionProps(fadeIn)}
-          className="text-xs text-muted-foreground"
-        >
-          Sem cartão · 3 currículos grátis · Cancele quando quiser
-        </motion.p>
-
-        {/* Visual decorativo */}
-        <motion.div
-          aria-hidden
-          initial={reduce ? false : { opacity: 0, y: 30 }}
-          animate={reduce ? false : { opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.4, ease: [0.16, 1, 0.3, 1] }}
-          className="mt-8 w-full max-w-5xl"
-        >
-          <HeroMockup />
-        </motion.div>
-      </section>
-
-      {/* === Logos / Social proof (simbolico) === */}
-      <motion.section
-        {...motionProps(fadeIn)}
-        className="container pb-16"
-      >
-        <p className="text-center text-xs font-medium uppercase tracking-widest text-muted-foreground">
-          Usado por profissionais em mais de 12 áreas
-        </p>
-        <div className="mt-4 flex flex-wrap items-center justify-center gap-x-8 gap-y-3 text-sm font-medium text-muted-foreground">
-          {['Tecnologia', 'Marketing', 'Direito', 'Saúde', 'Engenharia', 'Design', 'Vendas', 'Educação'].map(
-            (label) => (
-              <span key={label} className="opacity-70 hover:opacity-100 transition-opacity">
-                {label}
-              </span>
-            )
-          )}
-        </div>
-      </motion.section>
-
-      {/* === Features === */}
-      <section id="features" className="container scroll-mt-20 py-16 md:py-24">
-        <motion.div
-          {...motionProps(fadeUp)}
-          className="mx-auto mb-12 max-w-2xl text-center"
-        >
-          <h2 className="font-display text-3xl font-bold tracking-tight md:text-4xl">
-            Tudo que você precisa, nada do que você não precisa.
-          </h2>
-          <p className="mt-3 text-muted-foreground">
-            Foco em resultado: currículos que te levam para a próxima entrevista.
-          </p>
-        </motion.div>
-
-        <motion.div
-          {...motionProps(staggerContainer(0.08, 0.1))}
-          className="grid gap-4 md:grid-cols-3"
-        >
-          {[
-            {
-              icon: <FileText className="h-5 w-5" />,
-              title: 'Análise de currículo',
-              desc: 'A IA avalia o currículo e mostra problemas, pontuação e melhorias detalhadas passo a passo.',
-            },
-            {
-              icon: <Sparkles className="h-5 w-5" />,
-              title: 'Adaptação por vaga',
-              desc: 'Cole a descrição da vaga e a IA reescreve seu currículo, reordena habilidades e adiciona keywords.',
-            },
-            {
-              icon: <Linkedin className="h-5 w-5" />,
-              title: 'Auditoria LinkedIn',
-              desc: 'Nota 0–100 do seu perfil, sugestões por seção, ideias de post e consistência com o currículo.',
-            },
-            {
-              icon: <Target className="h-5 w-5" />,
-              title: 'Score ATS objetivo',
-              desc: 'Veja sua nota ATS, com correções e exemplos de antes/depois que você aplica em 1 clique.',
-            },
-            {
-              icon: <Zap className="h-5 w-5" />,
-              title: 'Velocidade real',
-              desc: 'Sem travar. Sem tabs infinitas. Apenas o que importa para terminar em minutos.',
-            },
-            {
-              icon: <ShieldCheck className="h-5 w-5" />,
-              title: 'Privacidade primeiro',
-              desc: 'Seus dados ficam no seu banco. Você é dono do seu currículo, não a ferramenta.',
-            },
-          ].map((f) => (
-            <motion.div key={f.title} variants={fadeUp} {...hoverLift}>
-              <FeatureCard icon={f.icon} title={f.title} description={f.desc} />
-            </motion.div>
-          ))}
-        </motion.div>
-      </section>
-
-      {/* === Pricing === */}
-      <section id="pricing" className="container scroll-mt-20 py-16 md:py-24">
-        <motion.div {...motionProps(fadeUp)} className="mx-auto mb-12 max-w-2xl text-center">
-          <h2 className="font-display text-3xl font-bold tracking-tight md:text-4xl">
-            Planos simples
-          </h2>
-          <p className="mt-3 text-muted-foreground">
-            Comece grátis. Faça upgrade quando precisar de mais.
-          </p>
-        </motion.div>
-
-        <motion.div
-          {...motionProps(staggerContainer(0.1, 0.1))}
-          className="grid gap-4 md:grid-cols-3"
-        >
-          <Plan
-            name="Free"
-            price="R$ 0"
-            features={['1 currículo ativo', 'Análise básica com pontuação e 3 sugestões', '3 templates', "Marca d'água discreta"]}
-            cta="Começar grátis"
-            href="/register"
-          />
-          <Plan
-            name="Pro"
-            price="R$ 19,90"
-            suffix="/mês"
-            highlight
-            features={['10 currículos ativos', '10 análises completas', '10 adaptações para vagas', '3 auditorias LinkedIn', 'Suporte prioritário']}
-            cta="Assinar Pro"
-            href="/pricing"
-          />
-          <Plan
-            name="Max"
-            price="R$ 39,90"
-            suffix="/mês"
-            features={['30 currículos', '50 ações de IA completas', '10 auditorias LinkedIn', 'Acesso antecipado a recursos']}
-            cta="Assinar Max"
-            href="/pricing"
-          />
-        </motion.div>
-      </section>
-
-      {/* === CTA final === */}
-      <section className="container py-16 md:py-24">
-        <motion.div
-          {...motionProps(scaleIn)}
-          className="relative mx-auto max-w-3xl overflow-hidden rounded-3xl border border-border bg-card p-8 text-center shadow-sm md:p-12"
-        >
-          <div className="absolute inset-0 -z-10 bg-gradient-to-br from-indigo-500/10 via-transparent to-fuchsia-500/10" />
-          <h2 className="font-display text-2xl font-bold tracking-tight md:text-3xl">
-            Pronto para a próxima entrevista?
-          </h2>
-          <p className="mx-auto mt-3 max-w-xl text-pretty text-muted-foreground">
-            Crie seu primeiro currículo com IA em menos de 5 minutos. Sem cartão de crédito.
-          </p>
-          <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
-            <SignedOut>
-              <SignUpButton mode="modal" forceRedirectUrl="/dashboard">
-                <motion.button
-                  {...hoverLift}
-                  type="button"
-                  className="inline-flex h-12 items-center gap-2 rounded-full bg-foreground px-6 text-sm font-semibold text-background shadow-md"
-                >
-                  Começar grátis <ArrowRight className="h-4 w-4" />
-                </motion.button>
-              </SignUpButton>
-            </SignedOut>
-            <SignedIn>
-              <Link href="/dashboard">
-                <motion.button
-                  {...hoverLift}
-                  type="button"
-                  className="inline-flex h-12 items-center gap-2 rounded-full bg-foreground px-6 text-sm font-semibold text-background shadow-md"
-                >
-                  Ir para o Painel <ArrowRight className="h-4 w-4" />
-                </motion.button>
-              </Link>
-            </SignedIn>
-            <Link
-              href="#features"
-              className="inline-flex h-12 items-center px-4 text-sm font-medium text-muted-foreground hover:text-foreground"
+          <div className="flex flex-col items-start text-left lg:col-span-5">
+            <motion.h1
+              {...motionProps(fadeUp)}
+              className="text-balance font-sans text-4xl font-extrabold leading-[1.1] tracking-tight text-slate-900 sm:text-5xl md:text-6xl"
             >
-              Ver recursos
+              Crie currículos que{' '}
+              <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                passam no ATS
+              </span>{' '}
+              e se destaque.
+            </motion.h1>
+
+            <motion.p
+              {...motionProps(fadeUp)}
+              className="mt-6 max-w-xl text-pretty text-base leading-relaxed text-slate-600 md:text-lg"
+            >
+              Crie um currículo profissional em poucos minutos, com ajuda da IA, e aumente suas chances de chamar atenção dos recrutadores.
+            </motion.p>
+
+            <motion.div
+              {...motionProps(fadeUp)}
+              className="mt-8 flex flex-col items-stretch gap-3 sm:flex-row sm:items-center w-full sm:w-auto"
+            >
+              <SignedOut>
+                <SignUpButton mode="modal" forceRedirectUrl="/dashboard">
+                  <motion.button
+                    {...hoverLift}
+                    type="button"
+                    className="group inline-flex h-12 items-center justify-center gap-2 rounded-full bg-blue-600 px-6 text-sm font-semibold text-white shadow-md hover:bg-blue-700 transition-colors cursor-pointer"
+                  >
+                    Criar Currículo Grátis
+                    <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                  </motion.button>
+                </SignUpButton>
+              </SignedOut>
+              <SignedIn>
+                <Link href="/dashboard" className="w-full sm:w-auto">
+                  <motion.button
+                    {...hoverLift}
+                    type="button"
+                    className="group inline-flex h-12 items-center justify-center gap-2 rounded-full bg-blue-600 px-6 text-sm font-semibold text-white shadow-md hover:bg-blue-700 transition-colors w-full cursor-pointer"
+                  >
+                    Ir para o Painel
+                    <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                  </motion.button>
+                </Link>
+              </SignedIn>
+              <Link href="#templates" className="inline-flex h-12 items-center justify-center px-4 text-sm font-semibold text-slate-600 hover:text-blue-600 transition-colors">
+                Ver templates
+              </Link>
+            </motion.div>
+
+            <motion.p
+              {...motionProps(fadeIn)}
+              className="mt-4 text-xs text-slate-500"
+            >
+              Sem cartão de crédito · 1 currículo grátis · Exportação de PDF com marca d&apos;água
+            </motion.p>
+          </div>
+
+          <div className="lg:col-span-7 flex justify-center lg:justify-end">
+            <motion.div
+              initial={reduce ? false : { opacity: 0, scale: 0.98, x: 15 }}
+              animate={reduce ? false : { opacity: 1, scale: 1, x: 0 }}
+              transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+              className="relative w-full max-w-[640px]"
+            >
+              <motion.div
+                animate={reduce ? undefined : { y: [0, -10, 0] }}
+                transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+              >
+                <Image
+                  src="/home.png"
+                  alt="Interface do Gerador de Currículos ATRION"
+                  width={640}
+                  height={480}
+                  priority
+                  className="w-full h-auto object-contain"
+                />
+              </motion.div>
+            </motion.div>
+          </div>
+
+        </div>
+      </section>
+
+      <section id="curriculo" className="relative border-y border-slate-200/60 bg-slate-50 py-20 md:py-24 overflow-hidden">
+        <motion.div 
+          animate={reduce ? undefined : { rotate: [45, 50, 45], opacity: [0.5, 0.7, 0.5] }}
+          transition={{ duration: 7, repeat: Infinity, ease: 'easeInOut' }}
+          className="absolute top-10 left-10 w-64 h-64 border-2 border-blue-100 rotate-45 pointer-events-none opacity-50" 
+        />
+        <motion.div 
+          animate={reduce ? undefined : { scale: [1, 1.05, 1], rotate: [12, 15, 12] }}
+          transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
+          className="absolute bottom-10 right-20 w-48 h-48 bg-indigo-50 rotate-12 pointer-events-none" 
+        />
+
+        <div className="mx-auto max-w-6xl px-4 relative">
+          <div className="grid gap-12 lg:grid-cols-12 lg:items-center">
+
+            <div className="lg:col-span-5 flex flex-col items-start">
+              <span className="text-xs font-bold uppercase tracking-widest text-blue-600">ATS Performance</span>
+              <h2 className="mt-3 font-sans text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">
+                O resultado final que abre portas de emprego
+              </h2>
+              <p className="mt-4 text-slate-600 leading-relaxed text-sm">
+                Seu currículo é gerado com base nas regras mais estritas que os sistemas de recrutamento (ATS) e recrutadores estão usando agora. Visual limpo, hierarquia clara e leitura facilitada.
+              </p>
+
+              <motion.div 
+                {...inViewProps(staggerContainer(0.15))}
+                className="mt-8 space-y-5 w-full"
+              >
+                {[
+                  { title: 'Otimização com Palavras-chave', text: 'Atraia a atenção dos recrutadores e passe pelos filtros de IA.' },
+                  { title: 'Formatos Aprovados por Recrutadores', text: 'Layouts limpos e compatíveis com os critérios de grandes empresas e consultorias.' },
+                  { title: 'Score de Qualidade em Tempo Real', text: 'Entenda o desempenho do seu currículo e melhore antes de enviar.' },
+                ].map((item, idx) => (
+                  <motion.div
+                    key={idx}
+                    variants={fadeUp}
+                    className="flex gap-4 group cursor-default"
+                    whileHover={{ x: 4 }}
+                  >
+                    <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-blue-600 text-white shadow-sm shadow-blue-500/10">
+                      <Check className="h-3.5 w-3.5" />
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-slate-900 text-sm leading-none">{item.title}</h4>
+                      <p className="text-slate-500 text-xs mt-1.5 leading-relaxed">{item.text}</p>
+                    </div>
+                  </motion.div>
+                ))}
+              </motion.div>
+            </div>
+
+            <div className="lg:col-span-7 relative">
+              <motion.div
+                initial={reduce ? false : { opacity: 0, x: 20 }}
+                whileInView={reduce ? undefined : { opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6 }}
+                className="relative w-full"
+              >
+                <motion.div
+                  animate={reduce ? undefined : { y: [0, -10, 0] }}
+                  transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
+                >
+                  <Image
+                    src="/sobre_atrion.png"
+                    alt="Plataforma ATRION - Performance ATS"
+                    width={800}
+                    height={600}
+                    className="w-full h-auto object-contain drop-shadow-xl"
+                  />
+                </motion.div>
+              </motion.div>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      <section id="templates" className="relative bg-white py-20 md:py-24 overflow-hidden">
+        <motion.div 
+          animate={reduce ? undefined : { rotate: [30, 35, 30], scale: [1, 1.02, 1] }}
+          transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
+          className="absolute -left-20 top-40 w-96 h-96 border border-slate-100 rotate-[30deg] pointer-events-none" 
+        />
+        <motion.div 
+          animate={reduce ? undefined : { y: [0, -20, 0] }}
+          transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
+          className="absolute right-10 bottom-20 w-32 h-32 bg-blue-50/50 rotate-45 pointer-events-none" 
+        />
+
+        <div className="mx-auto max-w-6xl px-4 relative z-10">
+          <div className="mx-auto max-w-3xl text-center mb-16">
+            <span className="text-xs font-bold uppercase tracking-widest text-blue-600">Templates Profissionais</span>
+            <h2 className="mt-3 font-sans text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">
+              Modelos projetados para cada objetivo de carreira
+            </h2>
+            <p className="mt-3 text-slate-500 text-sm max-w-xl mx-auto">
+              Escolha entre templates otimizados e 100% compatíveis com ATS. Desenhos modernos que comunicam profissionalismo e facilitam a leitura dos recrutadores.
+            </p>
+          </div>
+
+          <motion.div 
+            {...inViewProps(fadeUp)}
+            className="grid gap-6 md:grid-cols-2 lg:grid-cols-4"
+          >
+            <div
+              onClick={() => setSelectedTemplate('modern')}
+              className={`group flex flex-col justify-between h-full rounded-2xl border p-5 bg-white cursor-pointer transition-all duration-300 ${selectedTemplate === 'modern'
+                ? 'border-blue-600 shadow-md shadow-blue-500/5 ring-1 ring-blue-600/10'
+                : 'border-slate-200 hover:border-slate-300 shadow-sm'
+                }`}
+            >
+              <div>
+                <div className="rounded-lg overflow-hidden border border-slate-100 mb-4 bg-slate-50 relative">
+                  <ResumeCardPreview content={DUMMY_CONTENT} templateId="modern" className="h-40" />
+                </div>
+
+                <h3 className="font-bold text-slate-900 text-sm flex items-center justify-between">
+                  Moderno
+                  <span className="text-[9px] font-bold bg-blue-50 text-blue-700 px-1.5 py-0.5 rounded">Mais usado</span>
+                </h3>
+                <p className="text-slate-500 text-xs mt-1.5 leading-relaxed">
+                  Design contemporâneo e limpo, ideal para quase todas as áreas profissionais.
+                </p>
+              </div>
+              <button
+                type="button"
+                className={`mt-4 w-full h-8 text-xs font-bold rounded-lg transition-colors cursor-pointer ${selectedTemplate === 'modern' ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                  }`}
+              >
+                Selecionar
+              </button>
+            </div>
+
+            <div
+              onClick={() => setSelectedTemplate('classic')}
+              className={`group flex flex-col justify-between h-full rounded-2xl border p-5 bg-white cursor-pointer transition-all duration-300 ${selectedTemplate === 'classic'
+                ? 'border-blue-600 shadow-md shadow-blue-500/5 ring-1 ring-blue-600/10'
+                : 'border-slate-200 hover:border-slate-300 shadow-sm'
+                }`}
+            >
+              <div>
+                <div className="rounded-lg overflow-hidden border border-slate-100 mb-4 bg-slate-50 relative">
+                  <ResumeCardPreview content={DUMMY_CONTENT} templateId="classic" className="h-40" />
+                </div>
+
+                <h3 className="font-bold text-slate-900 text-sm">Clássico</h3>
+                <p className="text-slate-500 text-xs mt-1.5 leading-relaxed">
+                  Estilo tradicional e elegante, perfeito para áreas corporativas e posições executivas.
+                </p>
+              </div>
+              <button
+                type="button"
+                className={`mt-4 w-full h-8 text-xs font-bold rounded-lg transition-colors cursor-pointer ${selectedTemplate === 'classic' ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                  }`}
+              >
+                Selecionar
+              </button>
+            </div>
+
+            <div
+              onClick={() => setSelectedTemplate('creative')}
+              className={`group flex flex-col justify-between h-full rounded-2xl border p-5 bg-white cursor-pointer transition-all duration-300 ${selectedTemplate === 'creative'
+                ? 'border-blue-600 shadow-md shadow-blue-500/5 ring-1 ring-blue-600/10'
+                : 'border-slate-200 hover:border-slate-300 shadow-sm'
+                }`}
+            >
+              <div>
+                <div className="rounded-lg overflow-hidden border border-slate-100 mb-4 bg-slate-50 relative">
+                  <ResumeCardPreview content={DUMMY_CONTENT} templateId="creative" className="h-40" />
+                </div>
+
+                <h3 className="font-bold text-slate-900 text-sm">Criativo</h3>
+                <p className="text-slate-500 text-xs mt-1.5 leading-relaxed">
+                  Destaque sua personalidade com um layout moderno e equilibrado.
+                </p>
+              </div>
+              <button
+                type="button"
+                className={`mt-4 w-full h-8 text-xs font-bold rounded-lg transition-colors cursor-pointer ${selectedTemplate === 'creative' ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                  }`}
+              >
+                Selecionar
+              </button>
+            </div>
+
+            <div
+              onClick={() => setSelectedTemplate('sidebar')}
+              className={`group flex flex-col justify-between h-full rounded-2xl border p-5 bg-white cursor-pointer transition-all duration-300 ${selectedTemplate === 'sidebar'
+                ? 'border-blue-600 shadow-md shadow-blue-500/5 ring-1 ring-blue-600/10'
+                : 'border-slate-200 hover:border-slate-300 shadow-sm'
+                }`}
+            >
+              <div>
+                <div className="rounded-lg overflow-hidden border border-slate-100 mb-4 bg-slate-50 relative">
+                  <ResumeCardPreview content={DUMMY_CONTENT} templateId="blue-right-sidebar" className="h-40" />
+                </div>
+
+                <h3 className="font-bold text-slate-900 text-sm">Lateral</h3>
+                <p className="text-slate-500 text-xs mt-1.5 leading-relaxed">
+                  Organização em duas colunas para destacar habilidades e informações-chave.
+                </p>
+              </div>
+              <button
+                type="button"
+                className={`mt-4 w-full h-8 text-xs font-bold rounded-lg transition-colors cursor-pointer ${selectedTemplate === 'sidebar' ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                  }`}
+              >
+                Selecionar
+              </button>
+            </div>
+
+          </motion.div>
+
+          <div className="mt-12 text-center">
+            <Link
+              href="/dashboard"
+              className="inline-flex items-center gap-1.5 text-xs font-bold text-blue-600 hover:text-blue-700 transition-colors"
+            >
+              Ver todos os templates <ArrowRight className="h-3.5 w-3.5" />
             </Link>
           </div>
-        </motion.div>
+        </div>
       </section>
 
-      <footer className="container border-t border-border/60 py-8">
-        <div className="flex flex-col items-center justify-between gap-3 text-sm text-muted-foreground md:flex-row">
-          <p>© {new Date().getFullYear()} ATRION · Construído com Next.js, Tailwind, Framer Motion e Clerk.</p>
-          <div className="flex items-center gap-4">
-            <Link href="#contato" className="hover:text-foreground">Contato</Link>
-            <Link href="/pricing" className="hover:text-foreground">Planos</Link>
-            <SignedOut>
-              <Link href="/login" className="hover:text-foreground">Entrar</Link>
-            </SignedOut>
-            <SignedIn>
-              <Link href="/dashboard" className="hover:text-foreground">Painel</Link>
-            </SignedIn>
+      <section id="features" className="relative scroll-mt-20 py-20 md:py-24 bg-slate-50 border-y border-slate-200/60 overflow-hidden">
+        <motion.div 
+          animate={reduce ? undefined : { rotate: [12, 16, 12], scale: [1, 1.02, 1] }}
+          transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut' }}
+          className="absolute top-0 right-0 w-[500px] h-[500px] border-[40px] border-white/40 -translate-y-1/2 translate-x-1/3 rotate-12 pointer-events-none" 
+        />
+
+        <div className="mx-auto max-w-6xl px-4 relative z-10">
+          <motion.div
+            {...inViewProps(fadeUp)}
+            className="mx-auto mb-16 max-w-2xl text-center"
+          >
+            <span className="text-xs font-bold uppercase tracking-widest text-blue-600">Recursos Exclusivos</span>
+            <h2 className="mt-3 font-sans text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">
+              Tecnologia de ponta a favor da sua carreira
+            </h2>
+            <p className="mt-3 text-slate-500 text-sm max-w-xl mx-auto">
+              Mais do que um gerador de currículos. Uma plataforma completa alimentada por IA para impulsionar sua jornada profissional.
+            </p>
+          </motion.div>
+
+          <motion.div
+            {...inViewProps(staggerContainer(0.06, 0.1))}
+            className="grid gap-6 md:grid-cols-3"
+          >
+            {[
+              {
+                icon: <FileText className="h-5 w-5" />,
+                title: 'Análise de Currículo',
+                desc: 'A IA avalia seu currículo e aponta problemas gramaticais ou de estrutura que podem prejudicar sua aprovação no ATS.',
+                highlight: true,
+                badge: 'DESTAQUE',
+              },
+              {
+                icon: <Sparkles className="h-5 w-5" />,
+                title: 'Adaptação por Vaga',
+                desc: 'Adapte seu currículo para cada vaga de forma automática com sugestões de palavras-chave.',
+              },
+              {
+                icon: <Linkedin className="h-5 w-5" />,
+                title: 'Auditoria LinkedIn',
+                desc: 'Receba um relatório completo do seu perfil do LinkedIn e sugestões para se destacar para recrutadores.',
+              },
+              {
+                icon: <Target className="h-5 w-5" />,
+                title: 'Score ATS Objetivo',
+                desc: 'Pontuação clara que mostra como seu currículo será avaliado pelos sistemas automáticos.',
+              },
+              {
+                icon: <Zap className="h-5 w-5" />,
+                title: 'Desempenho em Tempo Real',
+                desc: 'Melhore seu currículo com feedback instantâneo enquanto você edita.',
+              },
+              {
+                icon: <ShieldCheck className="h-5 w-5" />,
+                title: 'Privacidade em Foco',
+                desc: 'Seus dados são protegidos com criptografia de ponta a ponta e não são compartilhados.',
+              },
+            ].map((f) => (
+              <motion.div key={f.title} variants={fadeUp} {...hoverLift}>
+                <FeatureCard
+                  icon={f.icon}
+                  title={f.title}
+                  description={f.desc}
+                  highlight={f.highlight}
+                  badge={f.badge}
+                />
+              </motion.div>
+            ))}
+          </motion.div>
+        </div>
+      </section>
+
+      <section id="pricing" className="relative scroll-mt-20 py-20 md:py-24 bg-white overflow-hidden">
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#f1f5f9_1px,transparent_1px),linear-gradient(to_bottom,#f1f5f9_1px,transparent_1px)] bg-[size:3rem_3rem] [mask-image:linear-gradient(to_bottom,transparent,black_10%,black_90%,transparent)] opacity-30 pointer-events-none" />
+        <motion.div 
+          animate={reduce ? undefined : { y: [0, -10, 0], rotate: [45, 90, 45] }}
+          transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
+          className="absolute left-1/4 top-1/4 w-12 h-12 bg-blue-100 rotate-45 pointer-events-none" 
+        />
+
+        <div className="mx-auto max-w-6xl px-4 relative z-10">
+          <motion.div {...inViewProps(fadeUp)} className="mx-auto mb-16 max-w-2xl text-center">
+            <span className="text-xs font-bold uppercase tracking-widest text-blue-600">Investimento</span>
+            <h2 className="mt-3 font-sans text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">
+              Planos diretos, sem letras miúdas
+            </h2>
+            <p className="mt-3 text-slate-500 text-sm">
+              Comece sem custos. Contrate planos pagos apenas quando precisar de mais recursos.
+            </p>
+          </motion.div>
+
+          <motion.div
+            {...inViewProps(staggerContainer(0.08, 0.1))}
+            className="grid gap-6 max-w-5xl mx-auto md:grid-cols-3 items-stretch"
+          >
+            <Plan
+              name="Free"
+              price="R$ 0"
+              features={['1 currículo ativo', 'Análise básica com IA (pontuação geral)', '3 templates básicos', "Menor destaque no score ATS"]}
+              cta="Começar Grátis"
+              href="/dashboard"
+            />
+            <Plan
+              name="Pro"
+              price="R$ 19,90"
+              suffix="/mês"
+              highlight
+              features={['10 currículos ativos', 'Acesso completo a IA (análises e sugestões ilimitadas)', 'Templates Premium', 'Auditoria de perfil LinkedIn', 'Suporte prioritário via e-mail']}
+              cta="Escolher Plano Pro"
+              href="/pricing"
+            />
+            <Plan
+              name="Max"
+              price="R$ 39,90"
+              suffix="/mês"
+              features={['20 currículos ativos', 'IA ilimitada para revisões de texto', 'Auditoria de perfil LinkedIn Premium', 'Dicas semanais exclusivas de recrutadores']}
+              cta="Escolher Plano Max"
+              href="/pricing"
+            />
+          </motion.div>
+        </div>
+      </section>
+
+      <section className="py-20 md:py-24 bg-white border-t border-slate-200/60">
+        <div className="mx-auto max-w-6xl px-4">
+          <motion.div
+            {...inViewProps(scaleIn)}
+            className="relative mx-auto max-w-5xl overflow-hidden rounded-3xl bg-gradient-to-t from-blue-950 to-blue-600 p-8 md:p-12 text-white shadow-lg shadow-blue-500/10"
+          >
+
+            <div className="absolute top-0 right-0 w-96 h-full bg-white/5 -skew-x-12 translate-x-10 pointer-events-none" />
+
+            <div className="grid gap-8 md:grid-cols-12 md:items-center relative">
+
+              <div className="md:col-span-7 text-left">
+                <h2 className="font-sans text-3xl font-extrabold tracking-tight md:text-4xl text-white">
+                  Alavanque sua recolocação profissional agora
+                </h2>
+                <p className="mt-4 max-w-xl text-blue-100 text-sm leading-relaxed">
+                  Crie seu primeiro currículo otimizado com nossa inteligência artificial em menos de 5 minutos. Rápido, profissional e gratuito.
+                </p>
+                <div className="mt-8 flex flex-wrap items-center gap-4">
+                  <SignedOut>
+                    <SignUpButton mode="modal" forceRedirectUrl="/dashboard">
+                      <motion.button
+                        {...hoverLift}
+                        type="button"
+                        className="inline-flex h-11 items-center gap-1.5 rounded-full bg-white px-6 text-xs font-bold text-blue-600 shadow-sm transition-all hover:bg-slate-50 cursor-pointer"
+                      >
+                        Cadastrar Grátis <ArrowRight className="h-3.5 w-3.5" />
+                      </motion.button>
+                    </SignUpButton>
+                  </SignedOut>
+                  <SignedIn>
+                    <Link href="/dashboard">
+                      <motion.button
+                        {...hoverLift}
+                        type="button"
+                        className="inline-flex h-11 items-center gap-1.5 rounded-full bg-white px-6 text-xs font-bold text-blue-600 shadow-sm transition-all hover:bg-slate-50 cursor-pointer"
+                      >
+                        Ir para o Painel <ArrowRight className="h-3.5 w-3.5" />
+                      </motion.button>
+                    </Link>
+                  </SignedIn>
+                  <Link
+                    href="#features"
+                    className="inline-flex h-11 items-center px-4 text-xs font-bold text-blue-100 hover:text-white transition-colors"
+                  >
+                    Conhecer recursos
+                  </Link>
+                </div>
+              </div>
+
+              <div className="md:col-span-5 flex justify-center relative">
+                <motion.div
+                  initial={reduce ? false : { opacity: 0, scale: 0.95 }}
+                  whileInView={reduce ? undefined : { opacity: 1, scale: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5 }}
+                  className="w-full relative"
+                >
+                  <motion.div
+                    animate={reduce ? undefined : { y: [0, -10, 0] }}
+                    transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+                  >
+                    <Image
+                      src="/dados_atrion.png"
+                      alt="Gráficos e dados da plataforma ATRION"
+                      width={400}
+                      height={300}
+                      className="w-full h-auto object-contain drop-shadow-2xl"
+                    />
+                  </motion.div>
+                </motion.div>
+              </div>
+
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
+      <footer className="relative bg-gradient-to-t from-blue-950 to-blue-600 text-blue-100 py-16 overflow-hidden">
+        <div className="absolute inset-0 z-0 select-none pointer-events-none opacity-30 flex items-center justify-center p-8 mix-blend-overlay">
+          <Image
+            src="/Logo-atrion-fundo.png"
+            alt=""
+            fill
+            className="object-contain object-center"
+          />
+        </div>
+
+        <div className="mx-auto max-w-6xl px-4 relative z-10">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-8">
+
+            <div className="flex flex-col items-center md:items-start gap-3">
+              <Image src="/Logo-atrion-fundo.png" alt="ATRION" width={150} height={50} className="h-6 w-auto" />
+              <p className="text-xs text-blue-200">
+                Otimizando sua recolocação com inteligência artificial.
+              </p>
+            </div>
+
+            <div className="flex flex-wrap justify-center gap-x-8 gap-y-2 text-xs font-medium text-white">
+              <Link href="/#templates" className="hover:text-blue-200 transition-colors">Templates</Link>
+              <Link href="/#pricing" className="hover:text-blue-200 transition-colors">Planos</Link>
+              <Link href="/termos" className="hover:text-blue-200 transition-colors">Termos</Link>
+              <Link href="/privacidade" className="hover:text-blue-200 transition-colors">Privacidade</Link>
+              <Link href="/#curriculo" className="hover:text-blue-200 transition-colors">Exemplo</Link>
+            </div>
+
+          </div>
+
+          <div className="mt-8 pt-8 border-t border-blue-400/30 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-blue-200">
+            <p>© {new Date().getFullYear()} ATRION. Todos os direitos reservados.</p>
+
+            <div className="flex items-center gap-4">
+              <a href="#" className="hover:text-white transition-colors" aria-label="LinkedIn">
+                <Linkedin className="h-4 w-4" />
+              </a>
+              <a href="#" className="hover:text-white transition-colors" aria-label="Instagram">
+                <Instagram className="h-4 w-4" />
+              </a>
+            </div>
           </div>
         </div>
       </footer>
@@ -339,10 +702,22 @@ export default function HomePage() {
 }
 
 function NavLink({ href, children }: { href: string; children: React.ReactNode }) {
+  const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    if (href.startsWith('/#')) {
+      const targetId = href.replace('/#', '');
+      const el = document.getElementById(targetId);
+      if (el) {
+        e.preventDefault();
+        el.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+  };
+
   return (
     <Link
       href={href}
-      className="rounded-full px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+      onClick={handleClick}
+      className="rounded-full px-4 py-2 text-sm font-semibold text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900"
     >
       {children}
     </Link>
@@ -353,18 +728,53 @@ function FeatureCard({
   icon,
   title,
   description,
+  highlight = false,
+  badge,
 }: {
   icon: React.ReactNode;
   title: string;
   description: string;
+  highlight?: boolean;
+  badge?: string;
 }) {
   return (
-    <div className="group h-full rounded-2xl border border-border/60 bg-card/70 p-6 shadow-sm backdrop-blur transition-colors hover:border-border hover:bg-card">
-      <div className="mb-4 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500/15 to-fuchsia-500/10 text-indigo-600 ring-1 ring-inset ring-indigo-500/20">
-        {icon}
+    <div className={`group relative h-full rounded-2xl p-6 transition-all duration-300 hover:-translate-y-0.5 overflow-hidden ${highlight
+      ? 'bg-gradient-to-br from-blue-600 to-indigo-700 text-white shadow-lg shadow-blue-500/10'
+      : 'border border-slate-200 bg-white text-slate-900 shadow-sm hover:border-slate-300 hover:shadow-md hover:shadow-blue-500/5'
+      }`}>
+      {highlight && (
+        <svg className="absolute bottom-0 right-0 w-32 h-14 text-white/20 pointer-events-none" viewBox="0 0 100 50" fill="none" stroke="currentColor" strokeWidth="1.2">
+          <path d="M0 45 C 30 35, 60 45, 100 35 M0 40 C 30 30, 60 40, 100 30 M0 35 C 30 25, 60 35, 100 25 M0 30 C 30 20, 60 30, 100 20" />
+        </svg>
+      )}
+
+      <div className="flex items-center justify-between mb-6">
+        <div className={`inline-flex h-12 w-12 items-center justify-center rounded-xl transition-transform duration-300 group-hover:scale-110 ${highlight
+          ? 'bg-white/10 text-white border border-white/20 backdrop-blur-sm'
+          : 'bg-indigo-50 text-indigo-600 ring-1 ring-inset ring-indigo-500/10'
+          }`}>
+          {icon}
+        </div>
+
+        {badge && (
+          <span className={`text-[9px] font-extrabold uppercase tracking-wider px-2.5 py-1 rounded-full ${highlight ? 'bg-white/20 text-white' : 'bg-indigo-50 text-indigo-600'
+            }`}>
+            {badge}
+          </span>
+        )}
       </div>
-      <h3 className="mb-2 text-base font-semibold tracking-tight">{title}</h3>
-      <p className="text-sm leading-relaxed text-muted-foreground">{description}</p>
+
+      <h3 className={`text-base font-bold tracking-tight ${highlight ? 'text-white' : 'text-slate-900'}`}>
+        {title}
+      </h3>
+
+      {!highlight && (
+        <div className="h-[2px] w-8 bg-blue-600/70 rounded mt-2.5 mb-3" />
+      )}
+
+      <p className={`text-xs leading-relaxed mt-2.5 ${highlight ? 'text-blue-100/90' : 'text-slate-500'}`}>
+        {description}
+      </p>
     </div>
   );
 }
@@ -387,86 +797,45 @@ function Plan({
   href: string;
 }) {
   return (
-    <motion.div variants={fadeUp} {...hoverLift}>
+    <motion.div variants={fadeUp} {...hoverLift} className="h-full">
       <div
-        className={`relative flex flex-col h-full rounded-2xl border p-6 transition-colors ${highlight
-            ? 'border-transparent bg-foreground text-background shadow-2xl shadow-indigo-500/20'
-            : 'border-border/60 bg-card/70 text-foreground backdrop-blur'
+        className={`relative flex flex-col h-full rounded-3xl border p-6 transition-all duration-300 ${highlight
+          ? 'border-blue-600 bg-white text-slate-900 shadow-md shadow-blue-500/10 ring-1 ring-blue-600/10 scale-[1.01]'
+          : 'border-slate-200/80 bg-white text-slate-900 shadow-sm hover:border-slate-300'
           }`}
       >
         {highlight && (
-          <span className="absolute -top-3 right-6 rounded-full bg-gradient-to-r from-indigo-500 to-fuchsia-500 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-white shadow">
+          <span className="absolute -top-3 right-6 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-white shadow-sm">
             Mais popular
           </span>
         )}
-        <div className={`mb-1 text-sm font-medium ${highlight ? 'text-background/70' : 'text-muted-foreground'}`}>{name}</div>
-        <div className="mb-5 flex items-baseline gap-1">
-          <span className="text-3xl font-bold tracking-tight">{price}</span>
-          {suffix && <span className={`text-sm ${highlight ? 'text-background/60' : 'text-muted-foreground'}`}>{suffix}</span>}
+        <div className={`mb-1 text-xs font-bold uppercase tracking-wider ${highlight ? 'text-blue-600' : 'text-slate-400'}`}>
+          {name}
         </div>
-        <ul className="mb-6 flex-1 space-y-2.5 text-sm">
+        <div className="mb-5 flex items-baseline gap-1">
+          <span className="text-3xl font-extrabold tracking-tight text-slate-900">{price}</span>
+          {suffix && <span className="text-xs text-slate-500">{suffix}</span>}
+        </div>
+        <ul className="mb-6 flex-1 space-y-3 text-xs leading-relaxed">
           {features.map((f) => (
             <li key={f} className="flex items-start gap-2.5">
-              <Check className={`mt-0.5 h-4 w-4 flex-shrink-0 ${highlight ? 'text-emerald-400' : 'text-indigo-500'}`} />
-              <span className={highlight ? 'text-background/85' : 'text-foreground/80'}>{f}</span>
+              <Check className={`mt-0.5 h-4 w-4 flex-shrink-0 ${highlight ? 'text-blue-600' : 'text-slate-400'}`} />
+              <span className="text-slate-600">{f}</span>
             </li>
           ))}
         </ul>
-        <Link href={href} className={`mt-auto inline-flex h-10 w-full items-center justify-center rounded-lg text-sm font-semibold transition-colors ${highlight ? 'bg-background text-foreground hover:bg-background/90' : 'bg-foreground text-background hover:bg-foreground/90'}`}>
-          {cta}
+        <Link href={href} className="mt-auto block w-full">
+          <button
+            type="button"
+            className={`w-full h-10 rounded-xl text-xs font-bold transition-colors cursor-pointer ${highlight
+              ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-sm'
+              : 'bg-slate-100 text-slate-800 hover:bg-slate-200'
+              }`}
+          >
+            {cta}
+          </button>
         </Link>
       </div>
     </motion.div>
-  );
-}
-
-function HeroMockup() {
-  return (
-    <div className="relative mx-auto rounded-2xl border border-border/60 bg-card/80 p-3 shadow-2xl shadow-indigo-500/10 backdrop-blur">
-      <div className="rounded-xl border border-border/60 bg-background">
-        {/* Mockup "editor" - minimalista */}
-        <div className="flex items-center gap-2 border-b border-border/60 px-4 py-2.5">
-          <div className="flex gap-1.5">
-            <span className="h-2.5 w-2.5 rounded-full bg-rose-400/70" />
-            <span className="h-2.5 w-2.5 rounded-full bg-amber-400/70" />
-            <span className="h-2.5 w-2.5 rounded-full bg-emerald-400/70" />
-          </div>
-          <span className="ml-3 text-xs text-muted-foreground">currículo-marcos-souza.pdf</span>
-          <div className="ml-auto flex items-center gap-2">
-            <span className="hidden text-xs text-muted-foreground sm:inline">ATS Score</span>
-            <span className="rounded-full bg-emerald-500/15 px-2.5 py-0.5 text-xs font-semibold text-emerald-600">
-              92 / 100
-            </span>
-          </div>
-        </div>
-        <div className="grid gap-4 p-6 md:grid-cols-3">
-          <Stat icon={<BarChart3 className="h-3.5 w-3.5" />} label="Palavras-chave" value="14/15" />
-          <Stat icon={<Globe2 className="h-3.5 w-3.5" />} label="Idiomas" value="2" />
-          <Stat icon={<Briefcase className="h-3.5 w-3.5" />} label="Experiências" value="4" />
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function Stat({
-  icon,
-  label,
-  value,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  value: string;
-}) {
-  return (
-    <div className="flex items-center gap-3 rounded-xl border border-border/60 bg-card px-4 py-3">
-      <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-500/10 text-indigo-600">
-        {icon}
-      </span>
-      <div>
-        <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{label}</p>
-        <p className="text-sm font-semibold">{value}</p>
-      </div>
-    </div>
   );
 }

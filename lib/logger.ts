@@ -20,10 +20,7 @@ interface LogOptions {
   details?: Record<string, unknown>;
 }
 
-/**
- * Registra uma ação do usuário na tabela ActivityLog.
- * Tenta capturar o IP e o User-Agent a partir dos headers da requisição, se disponíveis.
- */
+// Registra ação do usuário na tabela ActivityLog.
 export async function logUserAction({ userId, action, details }: LogOptions) {
   try {
     let ipAddress = null;
@@ -34,7 +31,7 @@ export async function logUserAction({ userId, action, details }: LogOptions) {
       ipAddress = headersList.get('x-forwarded-for') || headersList.get('x-real-ip') || null;
       userAgent = headersList.get('user-agent') || null;
     } catch {
-      // Ignorar erros caso headers() não possa ser chamado neste contexto (ex: rotas não-dinâmicas)
+      // headers() indisponível neste contexto
     }
 
     await prisma.activityLog.create({
@@ -47,7 +44,6 @@ export async function logUserAction({ userId, action, details }: LogOptions) {
       },
     });
   } catch (error) {
-    // Não vamos estourar um erro para o usuário se o log falhar
     console.error('Falha ao gravar ActivityLog:', error);
   }
 }

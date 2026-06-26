@@ -26,14 +26,29 @@ export function ResumeCardPreview({ content, templateId, colorScheme, className 
           className="overflow-hidden bg-white"
           style={{ width: '210mm', minHeight: '297mm' }}
         >
-          <ResumePreview
-            content={content}
-            templateId={templateId || 'classic'}
-            style={{
-              ...DEFAULT_STYLE,
-              primaryColor: colorScheme || DEFAULT_STYLE.primaryColor,
-            }}
-          />
+          {(() => {
+            let parsedStyle = DEFAULT_STYLE;
+            if (colorScheme && colorScheme.startsWith('{')) {
+              try {
+                parsedStyle = {
+                  ...DEFAULT_STYLE,
+                  ...JSON.parse(colorScheme),
+                };
+              } catch {}
+            } else if (colorScheme) {
+              parsedStyle = {
+                ...DEFAULT_STYLE,
+                primaryColor: colorScheme,
+              };
+            }
+            return (
+              <ResumePreview
+                content={content}
+                templateId={templateId || 'classic'}
+                style={parsedStyle}
+              />
+            );
+          })()}
         </div>
       </div>
       
