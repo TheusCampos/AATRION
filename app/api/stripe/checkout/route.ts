@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { getCurrentUser } from '@/lib/auth';
 import { stripe } from '@/lib/stripe';
 
+export const dynamic = 'force-dynamic';
+
 /**
  * GET /api/stripe/checkout?plan=PRO|MAX
  *

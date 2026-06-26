@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { headers } from 'next/headers';
 import { prisma } from '@/lib/prisma';
 
 export const dynamic = 'force-dynamic';
@@ -11,8 +12,13 @@ export const dynamic = 'force-dynamic';
 export async function GET(request: Request) {
   // SEC-007: Proteção da rota do Cron Job
   // Utilize a variável de ambiente CRON_SECRET (padrão em plataformas como Vercel)
-  const authHeader = request.headers.get('authorization');
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+  
+  // No build do Next.js, o `request` pode vir vazio em avaliações estáticas.
+  // Usar next/headers garante que ele opte pela renderização dinâmica.
+  const headersList = headers();
+  const authHeader = headersList.get('authorization') || (request?.headers ? request.headers.get('authorization') : null);
+
+  if (!process.env.CRON_SECRET || authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
     return NextResponse.json({ error: 'Acesso não autorizado ao Cron' }, { status: 401 });
   }
 
