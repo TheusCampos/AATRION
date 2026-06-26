@@ -7,6 +7,8 @@ import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { LinkedInAuditForm } from '@/components/forms/LinkedInAuditForm';
 
+export const dynamic = 'force-dynamic';
+
 export default async function LinkedInPage() {
   const user = await getCurrentUser();
   if (!user) redirect('/login');

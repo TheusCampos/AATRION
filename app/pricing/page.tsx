@@ -6,6 +6,8 @@ import { Card } from '@/components/ui/Card';
 import { PlanCard } from '@/components/pricing/PlanCard';
 import { getCurrentUser } from '@/lib/auth';
 
+export const dynamic = 'force-dynamic';
+
 export const metadata = {
   title: 'Planos · ATRION',
   description: 'Conheça os planos do ATRION e escolha o melhor para você',

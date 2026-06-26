@@ -5,6 +5,8 @@ import { updateSettingsSchema } from '@/lib/validations/user-settings';
 import { daysUntilRenewal } from '@/lib/plan';
 import { stripe } from '@/lib/stripe';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   const user = await getCurrentUser();
   if (!user) {

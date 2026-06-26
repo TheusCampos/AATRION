@@ -2,8 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentUser } from '@/lib/auth';
 import { checkRateLimit, RATE_LIMITS } from '@/lib/rate-limit';
 import { logUserAction } from '@/lib/logger';
-
 const ADZUNA_APP_ID = process.env.ADZUNA_APP_ID;
+
+export const dynamic = 'force-dynamic';
 const ADZUNA_APP_KEY = process.env.ADZUNA_APP_KEY;
 const ADZUNA_BASE_URL = 'https://api.adzuna.com/v1/api/jobs/br/search';
 

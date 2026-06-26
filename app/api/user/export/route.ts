@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getCurrentUser } from '@/lib/auth';
 
+export const dynamic = 'force-dynamic';
+
 /**
  * GET /api/user/export
  * Exporta todos os dados do usuário (Resumes, Audits, Logs) em conformidade com a LGPD.
