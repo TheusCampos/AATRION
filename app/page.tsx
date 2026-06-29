@@ -64,6 +64,8 @@ const DUMMY_CONTENT: ResumeContent = {
   certifications: []
 };
 
+import { LandingMobileMenu } from '@/components/layout/LandingMobileMenu';
+
 export default function HomePage() {
   const reduce = useReducedMotion();
   const [selectedTemplate, setSelectedTemplate] = useState<'modern' | 'classic' | 'creative' | 'sidebar'>('modern');
@@ -93,7 +95,7 @@ export default function HomePage() {
         animate={reduce ? false : 'visible'}
         className="sticky top-4 z-40 mx-auto w-full max-w-6xl px-4"
       >
-        <div className="flex h-16 items-center justify-between rounded-2xl border border-slate-200/80 bg-white/80 px-6 shadow-sm backdrop-blur-md">
+        <div className="flex h-16 items-center justify-between rounded-2xl border border-slate-200/80 bg-white/80 px-4 sm:px-6 shadow-sm backdrop-blur-md relative">
           <Link href="/" className="flex items-center gap-2 font-bold transition-opacity hover:opacity-95">
             <Image src="/Logo-atrion.png" alt="ATRION" width={110} height={26} className="h-6 w-auto" />
           </Link>
@@ -106,7 +108,7 @@ export default function HomePage() {
             <NavLink href="/#pricing">Planos</NavLink>
           </nav>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             <SignedOut>
               <SignInButton mode="modal" forceRedirectUrl="/dashboard">
                 <button
@@ -119,20 +121,25 @@ export default function HomePage() {
               <SignUpButton mode="modal" forceRedirectUrl="/dashboard">
                 <button
                   type="button"
-                  className="inline-flex h-10 items-center justify-center gap-1.5 rounded-full bg-blue-600 px-5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-blue-700 hover:scale-[1.01] active:scale-95 cursor-pointer"
+                  className="inline-flex h-10 items-center justify-center gap-1.5 rounded-full bg-blue-600 px-4 sm:px-5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-blue-700 hover:scale-[1.01] active:scale-95 cursor-pointer"
                 >
-                  Começar grátis <ArrowRight className="h-4 w-4" />
+                  <span className="hidden sm:inline">Começar grátis</span>
+                  <span className="sm:hidden">Começar</span>
+                  <ArrowRight className="h-4 w-4" />
                 </button>
               </SignUpButton>
             </SignedOut>
             <SignedIn>
               <Link
                 href="/dashboard"
-                className="inline-flex h-10 items-center justify-center gap-1.5 rounded-full bg-blue-600 px-5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-blue-700 hover:scale-[1.01] active:scale-95 cursor-pointer"
+                className="inline-flex h-10 items-center justify-center gap-1.5 rounded-full bg-blue-600 px-4 sm:px-5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-blue-700 hover:scale-[1.01] active:scale-95 cursor-pointer"
               >
-                Acessar Painel <ArrowRight className="h-4 w-4" />
+                <span className="hidden sm:inline">Acessar Painel</span>
+                <span className="sm:hidden">Painel</span>
+                <ArrowRight className="h-4 w-4" />
               </Link>
             </SignedIn>
+            <LandingMobileMenu />
           </div>
         </div>
       </motion.header>

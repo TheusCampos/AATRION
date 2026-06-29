@@ -502,7 +502,7 @@ export function ResumeEditor({
         />
       )}
 
-      <div className="grid gap-4 lg:grid-cols-[220px_1fr] xl:grid-cols-[240px_minmax(380px,1fr)_minmax(450px,1.2fr)] 2xl:grid-cols-[260px_minmax(450px,1fr)_minmax(600px,1.2fr)] w-full items-start">
+      <div className="grid gap-4 lg:grid-cols-[220px_1fr] xl:grid-cols-[240px_minmax(380px,1fr)_minmax(450px,1.2fr)] 2xl:grid-cols-[260px_minmax(450px,1fr)_minmax(600px,1.2fr)] w-full items-start pb-20 xl:pb-0">
         {/* Esquerda: Tabs e Qualidade */}
         <EditorSidebar content={content} tab={tab} setTab={setTab} completeness={completeness} />
 
@@ -698,6 +698,14 @@ export function ResumeEditor({
           </div>
         </div>
       )}
+      {/* Floating Action Button for Mobile/Tablet Preview */}
+      <button
+        onClick={() => setFullscreen(true)}
+        className="xl:hidden fixed bottom-6 right-6 z-40 flex h-14 items-center justify-center gap-2 rounded-full bg-indigo-600 px-6 font-bold text-white shadow-[0_8px_30px_rgba(79,70,229,0.3)] transition-transform hover:scale-105 hover:bg-indigo-700 active:scale-95"
+      >
+        <Maximize2 className="h-5 w-5" />
+        Visualizar Currículo
+      </button>
     </div>
   );
 }

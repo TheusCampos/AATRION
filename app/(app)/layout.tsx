@@ -7,6 +7,8 @@ import Image from 'next/image';
 import { getCurrentUser } from '@/lib/auth';
 import { HeaderWrapper } from '@/components/layout/HeaderWrapper';
 
+import { MobileMenu } from '@/components/layout/MobileMenu';
+
 export default async function AppLayout({
   children,
 }: {
@@ -21,7 +23,7 @@ export default async function AppLayout({
   return (
     <div className="relative min-h-screen bg-background bg-page-gradient">
       <HeaderWrapper>
-        <div className="flex h-14 items-center justify-between rounded-2xl border border-border/60 bg-card/80 px-4 shadow-sm backdrop-blur-md">
+        <div className="flex h-14 items-center justify-between rounded-2xl border border-border/60 bg-card/80 px-4 shadow-sm backdrop-blur-md relative">
           <div className="flex items-center gap-6">
             <Link href="/dashboard" className="flex items-center gap-2 font-bold">
               <Image src="/Logo-atrion.png" alt="ATRION Logo" width={100} height={24} className="h-6 w-auto" />
@@ -42,7 +44,7 @@ export default async function AppLayout({
           <div className="flex items-center gap-2">
             <Link
               href="/settings"
-              className="inline-flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+              className="hidden md:inline-flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
               title="Configurações"
             >
               <SettingsIcon className="h-5 w-5" />
@@ -50,6 +52,7 @@ export default async function AppLayout({
             <span className="hidden text-sm text-muted-foreground lg:inline">
               {user.name}
             </span>
+            <MobileMenu />
             <UserButton
               afterSignOutUrl="/"
               appearance={{
