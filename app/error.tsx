@@ -12,13 +12,19 @@ export default function Error({
 }) {
   useEffect(() => {
     // Captura a exceção no Error Tracking do PostHog (Next.js App Router)
-    posthog.capture('$exception', {
-      $exception_message: error.message,
-      $exception_type: error.name,
-      $exception_personURL: window.location.href,
-      // Se houver mais detalhes, como stack trace
-      $exception_stack_trace_raw: error.stack,
-    });
+    try {
+      if (posthog && typeof posthog.capture === 'function') {
+        posthog.capture('$exception', {
+          $exception_message: error.message,
+          $exception_type: error.name,
+          $exception_personURL: typeof window !== 'undefined' ? window.location.href : '',
+          // Se houver mais detalhes, como stack trace
+          $exception_stack_trace_raw: error.stack,
+        });
+      }
+    } catch (e) {
+      console.error('Failed to capture error in PostHog', e);
+    }
   }, [error]);
 
   return (

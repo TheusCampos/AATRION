@@ -502,8 +502,7 @@ export function ResumeEditor({
         />
       )}
 
-      {/* Trocado o grid gap e padding para ficar mais minimalista e responsivo */}
-      <div className="grid gap-6 lg:grid-cols-[240px_1fr] xl:grid-cols-[260px_minmax(450px,1fr)_minmax(600px,1.2fr)] w-full items-start">
+      <div className="grid gap-4 lg:grid-cols-[220px_1fr] xl:grid-cols-[240px_minmax(380px,1fr)_minmax(450px,1.2fr)] 2xl:grid-cols-[260px_minmax(450px,1fr)_minmax(600px,1.2fr)] w-full items-start">
         {/* Esquerda: Tabs e Qualidade */}
         <EditorSidebar content={content} tab={tab} setTab={setTab} completeness={completeness} />
 

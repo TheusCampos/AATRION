@@ -12,12 +12,18 @@ export default function GlobalError({
 }) {
   useEffect(() => {
     // Captura erros críticos de layout para o PostHog Error Tracking
-    posthog.capture('$exception', {
-      $exception_message: error.message,
-      $exception_type: error.name,
-      $exception_personURL: window.location.href,
-      $exception_stack_trace_raw: error.stack,
-    });
+    try {
+      if (posthog && typeof posthog.capture === 'function') {
+        posthog.capture('$exception', {
+          $exception_message: error.message,
+          $exception_type: error.name,
+          $exception_personURL: typeof window !== 'undefined' ? window.location.href : '',
+          $exception_stack_trace_raw: error.stack,
+        });
+      }
+    } catch (e) {
+      console.error('Failed to capture global error in PostHog', e);
+    }
   }, [error]);
 
   return (
