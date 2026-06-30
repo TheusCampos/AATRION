@@ -1,0 +1,122 @@
+// CVForge / ATRION — Schema Prisma
+// Banco atual: SQLite (./prisma/dev.db). Para Postgres troque o provider e DATABASE_URL.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// =====================================================
+// Auth / Usuario
+// =====================================================
+
+model User {
+  id        String   @id @default(cuid())
+  // Identificador externo do Clerk. Mantemos email/name para vinculo
+  // e continuidade de dados ao migrar para o Clerk.
+  clerkId   String?  @unique
+  email     String   @unique
+  name      String
+  // Plano do usuario: FREE | PRO | MAX (ver lib/plan.ts)
+  plan      String   @default("FREE")
+  // Quando o plano foi iniciado. Usado para calcular "dias ate a renovacao".
+  planStartedAt DateTime?
+  // Data de expiracao/renovacao. null = sem expiracao (FREE vitalicio).
+  planRenewsAt  DateTime?
+
+  // Preferencias pessoais editaveis pelo proprio usuario em /settings
+  phone           String?
+  jobTitle        String?
+  location        String?
+  linkedinUrl     String?
+  allowPdfDownload Boolean @default(true)
+
+  // Contadores mensais de uso de IA (resetam no mes calendario)
+  aiAnalyzeUsed  Int @default(0)
+  aiAdaptUsed    Int @default(0)
+  aiAuditUsed    Int @default(0)
+  // Periodo de referencia (primeiro dia do mes) dos contadores acima
+  aiUsagePeriod  String? // ex: "2026-06"
+
+  // Integracao Stripe
+  stripeCustomerId       String? @unique
+  stripeSubscriptionId   String? @unique
+  stripePriceId          String?
+  stripeCurrentPeriodEnd DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  resumes Resume[]
+  audits  LinkedInAudit[]
+  activityLogs ActivityLog[]
+
+  @@index([plan])
+}
+
+// =====================================================
+// Curriculo
+// =====================================================
+
+model Resume {
+  id          String   @id @default(cuid())
+  userId      String
+  title       String
+  // Conteudo serializado como JSON string (SQLite nao tem tipo JSON nativo;
+  // Prisma lida com a conversao automaticamente).
+  content     String
+  templateId  String   @default("classic")
+  colorScheme String   @default("blue")
+  atsScore    Int?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+// =====================================================
+// LinkedIn Audit
+// =====================================================
+
+model LinkedInAudit {
+  id           String   @id @default(cuid())
+  userId       String
+  profileUrl   String?
+  profileText  String
+  area         String?
+  targetJob    String?
+  status       String   @default("done") // processing | done | failed
+  overallScore Int      @default(0)      // 0-100
+  result       String   @default("{}")
+  createdAt    DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+// =====================================================
+// Logs de Atividade
+// =====================================================
+
+model ActivityLog {
+  id        String   @id @default(cuid())
+  userId    String
+  action    String
+  details   String?  // JSON string
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([action])
+  @@index([createdAt])
+}
