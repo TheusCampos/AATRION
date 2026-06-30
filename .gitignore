@@ -89,6 +89,7 @@ Desktop.ini
 prisma/migrations/dev.db*
 prisma/*.db
 prisma/*.db-journal
+.prisma/
 
 # --- Local env
 .env
