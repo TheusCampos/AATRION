@@ -82,14 +82,7 @@ export default function HomePage() {
   const motionProps = (variants: Parameters<typeof motion.div>[0]['variants']) =>
     reduce ? undefined : { initial: 'hidden', animate: 'visible', variants };
 
-  // Used for elements below the fold — triggers when they scroll into view
-  const inViewProps = (variants: Parameters<typeof motion.div>[0]['variants']) =>
-    reduce ? undefined : {
-      initial: 'hidden',
-      whileInView: 'visible',
-      viewport: { once: true, margin: '-80px' },
-      variants,
-    };
+
 
   return (
     <main className="relative min-h-screen overflow-x-hidden bg-[#F8FAFC] text-slate-900 selection:bg-blue-500/10 selection:text-blue-600">

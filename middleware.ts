@@ -10,7 +10,7 @@ const isProtectedRoute = createRouteMatcher([
 
 export default clerkMiddleware(async (auth, req) => {
   if (isProtectedRoute(req)) {
-    await auth.protect();
+    await auth().protect();
   }
   // Security headers (CSP, X-Frame-Options, etc.) are set in next.config.mjs.
   // Do NOT set them here — duplicate CSP headers cause the browser to enforce
