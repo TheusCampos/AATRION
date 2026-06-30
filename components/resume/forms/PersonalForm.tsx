@@ -154,7 +154,7 @@ export function PersonalForm({
         <div className="flex flex-col sm:flex-row items-center gap-5 pb-6 border-b border-slate-100 mb-6">
           <div className="relative h-20 w-20 rounded-full bg-slate-100 flex items-center justify-center border-2 border-slate-200 overflow-hidden flex-shrink-0">
             {content.personal.photo ? (
-
+              /* eslint-disable-next-line @next/next/no-img-element */
               <img
                 src={content.personal.photo}
                 alt={content.personal.name || 'Foto'}

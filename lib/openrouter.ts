@@ -2,6 +2,7 @@ import { OpenRouter } from "@openrouter/sdk";
 
 export type ChatMessage = {
   role: 'system' | 'user' | 'assistant';
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   content: string | any[];
 };
 
@@ -45,6 +46,7 @@ export async function openrouterChat(req: ChatRequest): Promise<ChatResponse> {
   const response = await openrouter.chat.send({
     chatRequest: {
       model: model,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       messages: req.messages as any,
       temperature: req.temperature ?? 0.7,
       maxTokens: req.max_tokens ?? 2048,

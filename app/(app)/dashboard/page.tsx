@@ -54,7 +54,7 @@ export default async function DashboardPage({
         let stripeSubscriptionId = null;
 
         if (session.mode === 'subscription' && session.subscription) {
-          const sub = session.subscription as any;
+          const sub = session.subscription as { current_period_end: number; id: string };
           planRenewsAt = new Date(sub.current_period_end * 1000);
           stripeSubscriptionId = sub.id;
         }

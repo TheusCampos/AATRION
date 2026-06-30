@@ -96,7 +96,7 @@ export function ResumeEditor({
   const [showStylePanel, setShowStylePanel] = useState(false);
   const [isExportingPdf, setIsExportingPdf] = useState(false);
   const [pdfPreviewUrl, setPdfPreviewUrl] = useState<string | null>(null);
-  const [pdfInstance, setPdfInstance] = useState<any | null>(null);
+  const [pdfInstance, setPdfInstance] = useState<unknown | null>(null);
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
   const [previewScale, setPreviewScale] = useState(100);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
@@ -210,7 +210,7 @@ export function ResumeEditor({
         .replace(/[^a-zA-Z0-9-_]+/g, '-')
         .replace(/^-+|-+$/g, '')
         .toLowerCase();
-      pdfInstance.save(`${safeTitle || 'curriculo'}.pdf`);
+      (pdfInstance as { save: (filename: string) => void }).save(`${safeTitle || 'curriculo'}.pdf`);
       closePreviewModal();
     }
   };

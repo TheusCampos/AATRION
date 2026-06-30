@@ -7,7 +7,6 @@ import {
   Phone,
   MapPin,
   Linkedin,
-  Globe,
   User,
   Briefcase,
   GraduationCap,
@@ -21,8 +20,9 @@ export function Resume3DShowcase() {
   const tiltRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (tiltRef.current) {
-      VanillaTilt.init(tiltRef.current, {
+    const node = tiltRef.current;
+    if (node) {
+      VanillaTilt.init(node, {
         max: 5,
         speed: 400,
         glare: true,
@@ -32,8 +32,9 @@ export function Resume3DShowcase() {
     }
 
     return () => {
-      if (tiltRef.current && (tiltRef.current as any).vanillaTilt) {
-        (tiltRef.current as any).vanillaTilt.destroy();
+      const tiltNode = node as HTMLDivElement & { vanillaTilt?: { destroy: () => void } };
+      if (tiltNode && tiltNode.vanillaTilt) {
+        tiltNode.vanillaTilt.destroy();
       }
     };
   }, []);
