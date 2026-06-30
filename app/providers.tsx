@@ -17,7 +17,7 @@ function PostHogPageView() {
         if (search) url += `?${search}`;
         posthog.capture('$pageview', { $current_url: url });
       }
-    } catch (error) {
+    } catch {
       console.warn('PostHog capture failed.');
     }
   }, [pathname, searchParams]);
@@ -35,7 +35,7 @@ export function PostHogProvider({ children }: { children: React.ReactNode }) {
           capture_pageview: false,
         });
       }
-    } catch (error) {
+    } catch {
       console.warn('PostHog initialization failed or was blocked by the browser.');
     }
   }, []);

@@ -74,7 +74,7 @@ export default function HomePage() {
     reduce ? undefined : { initial: 'hidden', animate: 'visible', variants };
 
   const inViewProps = (variants: Parameters<typeof motion.div>[0]['variants']) =>
-    reduce ? undefined : { initial: 'hidden', whileInView: 'visible', viewport: { once: true, margin: "-50px" }, variants };
+    reduce ? undefined : { initial: 'hidden', animate: 'visible', variants };
 
   return (
     <main className="relative min-h-screen overflow-x-hidden bg-[#F8FAFC] text-slate-900 selection:bg-blue-500/10 selection:text-blue-600">
@@ -276,7 +276,7 @@ export default function HomePage() {
             <div className="lg:col-span-7 relative">
               <motion.div
                 initial={reduce ? false : { opacity: 0, x: 20 }}
-                whileInView={reduce ? undefined : { opacity: 1, x: 0 }}
+                animate={reduce ? undefined : { opacity: 1, x: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.6 }}
                 className="relative w-full"
@@ -613,7 +613,7 @@ export default function HomePage() {
               <div className="md:col-span-5 flex justify-center relative">
                 <motion.div
                   initial={reduce ? false : { opacity: 0, scale: 0.95 }}
-                  whileInView={reduce ? undefined : { opacity: 1, scale: 1 }}
+                  animate={reduce ? undefined : { opacity: 1, scale: 1 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.5 }}
                   className="w-full relative"
