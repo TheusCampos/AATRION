@@ -79,14 +79,10 @@ export default function HomePage() {
   return (
     <main className="relative min-h-screen overflow-x-hidden bg-[#F8FAFC] text-slate-900 selection:bg-blue-500/10 selection:text-blue-600">
       <div className="absolute inset-0 -z-10 bg-[linear-gradient(to_right,#e2e8f0_1px,transparent_1px),linear-gradient(to_bottom,#e2e8f0_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:polygon(0_0,100%_0,100%_100%,0_100%)] opacity-40" />
-      <motion.div 
-        animate={reduce ? undefined : { y: [0, -15, 0], rotate: [12, 16, 12] }}
-        transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
+      <div 
         className="absolute top-20 left-10 -z-10 w-32 h-32 rotate-12 border border-blue-500/10 rounded-lg pointer-events-none" 
       />
-      <motion.div 
-        animate={reduce ? undefined : { y: [0, 15, 0], rotate: [-12, -18, -12] }}
-        transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
+      <div 
         className="absolute top-60 right-20 -z-10 w-24 h-24 -rotate-12 bg-blue-500/5 rounded-lg pointer-events-none" 
       />
       <motion.header
@@ -214,10 +210,7 @@ export default function HomePage() {
               transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
               className="relative w-full max-w-[640px]"
             >
-              <motion.div
-                animate={reduce ? undefined : { y: [0, -10, 0] }}
-                transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
-              >
+              <div>
                 <Image
                   src="/home.png"
                   alt="Interface do Gerador de Currículos ATRION"
@@ -226,7 +219,7 @@ export default function HomePage() {
                   priority
                   className="w-full h-auto object-contain"
                 />
-              </motion.div>
+              </div>
             </motion.div>
           </div>
 
@@ -234,14 +227,10 @@ export default function HomePage() {
       </section>
 
       <section id="curriculo" className="relative border-y border-slate-200/60 bg-slate-50 py-20 md:py-24 overflow-hidden">
-        <motion.div 
-          animate={reduce ? undefined : { rotate: [45, 50, 45], opacity: [0.5, 0.7, 0.5] }}
-          transition={{ duration: 7, repeat: Infinity, ease: 'easeInOut' }}
+        <div 
           className="absolute top-10 left-10 w-64 h-64 border-2 border-blue-100 rotate-45 pointer-events-none opacity-50" 
         />
-        <motion.div 
-          animate={reduce ? undefined : { scale: [1, 1.05, 1], rotate: [12, 15, 12] }}
-          transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
+        <div 
           className="absolute bottom-10 right-20 w-48 h-48 bg-indigo-50 rotate-12 pointer-events-none" 
         />
 
@@ -292,10 +281,7 @@ export default function HomePage() {
                 transition={{ duration: 0.6 }}
                 className="relative w-full"
               >
-                <motion.div
-                  animate={reduce ? undefined : { y: [0, -10, 0] }}
-                  transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
-                >
+                <div>
                   <Image
                     src="/sobre_atrion.png"
                     alt="Plataforma ATRION - Performance ATS"
@@ -303,7 +289,7 @@ export default function HomePage() {
                     height={600}
                     className="w-full h-auto object-contain drop-shadow-xl"
                   />
-                </motion.div>
+                </div>
               </motion.div>
             </div>
 
@@ -312,14 +298,10 @@ export default function HomePage() {
       </section>
 
       <section id="templates" className="relative bg-white py-20 md:py-24 overflow-hidden">
-        <motion.div 
-          animate={reduce ? undefined : { rotate: [30, 35, 30], scale: [1, 1.02, 1] }}
-          transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
+        <div 
           className="absolute -left-20 top-40 w-96 h-96 border border-slate-100 rotate-[30deg] pointer-events-none" 
         />
-        <motion.div 
-          animate={reduce ? undefined : { y: [0, -20, 0] }}
-          transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
+        <div 
           className="absolute right-10 bottom-20 w-32 h-32 bg-blue-50/50 rotate-45 pointer-events-none" 
         />
 
@@ -459,9 +441,7 @@ export default function HomePage() {
       </section>
 
       <section id="features" className="relative scroll-mt-20 py-20 md:py-24 bg-slate-50 border-y border-slate-200/60 overflow-hidden">
-        <motion.div 
-          animate={reduce ? undefined : { rotate: [12, 16, 12], scale: [1, 1.02, 1] }}
-          transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut' }}
+        <div 
           className="absolute top-0 right-0 w-[500px] h-[500px] border-[40px] border-white/40 -translate-y-1/2 translate-x-1/3 rotate-12 pointer-events-none" 
         />
 
@@ -533,9 +513,7 @@ export default function HomePage() {
 
       <section id="pricing" className="relative scroll-mt-20 py-20 md:py-24 bg-white overflow-hidden">
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#f1f5f9_1px,transparent_1px),linear-gradient(to_bottom,#f1f5f9_1px,transparent_1px)] bg-[size:3rem_3rem] [mask-image:linear-gradient(to_bottom,transparent,black_10%,black_90%,transparent)] opacity-30 pointer-events-none" />
-        <motion.div 
-          animate={reduce ? undefined : { y: [0, -10, 0], rotate: [45, 90, 45] }}
-          transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
+        <div 
           className="absolute left-1/4 top-1/4 w-12 h-12 bg-blue-100 rotate-45 pointer-events-none" 
         />
 
@@ -640,10 +618,7 @@ export default function HomePage() {
                   transition={{ duration: 0.5 }}
                   className="w-full relative"
                 >
-                  <motion.div
-                    animate={reduce ? undefined : { y: [0, -10, 0] }}
-                    transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
-                  >
+                  <div>
                     <Image
                       src="/dados_atrion.png"
                       alt="Gráficos e dados da plataforma ATRION"
@@ -651,7 +626,7 @@ export default function HomePage() {
                       height={300}
                       className="w-full h-auto object-contain drop-shadow-2xl"
                     />
-                  </motion.div>
+                  </div>
                 </motion.div>
               </div>
 

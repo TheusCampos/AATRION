@@ -10,11 +10,15 @@ function PostHogPageView() {
   const searchParams = useSearchParams();
 
   useEffect(() => {
-    if (pathname && posthog) {
-      let url = window.origin + pathname;
-      const search = searchParams.toString();
-      if (search) url += `?${search}`;
-      posthog.capture('$pageview', { $current_url: url });
+    try {
+      if (pathname && typeof posthog !== 'undefined' && typeof posthog.capture === 'function') {
+        let url = window.origin + pathname;
+        const search = searchParams.toString();
+        if (search) url += `?${search}`;
+        posthog.capture('$pageview', { $current_url: url });
+      }
+    } catch (error) {
+      console.warn('PostHog capture failed.');
     }
   }, [pathname, searchParams]);
 
@@ -23,11 +27,17 @@ function PostHogPageView() {
 
 export function PostHogProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
-    posthog.init(process.env.NEXT_PUBLIC_POSTHOG_KEY!, {
-      api_host: process.env.NEXT_PUBLIC_POSTHOG_HOST,
-      person_profiles: 'identified_only',
-      capture_pageview: false,
-    });
+    try {
+      if (typeof posthog !== 'undefined' && typeof posthog.init === 'function') {
+        posthog.init(process.env.NEXT_PUBLIC_POSTHOG_KEY!, {
+          api_host: process.env.NEXT_PUBLIC_POSTHOG_HOST,
+          person_profiles: 'identified_only',
+          capture_pageview: false,
+        });
+      }
+    } catch (error) {
+      console.warn('PostHog initialization failed or was blocked by the browser.');
+    }
   }, []);
 
   return (
