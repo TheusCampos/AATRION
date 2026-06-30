@@ -18,7 +18,8 @@ import { SignInButton, SignUpButton, SignedIn, SignedOut } from '@clerk/nextjs';
 import { fadeUp, fadeIn, fadeDown, staggerContainer, hoverLift, scaleIn } from '@/lib/animations';
 import { useState } from 'react';
 import { ResumeCardPreview } from '@/components/resume/ResumeCardPreview';
-import { Resume3DShowcase } from '@/components/resume/Resume3DShowcase';
+import dynamic from 'next/dynamic';
+const Resume3DShowcase = dynamic(() => import('@/components/resume/Resume3DShowcase').then(mod => mod.Resume3DShowcase), { ssr: false });
 import type { ResumeContent } from '@/lib/validations/resume';
 
 const DUMMY_CONTENT: ResumeContent = {
