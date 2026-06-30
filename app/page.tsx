@@ -17,9 +17,15 @@ import {
 import { SignInButton, SignUpButton, SignedIn, SignedOut } from '@clerk/nextjs';
 import { fadeUp, fadeIn, fadeDown, staggerContainer, hoverLift, scaleIn } from '@/lib/animations';
 import { useState } from 'react';
-import { ResumeCardPreview } from '@/components/resume/ResumeCardPreview';
 import dynamic from 'next/dynamic';
-const Resume3DShowcase = dynamic(() => import('@/components/resume/Resume3DShowcase').then(mod => mod.Resume3DShowcase), { ssr: false });
+const ResumeCardPreview = dynamic(
+  () => import('@/components/resume/ResumeCardPreview').then(m => m.ResumeCardPreview),
+  { ssr: false, loading: () => <div className="h-40 w-full bg-slate-100 rounded-lg animate-pulse" /> }
+);
+const Resume3DShowcase = dynamic(
+  () => import('@/components/resume/Resume3DShowcase').then(mod => mod.Resume3DShowcase),
+  { ssr: false }
+);
 import type { ResumeContent } from '@/lib/validations/resume';
 
 const DUMMY_CONTENT: ResumeContent = {
@@ -72,11 +78,18 @@ export default function HomePage() {
   const reduce = useReducedMotion();
   const [selectedTemplate, setSelectedTemplate] = useState<'modern' | 'classic' | 'creative' | 'sidebar'>('modern');
 
+  // Used for elements visible on first load (hero section)
   const motionProps = (variants: Parameters<typeof motion.div>[0]['variants']) =>
     reduce ? undefined : { initial: 'hidden', animate: 'visible', variants };
 
+  // Used for elements below the fold — triggers when they scroll into view
   const inViewProps = (variants: Parameters<typeof motion.div>[0]['variants']) =>
-    reduce ? undefined : { initial: 'hidden', animate: 'visible', variants };
+    reduce ? undefined : {
+      initial: 'hidden',
+      whileInView: 'visible',
+      viewport: { once: true, margin: '-80px' },
+      variants,
+    };
 
   return (
     <main className="relative min-h-screen overflow-x-hidden bg-[#F8FAFC] text-slate-900 selection:bg-blue-500/10 selection:text-blue-600">
@@ -248,8 +261,11 @@ export default function HomePage() {
                 Seu currículo é gerado com base nas regras mais estritas que os sistemas de recrutamento (ATS) e recrutadores estão usando agora. Visual limpo, hierarquia clara e leitura facilitada.
               </p>
 
-              <motion.div 
-                {...inViewProps(staggerContainer(0.15))}
+              <motion.div
+                initial={reduce ? false : 'hidden'}
+                whileInView={reduce ? undefined : 'visible'}
+                viewport={{ once: true, margin: '-80px' }}
+                variants={staggerContainer(0.15)}
                 className="mt-8 space-y-5 w-full"
               >
                 {[
@@ -318,8 +334,11 @@ export default function HomePage() {
             </p>
           </div>
 
-          <motion.div 
-            {...inViewProps(fadeUp)}
+          <motion.div
+            initial={reduce ? false : 'hidden'}
+            whileInView={reduce ? undefined : 'visible'}
+            viewport={{ once: true, margin: '-80px' }}
+            variants={fadeUp}
             className="grid gap-6 md:grid-cols-2 lg:grid-cols-4"
           >
             <div
@@ -451,7 +470,10 @@ export default function HomePage() {
 
         <div className="mx-auto max-w-6xl px-4 relative z-10">
           <motion.div
-            {...inViewProps(fadeUp)}
+            initial={reduce ? false : 'hidden'}
+            whileInView={reduce ? undefined : 'visible'}
+            viewport={{ once: true, margin: '-80px' }}
+            variants={fadeUp}
             className="mx-auto mb-16 max-w-2xl text-center"
           >
             <span className="text-xs font-bold uppercase tracking-widest text-blue-600">Recursos Exclusivos</span>
@@ -464,7 +486,10 @@ export default function HomePage() {
           </motion.div>
 
           <motion.div
-            {...inViewProps(staggerContainer(0.06, 0.1))}
+            initial={reduce ? false : 'hidden'}
+            whileInView={reduce ? undefined : 'visible'}
+            viewport={{ once: true, margin: '-80px' }}
+            variants={staggerContainer(0.06, 0.1)}
             className="grid gap-6 md:grid-cols-12"
           >
             <motion.div variants={fadeUp} className="md:col-span-4" {...hoverLift}>
@@ -565,7 +590,13 @@ export default function HomePage() {
         />
 
         <div className="mx-auto max-w-6xl px-4 relative z-10">
-          <motion.div {...inViewProps(fadeUp)} className="mx-auto mb-16 max-w-2xl text-center">
+          <motion.div
+            initial={reduce ? false : 'hidden'}
+            whileInView={reduce ? undefined : 'visible'}
+            viewport={{ once: true, margin: '-80px' }}
+            variants={fadeUp}
+            className="mx-auto mb-16 max-w-2xl text-center"
+          >
             <span className="text-xs font-bold uppercase tracking-widest text-blue-600">Investimento</span>
             <h2 className="mt-3 font-sans text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">
               Planos diretos, sem letras miúdas
@@ -576,7 +607,10 @@ export default function HomePage() {
           </motion.div>
 
           <motion.div
-            {...inViewProps(staggerContainer(0.08, 0.1))}
+            initial={reduce ? false : 'hidden'}
+            whileInView={reduce ? undefined : 'visible'}
+            viewport={{ once: true, margin: '-80px' }}
+            variants={staggerContainer(0.08, 0.1)}
             className="grid gap-6 max-w-5xl mx-auto md:grid-cols-3 items-stretch"
           >
             <Plan
@@ -610,7 +644,10 @@ export default function HomePage() {
       <section className="py-20 md:py-24 bg-white border-t border-slate-200/60">
         <div className="mx-auto max-w-6xl px-4">
           <motion.div
-            {...inViewProps(scaleIn)}
+            initial={reduce ? false : 'hidden'}
+            whileInView={reduce ? undefined : 'visible'}
+            viewport={{ once: true, margin: '-80px' }}
+            variants={scaleIn}
             className="relative mx-auto max-w-5xl overflow-hidden rounded-3xl bg-gradient-to-t from-blue-950 to-blue-600 p-8 md:p-12 text-white shadow-lg shadow-blue-500/10"
           >
 
