@@ -397,7 +397,7 @@ export function MinimalistLayout(p: LayoutProps) {
 // ============== MINIMAL GREY ==============
 export function MinimalGreyLayout(p: LayoutProps) {
   const accent = p.primary !== DEFAULT_STYLE.primaryColor ? p.primary : '#333333';
-  const greyBar = '#e5e7eb'; // Tailwind gray-200
+  const greyBar = '#e5e7eb';
 
   const SectionHeader = ({ title }: { title: string }) => (
     <div className="flex items-center gap-4 mb-3">
@@ -410,7 +410,7 @@ export function MinimalGreyLayout(p: LayoutProps) {
     <div className={p.containerClass} style={p.containerStyle}>
       <div className="flex-1 p-8 overflow-y-auto print:overflow-visible text-slate-800">
         <div className="w-full h-8 mb-6" style={{ backgroundColor: accent }}></div>
-        
+
         <header className="mb-6 flex justify-between items-start">
           <div>
             <h1 className="text-4xl font-bold uppercase tracking-tighter" style={{ color: accent }}>{p.personal.name || 'Nome Completo'}</h1>

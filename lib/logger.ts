@@ -1,7 +1,7 @@
 import { prisma } from './prisma';
 import { headers } from 'next/headers';
 
-export type UserActionType = 
+export type UserActionType =
   | 'USER_LOGIN'
   | 'USER_LOGOUT'
   | 'VIEWED_DASHBOARD'
@@ -20,7 +20,6 @@ interface LogOptions {
   details?: Record<string, unknown>;
 }
 
-// Registra ação do usuário na tabela ActivityLog.
 export async function logUserAction({ userId, action, details }: LogOptions) {
   try {
     let ipAddress = null;

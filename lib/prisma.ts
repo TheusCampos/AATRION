@@ -1,10 +1,5 @@
 import { PrismaClient } from '@prisma/client';
 
-/**
- * Singleton do PrismaClient.
- * Em dev, evita múltiplas instâncias (HMR do Next.js).
- * Em prod, cria uma única instância.
- */
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
 };

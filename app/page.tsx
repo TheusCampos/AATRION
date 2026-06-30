@@ -5,7 +5,6 @@ import Image from 'next/image';
 import { motion, useReducedMotion } from 'framer-motion';
 import {
   FileText,
-  Sparkles,
   Linkedin,
   Check,
   ArrowRight,
@@ -13,6 +12,7 @@ import {
   Target,
   ShieldCheck,
   Instagram,
+  Crosshair,
 } from 'lucide-react';
 import { SignInButton, SignUpButton, SignedIn, SignedOut } from '@clerk/nextjs';
 import { fadeUp, fadeIn, fadeDown, staggerContainer, hoverLift, scaleIn } from '@/lib/animations';
@@ -461,52 +461,95 @@ export default function HomePage() {
 
           <motion.div
             {...inViewProps(staggerContainer(0.06, 0.1))}
-            className="grid gap-6 md:grid-cols-3"
+            className="grid gap-6 md:grid-cols-12"
           >
-            {[
-              {
-                icon: <FileText className="h-5 w-5" />,
-                title: 'Análise de Currículo',
-                desc: 'A IA avalia seu currículo e aponta problemas gramaticais ou de estrutura que podem prejudicar sua aprovação no ATS.',
-                highlight: true,
-                badge: 'DESTAQUE',
-              },
-              {
-                icon: <Sparkles className="h-5 w-5" />,
-                title: 'Adaptação por Vaga',
-                desc: 'Adapte seu currículo para cada vaga de forma automática com sugestões de palavras-chave.',
-              },
-              {
-                icon: <Linkedin className="h-5 w-5" />,
-                title: 'Auditoria LinkedIn',
-                desc: 'Receba um relatório completo do seu perfil do LinkedIn e sugestões para se destacar para recrutadores.',
-              },
-              {
-                icon: <Target className="h-5 w-5" />,
-                title: 'Score ATS Objetivo',
-                desc: 'Pontuação clara que mostra como seu currículo será avaliado pelos sistemas automáticos.',
-              },
-              {
-                icon: <Zap className="h-5 w-5" />,
-                title: 'Desempenho em Tempo Real',
-                desc: 'Melhore seu currículo com feedback instantâneo enquanto você edita.',
-              },
-              {
-                icon: <ShieldCheck className="h-5 w-5" />,
-                title: 'Privacidade em Foco',
-                desc: 'Seus dados são protegidos com criptografia de ponta a ponta e não são compartilhados.',
-              },
-            ].map((f) => (
-              <motion.div key={f.title} variants={fadeUp} {...hoverLift}>
-                <FeatureCard
-                  icon={f.icon}
-                  title={f.title}
-                  description={f.desc}
-                  highlight={f.highlight}
-                  badge={f.badge}
-                />
-              </motion.div>
-            ))}
+            <motion.div variants={fadeUp} className="md:col-span-4" {...hoverLift}>
+              <FeatureCard
+                icon={<FileText className="h-6 w-6" />}
+                title="Análise de Currículo"
+                description="A IA avalia seu currículo e aponta problemas gramaticais ou de estrutura que podem prejudicar sua aprovação no ATS."
+                highlight={true}
+                badge="DESTAQUE"
+              />
+            </motion.div>
+
+            <motion.div variants={fadeUp} className="md:col-span-4" {...hoverLift}>
+              <FeatureCard
+                icon={<Crosshair className="h-6 w-6" />}
+                title="Adaptação por Vaga"
+                description="Adapte seu currículo para cada vaga de forma automática com sugestões de palavras-chave."
+                showLine={true}
+              />
+            </motion.div>
+
+            <motion.div variants={fadeUp} className="md:col-span-4" {...hoverLift}>
+              <FeatureCard
+                icon={<Linkedin className="h-6 w-6" />}
+                title="Auditoria LinkedIn"
+                description="Receba um relatório completo do seu perfil do LinkedIn e sugestões para se destacar para recrutadores."
+                showLine={true}
+              />
+            </motion.div>
+
+            <motion.div variants={fadeUp} className="md:col-span-6" {...hoverLift}>
+              <FeatureCard
+                icon={<Target className="h-6 w-6" />}
+                title="Score ATS Objetivo"
+                description="Pontuação clara que mostra como seu currículo será avaliado pelos sistemas automáticos."
+                highlight={true}
+                showLine={true}
+                className="min-h-[340px]"
+              >
+                <div className="absolute right-[-5%] bottom-[-15%] w-[340px] h-[340px] rotate-[-10deg] rounded-2xl border border-white/10 bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-md p-6 shadow-2xl transition-transform duration-500 group-hover:rotate-[-12deg] group-hover:scale-105 pointer-events-none hidden sm:block">
+                  <div className="text-[11px] font-medium text-white/50 mb-4 tracking-wider">ATS Score</div>
+                  <div className="flex items-center gap-6 mb-8">
+                    <div className="relative w-24 h-24 rounded-full border-[6px] border-white/10 flex items-center justify-center">
+                      <svg className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 100 100">
+                        <circle cx="50" cy="50" r="44" fill="none" stroke="rgba(59, 130, 246, 0.8)" strokeWidth="6" strokeDasharray="276" strokeDashoffset="22" className="drop-shadow-[0_0_8px_rgba(59,130,246,0.5)]" />
+                      </svg>
+                      <span className="text-3xl font-extrabold text-white">92</span>
+                    </div>
+                    <div className="space-y-3 flex-1">
+                      <div className="h-2.5 w-full bg-white/10 rounded-full overflow-hidden">
+                        <div className="h-full bg-blue-400 w-full" />
+                      </div>
+                      <div className="h-2.5 w-4/5 bg-white/10 rounded-full overflow-hidden">
+                        <div className="h-full bg-indigo-400 w-full" />
+                      </div>
+                      <div className="h-2.5 w-2/3 bg-white/10 rounded-full overflow-hidden">
+                        <div className="h-full bg-purple-400 w-full" />
+                      </div>
+                    </div>
+                  </div>
+                  <div className="space-y-3">
+                    <div className="text-[10px] text-white/40 uppercase tracking-widest mb-1">ATS Score</div>
+                    <div className="flex gap-2">
+                      {Array.from({ length: 12 }).map((_, i) => (
+                        <div key={i} className={`h-8 w-1.5 rounded-full ${i > 9 ? 'bg-white/10' : 'bg-blue-500/50'}`} style={{ opacity: i > 9 ? 1 : 0.4 + (i * 0.05) }} />
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </FeatureCard>
+            </motion.div>
+
+            <motion.div variants={fadeUp} className="md:col-span-3" {...hoverLift}>
+              <FeatureCard
+                icon={<Zap className="h-6 w-6" />}
+                title="Desempenho em Tempo Real"
+                description="Melhore seu currículo com feedback instantâneo enquanto você edita."
+                showLine={true}
+              />
+            </motion.div>
+
+            <motion.div variants={fadeUp} className="md:col-span-3" {...hoverLift}>
+              <FeatureCard
+                icon={<ShieldCheck className="h-6 w-6" />}
+                title="Privacidade em Foco"
+                description="Seus dados são protegidos com criptografia de ponta a ponta e não são compartilhados."
+                showLine={true}
+              />
+            </motion.div>
           </motion.div>
         </div>
       </section>
@@ -712,51 +755,63 @@ function FeatureCard({
   description,
   highlight = false,
   badge,
+  className = "",
+  showLine = false,
+  children,
 }: {
   icon: React.ReactNode;
   title: string;
   description: string;
   highlight?: boolean;
   badge?: string;
+  className?: string;
+  showLine?: boolean;
+  children?: React.ReactNode;
 }) {
   return (
-    <div className={`group relative h-full rounded-2xl p-6 transition-all duration-300 hover:-translate-y-0.5 overflow-hidden ${highlight
-      ? 'bg-gradient-to-br from-blue-600 to-indigo-700 text-white shadow-lg shadow-blue-500/10'
+    <div className={`group relative h-full rounded-2xl p-6 md:p-8 transition-all duration-300 hover:-translate-y-0.5 overflow-hidden flex flex-col justify-between ${highlight
+      ? 'bg-gradient-to-br from-[#0c1231] to-[#162463] text-white shadow-lg shadow-blue-500/10'
       : 'border border-slate-200 bg-white text-slate-900 shadow-sm hover:border-slate-300 hover:shadow-md hover:shadow-blue-500/5'
-      }`}>
-      {highlight && (
-        <svg className="absolute bottom-0 right-0 w-32 h-14 text-white/20 pointer-events-none" viewBox="0 0 100 50" fill="none" stroke="currentColor" strokeWidth="1.2">
-          <path d="M0 45 C 30 35, 60 45, 100 35 M0 40 C 30 30, 60 40, 100 30 M0 35 C 30 25, 60 35, 100 25 M0 30 C 30 20, 60 30, 100 20" />
+      } ${className}`}>
+      
+      {highlight && !children && (
+        <svg className="absolute bottom-0 right-0 w-full h-32 text-white/5 pointer-events-none" viewBox="0 0 100 50" fill="none" stroke="currentColor" strokeWidth="0.5" preserveAspectRatio="none">
+          <path d="M0 45 C 30 35, 60 45, 100 35 M0 40 C 30 30, 60 40, 100 30 M0 35 C 30 25, 60 35, 100 25 M0 30 C 30 20, 60 30, 100 20 M0 25 C 30 15, 60 25, 100 15" />
         </svg>
       )}
 
-      <div className="flex items-center justify-between mb-6">
-        <div className={`inline-flex h-12 w-12 items-center justify-center rounded-xl transition-transform duration-300 group-hover:scale-110 ${highlight
-          ? 'bg-white/10 text-white border border-white/20 backdrop-blur-sm'
-          : 'bg-indigo-50 text-indigo-600 ring-1 ring-inset ring-indigo-500/10'
-          }`}>
-          {icon}
+      <div className="relative z-10 flex-1">
+        <div className="flex items-center justify-between mb-6">
+          <div className={`inline-flex h-12 w-12 items-center justify-center rounded-xl transition-transform duration-300 group-hover:scale-110 ${highlight
+            ? 'bg-white/10 text-white border border-white/10 backdrop-blur-sm'
+            : 'bg-blue-50 text-blue-600 ring-1 ring-inset ring-blue-500/10'
+            }`}>
+            {icon}
+          </div>
+
+          {badge && (
+            <span className={`text-[10px] font-extrabold uppercase tracking-wider px-3 py-1.5 rounded-full ${highlight ? 'bg-white/15 text-white backdrop-blur-sm' : 'bg-blue-50 text-blue-600'
+              }`}>
+              {badge}
+            </span>
+          )}
         </div>
 
-        {badge && (
-          <span className={`text-[9px] font-extrabold uppercase tracking-wider px-2.5 py-1 rounded-full ${highlight ? 'bg-white/20 text-white' : 'bg-indigo-50 text-indigo-600'
-            }`}>
-            {badge}
-          </span>
+        <h3 className={`text-xl font-bold tracking-tight ${highlight ? 'text-white' : 'text-slate-900'}`}>
+          {title}
+        </h3>
+
+        {showLine && (
+          <div className={`h-[3px] w-8 rounded mt-4 mb-4 ${highlight ? 'bg-blue-500/50' : 'bg-blue-600'}`} />
         )}
+        {!showLine && <div className="mt-4" />}
+
+        <p className={`text-sm leading-relaxed ${highlight ? 'text-blue-100/80 max-w-[280px]' : 'text-slate-500'}`}>
+          {description}
+        </p>
       </div>
 
-      <h3 className={`text-base font-bold tracking-tight ${highlight ? 'text-white' : 'text-slate-900'}`}>
-        {title}
-      </h3>
-
-      {!highlight && (
-        <div className="h-[2px] w-8 bg-blue-600/70 rounded mt-2.5 mb-3" />
-      )}
-
-      <p className={`text-xs leading-relaxed mt-2.5 ${highlight ? 'text-blue-100/90' : 'text-slate-500'}`}>
-        {description}
-      </p>
+      {children}
     </div>
   );
 }

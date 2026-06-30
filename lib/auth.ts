@@ -72,7 +72,6 @@ async function syncClerkUser(clerk: ClerkUser): Promise<PrismaUserLite | null> {
   if (!email) return null;
   const name = pickClerkName(clerk, email);
 
-  // 1) Match por clerkId
   const byClerk = await prisma.user.findUnique({ where: { clerkId: clerk.id } });
   if (byClerk) {
     if (byClerk.email !== email || byClerk.name !== name) {
@@ -84,7 +83,6 @@ async function syncClerkUser(clerk: ClerkUser): Promise<PrismaUserLite | null> {
     return byClerk;
   }
 
-  // 2) Match por email (vincula conta pre-existente)
   const byEmail = await prisma.user.findUnique({ where: { email } });
   if (byEmail) {
     return prisma.user.update({
@@ -93,7 +91,6 @@ async function syncClerkUser(clerk: ClerkUser): Promise<PrismaUserLite | null> {
     });
   }
 
-  // 3) Cria novo usuario FREE
   return prisma.user.create({
     data: { email, name, clerkId: clerk.id, plan: 'FREE' },
   });

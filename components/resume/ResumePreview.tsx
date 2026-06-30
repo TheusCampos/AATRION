@@ -40,7 +40,6 @@ export function ResumePreview({ content, templateId = 'classic', style = DEFAULT
 
   const fontFamily = FONT_MAP[style.fontFamily] || FONT_MAP.Inter;
 
-  // Suporte a valores numéricos (slider) ou presets de texto antigos
   const isNumeric = (val: unknown) => typeof val === 'number' || (!isNaN(Number(val)) && val !== '');
 
   const fontSize = isNumeric(style.fontSize)
@@ -89,7 +88,6 @@ export function ResumePreview({ content, templateId = 'classic', style = DEFAULT
     certifications,
   };
 
-  // Renderização condicional por template
   if (templateId === 'modern') return <ModernLayout {...layoutProps} />;
   if (templateId === 'classic-photo') return <ClassicPhotoLayout {...layoutProps} />;
   if (templateId === 'modern-photo') return <ModernPhotoLayout {...layoutProps} />;
@@ -102,7 +100,6 @@ export function ResumePreview({ content, templateId = 'classic', style = DEFAULT
   if (templateId === 'minimal-grey') return <MinimalGreyLayout {...layoutProps} />;
   if (templateId === 'yellow-header') return <YellowHeaderLayout {...layoutProps} />;
   if (templateId === 'blue-right-sidebar') return <BlueRightSidebarLayout {...layoutProps} />;
-  
-  // Default: classic
+
   return <ClassicLayout {...layoutProps} />;
 }

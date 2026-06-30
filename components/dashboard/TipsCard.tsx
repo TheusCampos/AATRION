@@ -26,20 +26,20 @@ export function TipsCard() {
   const [modalTips, setModalTips] = useState<string[]>([]);
 
   useEffect(() => {
-    // calculate a day index
+
     const dayIndex = Math.floor(new Date().getTime() / (1000 * 60 * 60 * 24));
-    // change every 3 days
+
     const rotationIndex = Math.floor(dayIndex / 3);
 
-    // Pick 3 tips for the card based on rotationIndex
+
     const startIdx = (rotationIndex * 3) % ALL_TIPS.length;
-    
+
     const mainTips = [];
     for (let i = 0; i < 3; i++) {
       mainTips.push(ALL_TIPS[(startIdx + i) % ALL_TIPS.length]);
     }
-    
-    // Pick 5 more tips for the modal
+
+
     const moreTips = [];
     for (let i = 3; i < 8; i++) {
       moreTips.push(ALL_TIPS[(startIdx + i) % ALL_TIPS.length]);
@@ -56,7 +56,7 @@ export function TipsCard() {
           <Lightbulb className="h-5 w-5 text-indigo-500" />
           <h3 className="text-sm font-semibold text-slate-800">Dicas para melhorar seu currículo</h3>
         </div>
-        
+
         <ul className="space-y-3 mb-4 flex-1">
           {currentTips.length > 0 ? currentTips.map((tip, idx) => (
             <li key={idx} className="flex items-start gap-2.5 text-sm text-slate-600">
@@ -71,8 +71,8 @@ export function TipsCard() {
             </div>
           )}
         </ul>
-        
-        <button 
+
+        <button
           onClick={() => setIsModalOpen(true)}
           className="text-sm font-semibold text-indigo-600 hover:text-indigo-700 text-left mt-auto"
         >
@@ -84,7 +84,7 @@ export function TipsCard() {
       {isModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
           <Card className="w-full max-w-md p-6 bg-white shadow-2xl relative rounded-3xl border-0 animate-in fade-in zoom-in duration-200">
-            <button 
+            <button
               onClick={() => setIsModalOpen(false)}
               className="absolute top-4 right-4 text-slate-400 hover:text-slate-700 bg-slate-100 rounded-full p-1"
             >
@@ -102,7 +102,7 @@ export function TipsCard() {
                 </li>
               ))}
             </ul>
-            <button 
+            <button
               onClick={() => setIsModalOpen(false)}
               className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-semibold transition-colors"
             >

@@ -80,7 +80,7 @@ export function AILoader({ isOpen, title, steps }: AILoaderProps) {
 
             {/* Inner CV Card (Esqueleto do Currículo) */}
             <div className="relative w-full aspect-[4/5] rounded-2xl border border-slate-800 bg-slate-900/40 p-5 overflow-hidden flex flex-col justify-between">
-              
+
               {/* Efeito Laser Scanner Azul */}
               <motion.div
                 animate={{ y: [0, 200, 0] }}
@@ -115,14 +115,14 @@ export function AILoader({ isOpen, title, steps }: AILoaderProps) {
                 <div className="space-y-3 pt-1">
                   <div className="h-1.5 w-full bg-slate-800/60 rounded" />
                   <div className="h-1.5 w-5/6 bg-slate-800/60 rounded" />
-                  
+
                   {/* Blue/White Highlight Line (substituindo roxo) */}
                   <motion.div
                     animate={{ opacity: [0.6, 1, 0.6] }}
                     transition={{ repeat: Infinity, duration: 1.5, ease: 'easeInOut' }}
                     className="h-1.5 w-full bg-gradient-to-r from-blue-500/30 via-slate-700/30 to-blue-500/20 border-b border-blue-500/10 rounded"
                   />
-                  
+
                   <div className="h-1.5 w-4/5 bg-slate-800/60 rounded" />
                   <div className="h-1.5 w-2/3 bg-slate-800/60 rounded" />
                 </div>
@@ -138,7 +138,7 @@ export function AILoader({ isOpen, title, steps }: AILoaderProps) {
                   </span>
                   <span className="uppercase">{activeStepText}</span>
                 </div>
-                
+
                 {/* Percentage */}
                 <div className="text-[10px] font-mono font-bold text-blue-400">
                   {progress}%

@@ -27,9 +27,6 @@ export default async function DashboardPage({
     action: 'VIEWED_DASHBOARD',
   });
 
-  // SEC-003(Modificado): Fallback de Sincronização Local.
-  // Como webhooks podem falhar no ambiente local (localhost), faremos
-  // uma checagem manual do session_id para forçar a atualização imediata.
   const sessionId = searchParams?.session_id as string | undefined;
   if (sessionId) {
     try {
@@ -39,7 +36,7 @@ export default async function DashboardPage({
       if (session.payment_status === 'paid') {
         const stripePrice = session.line_items?.data[0]?.price;
         const customerId = session.customer as string;
-        
+
         let plan = 'FREE';
         const priceId = stripePrice?.id;
         if (priceId === process.env.STRIPE_PRICE_ID_MAX) plan = 'MAX';
@@ -57,7 +54,6 @@ export default async function DashboardPage({
         let stripeSubscriptionId = null;
 
         if (session.mode === 'subscription' && session.subscription) {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const sub = session.subscription as any;
           planRenewsAt = new Date(sub.current_period_end * 1000);
           stripeSubscriptionId = sub.id;
@@ -75,8 +71,7 @@ export default async function DashboardPage({
             stripeCurrentPeriodEnd: planRenewsAt,
           },
         });
-        
-        // Redirecionar para limpar o session_id da URL
+
         redirect('/dashboard');
       }
     } catch (e) {
@@ -137,7 +132,7 @@ export default async function DashboardPage({
 
       {/* Main Grid Layout */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        
+
         {/* Coluna Esquerda: Ações e Currículos */}
         <div className="lg:col-span-2 space-y-8">
           <QuickActions lastResumeId={lastResumeId} userPlan={user.plan} />

@@ -140,7 +140,6 @@ export default function NewResumePage() {
     const formData = new FormData();
     formData.append('file', file);
 
-    // Controller de timeout: o import pode demorar (PDF grande + chamada de IA)
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 60_000);
 
@@ -158,7 +157,6 @@ export default function NewResumePage() {
         return;
       }
 
-      // Tenta extrair mensagem útil do servidor
       let message = 'Erro ao importar currículo.';
       if (data && data.error) {
         message = data.error;
@@ -276,11 +274,10 @@ export default function NewResumePage() {
                     setSelectedTemplate(tpl.id);
                     handleCreateFromScratch(tpl.id);
                   }}
-                  className={`cursor-pointer overflow-hidden transition-all group relative ${
-                    !isLocked && selectedTemplate === tpl.id
+                  className={`cursor-pointer overflow-hidden transition-all group relative ${!isLocked && selectedTemplate === tpl.id
                       ? 'ring-2 ring-primary border-transparent'
                       : 'hover:border-primary/50'
-                  }`}
+                    }`}
                 >
                   <div className={isLocked ? 'opacity-70 grayscale-[20%]' : ''}>
                     <ResumeCardPreview content={DUMMY_CONTENT} templateId={tpl.id} />

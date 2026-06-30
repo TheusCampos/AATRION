@@ -19,8 +19,6 @@ export default async function EditorPage({
 
   const action = searchParams?.action;
 
-  // SEC-004: Criação de currículo agora passa pela API para respeitar limites do plano.
-  // Antes, fazia prisma.resume.create() diretamente, bypassando maxResumes.
   if (params.id === 'new') {
     const res = await fetch(
       `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/resumes`,
@@ -28,13 +26,11 @@ export default async function EditorPage({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ title: 'Meu novo currículo' }),
-        // Forward cookies for auth in SSR context
         cache: 'no-store',
       }
     );
 
     if (!res.ok) {
-      // Se falhou (ex: limite do plano atingido), redireciona para o dashboard
       redirect('/dashboard');
     }
 
@@ -46,7 +42,6 @@ export default async function EditorPage({
     redirect(redirectUrl);
   }
 
-  // Carrega currículo existente
   const resume = await prisma.resume.findFirst({
     where: { id: params.id, userId: user.id },
   });

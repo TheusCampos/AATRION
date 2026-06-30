@@ -190,7 +190,7 @@ export function CreativePhotoLayout(p: LayoutProps) {
 // ============== YELLOW HEADER ==============
 export function YellowHeaderLayout(p: LayoutProps) {
   const accent = p.primary !== DEFAULT_STYLE.primaryColor ? p.primary : '#D99A1A';
-  const sidebarBg = '#F6EDD9'; // Light beige
+  const sidebarBg = '#F6EDD9';
 
   return (
     <div className={p.containerClass} style={p.containerStyle}>
@@ -201,7 +201,7 @@ export function YellowHeaderLayout(p: LayoutProps) {
           <div className="bg-white p-6 flex justify-center items-center" style={{ minHeight: '220px' }}>
             <ResumeAvatar photo={p.personal.photo} name={p.personal.name} size="140px" />
           </div>
-          
+
           {/* Bottom Sidebar Area (Beige) */}
           <div className="flex-1 p-6 text-slate-800 flex flex-col" style={{ backgroundColor: sidebarBg, gap: p.sectionSpacing }}>
             <section>

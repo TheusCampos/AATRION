@@ -1,7 +1,7 @@
-// Rate limiter centralizado via @upstash/ratelimit + @upstash/redis.
+
 import { NextResponse } from 'next/server';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 let _ratelimit: any = null;
 
 function getRateLimiter(
@@ -10,9 +10,8 @@ function getRateLimiter(
 ) {
   if (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) {
     try {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
+
       const { Ratelimit } = require('@upstash/ratelimit');
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
       const { Redis } = require('@upstash/redis');
 
       if (!_ratelimit) {

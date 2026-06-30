@@ -15,23 +15,21 @@ export default async function LinkedInPage() {
 
   const isPro = user.plan === 'PRO' || user.plan === 'MAX';
 
-  // Histórico recente (mostrar mesmo para FREE para que vejam o que perderam)
   const recent = isPro
     ? await prisma.linkedInAudit.findMany({
-        where: { userId: user.id },
-        orderBy: { createdAt: 'desc' },
-        take: 5,
-        select: {
-          id: true,
-          overallScore: true,
-          area: true,
-          targetJob: true,
-          createdAt: true,
-        },
-      })
+      where: { userId: user.id },
+      orderBy: { createdAt: 'desc' },
+      take: 5,
+      select: {
+        id: true,
+        overallScore: true,
+        area: true,
+        targetJob: true,
+        createdAt: true,
+      },
+    })
     : [];
 
-  // Usuário FREE: mostra card de upgrade em vez do formulário
   if (!isPro) {
     return (
       <div className="space-y-8">
@@ -166,13 +164,12 @@ export default async function LinkedInPage() {
                         </p>
                       </div>
                       <span
-                        className={`ml-2 inline-flex items-center justify-center rounded-full px-2 py-0.5 text-xs font-semibold ${
-                          a.overallScore >= 70
+                        className={`ml-2 inline-flex items-center justify-center rounded-full px-2 py-0.5 text-xs font-semibold ${a.overallScore >= 70
                             ? 'bg-green-100 text-green-800'
                             : a.overallScore >= 50
                               ? 'bg-amber-100 text-amber-800'
                               : 'bg-red-100 text-red-800'
-                        }`}
+                          }`}
                       >
                         {a.overallScore}
                       </span>

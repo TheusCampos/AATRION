@@ -10,7 +10,6 @@ type Action = {
   href: string;
   color: string;
   bg: string;
-  /** Se true, exige plano pago (PRO ou MAX) */
   requiresPro?: boolean;
 };
 
@@ -68,23 +67,20 @@ export function QuickActions({
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {actions.map((action, idx) => {
           const isLocked = action.requiresPro && !isPro;
-          // Usuários sem plano Pro são redirecionados para /pricing ao invés da feature
           const href = isLocked ? '/pricing' : action.href;
 
           return (
             <Link key={idx} href={href}>
               <Card
-                className={`group flex h-full flex-col rounded-3xl border border-border/60 bg-card/70 p-5 backdrop-blur transition-all duration-300 hover:shadow-md ${
-                  isLocked
+                className={`group flex h-full flex-col rounded-3xl border border-border/60 bg-card/70 p-5 backdrop-blur transition-all duration-300 hover:shadow-md ${isLocked
                     ? 'hover:border-amber-400/40 opacity-80'
                     : 'hover:border-indigo-500/30'
-                }`}
+                  }`}
               >
                 <div className="flex items-start justify-between mb-4">
                   <div
-                    className={`inline-flex h-10 w-10 items-center justify-center rounded-xl ${action.bg} ${action.color} ${
-                      isLocked ? 'opacity-60' : ''
-                    }`}
+                    className={`inline-flex h-10 w-10 items-center justify-center rounded-xl ${action.bg} ${action.color} ${isLocked ? 'opacity-60' : ''
+                      }`}
                   >
                     {action.icon}
                   </div>
@@ -102,9 +98,8 @@ export function QuickActions({
                 </p>
                 <div className="mt-auto">
                   <ArrowRight
-                    className={`h-4 w-4 transition-transform group-hover:translate-x-1 ${
-                      isLocked ? 'text-amber-400' : 'text-slate-400 group-hover:text-indigo-600'
-                    }`}
+                    className={`h-4 w-4 transition-transform group-hover:translate-x-1 ${isLocked ? 'text-amber-400' : 'text-slate-400 group-hover:text-indigo-600'
+                      }`}
                   />
                 </div>
               </Card>

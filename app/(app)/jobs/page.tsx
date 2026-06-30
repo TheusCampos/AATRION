@@ -5,7 +5,7 @@ import { Search, MapPin, Briefcase, Building, ExternalLink, Loader2 } from 'luci
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 
-// SEC-005: Remove HTML tags from external content to prevent XSS
+
 function stripHtml(html: string): string {
   return html.replace(/<[^>]*>/g, '');
 }
@@ -34,22 +34,22 @@ export default function JobsPage() {
 
   const searchJobs = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    
+
     setLoading(true);
     setError('');
     setHasSearched(true);
-    
+
     try {
       const params = new URLSearchParams();
       if (query) params.append('q', query);
       if (location) params.append('location', location);
-      
+
       const res = await fetch(`/api/jobs?${params.toString()}`);
-      
+
       if (!res.ok) {
         throw new Error('Falha ao buscar vagas');
       }
-      
+
       const data = await res.json();
       setJobs(data.results || []);
     } catch (err: unknown) {
@@ -73,24 +73,24 @@ export default function JobsPage() {
         <form onSubmit={searchJobs} className="grid grid-cols-1 md:grid-cols-12 gap-4">
           <div className="md:col-span-5 relative">
             <Briefcase className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-            <Input 
-              placeholder="Cargo, palavra-chave ou empresa" 
+            <Input
+              placeholder="Cargo, palavra-chave ou empresa"
               className="pl-9"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
             />
           </div>
-          
+
           <div className="md:col-span-5 relative">
             <MapPin className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-            <Input 
-              placeholder="Cidade, estado ou região" 
+            <Input
+              placeholder="Cidade, estado ou região"
               className="pl-9"
               value={location}
               onChange={(e) => setLocation(e.target.value)}
             />
           </div>
-          
+
           <div className="md:col-span-2">
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? (
@@ -133,13 +133,13 @@ export default function JobsPage() {
             <h3 className="font-medium text-muted-foreground">
               Exibindo {jobs.length} resultados
             </h3>
-            
+
             <div className="grid gap-4">
               {jobs.map((job) => (
                 <div key={job.id} className="border rounded-lg p-5 hover:border-primary/50 transition-colors bg-card flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
                   <div className="space-y-2 flex-1">
                     <h4 className="font-semibold text-lg text-primary line-clamp-1">{stripHtml(job.title)}</h4>
-                    
+
                     <div className="flex flex-wrap gap-3 text-sm text-muted-foreground">
                       {job.company?.display_name && (
                         <div className="flex items-center gap-1">
@@ -147,7 +147,7 @@ export default function JobsPage() {
                           <span>{job.company.display_name}</span>
                         </div>
                       )}
-                      
+
                       {job.location?.display_name && (
                         <div className="flex items-center gap-1">
                           <MapPin className="h-3.5 w-3.5" />
@@ -155,10 +155,10 @@ export default function JobsPage() {
                         </div>
                       )}
                     </div>
-                    
+
                     <p className="text-sm text-foreground/80 line-clamp-2 mt-2">{stripHtml(job.description)}</p>
                   </div>
-                  
+
                   <div className="shrink-0 mt-2 sm:mt-0">
                     <a href={job.redirect_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center gap-2 rounded-md font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50 border border-border bg-card text-foreground hover:bg-accent shadow-sm h-10 px-4 text-sm">
                       Ver Vaga

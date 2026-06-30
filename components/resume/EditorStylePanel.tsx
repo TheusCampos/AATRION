@@ -43,7 +43,6 @@ export function StylePanel({
   userPlan?: PlanCode;
   onUpgradeRequired: (msg: string) => void;
 }) {
-  // Map old string options to numeric equivalents if needed
   let fontSizeVal = 14;
   if (typeof style.fontSize === 'number') {
     fontSizeVal = style.fontSize;
@@ -111,13 +110,12 @@ export function StylePanel({
                     }
                     setTemplateId(t.id);
                   }}
-                  className={`text-left rounded-md border p-2 text-xs transition-all relative ${
-                    isLocked
+                  className={`text-left rounded-md border p-2 text-xs transition-all relative ${isLocked
                       ? 'opacity-60 bg-secondary/10 border-border cursor-not-allowed'
                       : templateId === t.id
-                      ? 'border-primary bg-primary/5 ring-1 ring-primary'
-                      : 'border-border bg-card hover:border-primary/50'
-                  }`}
+                        ? 'border-primary bg-primary/5 ring-1 ring-primary'
+                        : 'border-border bg-card hover:border-primary/50'
+                    }`}
                 >
                   <div className="font-medium flex items-center gap-1 justify-between">
                     <span>{t.name}</span>
@@ -205,9 +203,8 @@ export function StylePanel({
                 <button
                   key={c}
                   onClick={() => setStyle({ ...style, primaryColor: c })}
-                  className={`h-7 w-7 rounded-full border-2 transition-all ${
-                    style.primaryColor === c ? 'border-foreground scale-110' : 'border-transparent'
-                  }`}
+                  className={`h-7 w-7 rounded-full border-2 transition-all ${style.primaryColor === c ? 'border-foreground scale-110' : 'border-transparent'
+                    }`}
                   style={{ backgroundColor: c }}
                   aria-label={c}
                 />

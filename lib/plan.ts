@@ -1,4 +1,3 @@
-// Regras de plano (FREE / PRO / MAX) e controle de uso de IA.
 import { prisma } from './prisma';
 
 export type PlanCode = 'FREE' | 'PRO' | 'MAX';

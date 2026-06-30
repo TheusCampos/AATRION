@@ -6,7 +6,6 @@ import { ResumeAvatar } from './shared';
 
 // ============== BROWN SIDEBAR ==============
 export function BrownSidebarLayout(p: LayoutProps) {
-  // Use primary color for the header background, or fallback to the brown from the image
   const headerBg = p.primary !== DEFAULT_STYLE.primaryColor ? p.primary : '#8B7A66';
   const sidebarBg = '#EFECE5';
 
@@ -16,9 +15,9 @@ export function BrownSidebarLayout(p: LayoutProps) {
         {/* Left Sidebar */}
         <aside className="w-[32%] p-6 text-slate-800 flex flex-col gap-6" style={{ backgroundColor: sidebarBg }}>
           {p.personal.photo && (
-             <div className="mb-2">
-               <ResumeAvatar photo={p.personal.photo} name={p.personal.name} size="120px" borderColor={headerBg} />
-             </div>
+            <div className="mb-2">
+              <ResumeAvatar photo={p.personal.photo} name={p.personal.name} size="120px" borderColor={headerBg} />
+            </div>
           )}
 
           <section>
@@ -149,11 +148,11 @@ export function BrownSidebarLayout(p: LayoutProps) {
 // ============== BLUE RIGHT SIDEBAR ==============
 export function BlueRightSidebarLayout(p: LayoutProps) {
   const sidebarBg = p.primary !== DEFAULT_STYLE.primaryColor ? p.primary : '#0f172a'; // Dark slate blue
-  
+
   return (
     <div className={p.containerClass} style={p.containerStyle}>
       <div className="flex-1 flex overflow-y-auto print:overflow-visible">
-        
+
         {/* Left Main Content (White) */}
         <main className="w-[65%] p-8 flex flex-col bg-white">
           <header className="flex items-center gap-4 border-b border-slate-200 pb-6 mb-6">
@@ -239,7 +238,7 @@ export function BlueRightSidebarLayout(p: LayoutProps) {
 
         {/* Right Sidebar Area (Dark Blue) */}
         <aside className="w-[35%] p-8 text-white flex flex-col" style={{ backgroundColor: sidebarBg, gap: p.sectionSpacing }}>
-          
+
           <section>
             <h2 className="text-xs font-semibold mb-4 text-white/90">Dados Pessoais</h2>
             <div className="space-y-2 text-[11px] font-light text-white/80">
@@ -255,10 +254,10 @@ export function BlueRightSidebarLayout(p: LayoutProps) {
               <h2 className="text-xs font-semibold mb-4 text-white/90">Competências</h2>
               <div className="space-y-3">
                 {p.skills.map((skill, index) => {
-                  // Simulate different levels just for visuals, since we only have names
+
                   const levels = ['w-full', 'w-[85%]', 'w-[90%]', 'w-[75%]', 'w-[80%]'];
                   const levelClass = levels[index % levels.length];
-                  
+
                   return (
                     <div key={skill.id} className="text-[11px] text-white/90">
                       <div className="mb-1">{skill.name}</div>

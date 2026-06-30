@@ -1,10 +1,5 @@
 import { z } from 'zod';
 
-/**
- * Schema do conteúdo de um currículo (estrutura JSON armazenada no campo `content`).
- * Para SQLite, o Prisma armazena como TEXT e o app faz JSON.parse/stringify.
- */
-
 const strField = z.preprocess((v) => (v === null || v === undefined ? '' : v), z.string());
 const boolField = z.preprocess((v) => (v === null || v === undefined ? false : v), z.boolean());
 
@@ -110,9 +105,6 @@ export const updateResumeSchema = z.object({
 
 export type UpdateResumeInput = z.infer<typeof updateResumeSchema>;
 
-/**
- * Cria o conteúdo inicial vazio de um currículo.
- */
 export function emptyResumeContent(): ResumeContent {
   return {
     personal: {

@@ -1,4 +1,3 @@
-// Wrapper de IA via OpenRouter.
 import { openrouterChat } from './openrouter';
 
 export type AIProvider = 'openrouter';

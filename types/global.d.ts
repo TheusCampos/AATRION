@@ -1,5 +1,3 @@
-// Declarações de tipo para imports sem tipo explícito
-
 declare module '*.css';
 declare module '*.scss';
 declare module '*.svg' {

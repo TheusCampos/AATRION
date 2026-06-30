@@ -37,7 +37,7 @@ export function PersonalForm({
     }
 
     setIsUploading(true);
-    
+
     try {
       const resizeImage = (file: File): Promise<File> => {
         return new Promise((resolve, reject) => {
@@ -66,7 +66,7 @@ export function PersonalForm({
             canvas.height = height;
             const ctx = canvas.getContext('2d');
             if (!ctx) return reject(new Error('Canvas não suportado'));
-            
+
             ctx.fillStyle = '#FFFFFF';
             ctx.fillRect(0, 0, width, height);
             ctx.drawImage(img, 0, 0, width, height);
@@ -150,11 +150,11 @@ export function PersonalForm({
     <div className="space-y-8">
       <div>
         <h2 className="mb-6 text-2xl font-bold text-slate-800">Dados Pessoais</h2>
-        
+
         <div className="flex flex-col sm:flex-row items-center gap-5 pb-6 border-b border-slate-100 mb-6">
           <div className="relative h-20 w-20 rounded-full bg-slate-100 flex items-center justify-center border-2 border-slate-200 overflow-hidden flex-shrink-0">
             {content.personal.photo ? (
-              // eslint-disable-next-line @next/next/no-img-element
+
               <img
                 src={content.personal.photo}
                 alt={content.personal.name || 'Foto'}
@@ -214,7 +214,7 @@ export function PersonalForm({
               placeholder="João da Silva"
             />
           </Field>
-          
+
           <Field label="Cargo pretendido" required>
             <Input
               value={content.personal.jobTitle}
@@ -283,9 +283,9 @@ export function PersonalForm({
       <div className="space-y-3 pt-4">
         <div className="flex items-center justify-between mb-1">
           <Label className="font-medium">Resumo profissional</Label>
-          <Button 
-            variant="secondary" 
-            size="sm" 
+          <Button
+            variant="secondary"
+            size="sm"
             onClick={handleEnhanceSummary}
             disabled={isEnhancing}
             className="h-7 text-xs gap-1.5 bg-blue-50 text-blue-600 hover:bg-blue-100 border-blue-200"

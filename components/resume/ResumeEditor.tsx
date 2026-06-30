@@ -96,7 +96,6 @@ export function ResumeEditor({
   const [showStylePanel, setShowStylePanel] = useState(false);
   const [isExportingPdf, setIsExportingPdf] = useState(false);
   const [pdfPreviewUrl, setPdfPreviewUrl] = useState<string | null>(null);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [pdfInstance, setPdfInstance] = useState<any | null>(null);
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
   const [previewScale, setPreviewScale] = useState(100);
@@ -510,57 +509,57 @@ export function ResumeEditor({
         <div className="flex flex-col min-h-0 h-full">
           <Card className="flex-1 overflow-y-auto rounded-3xl border-none bg-white p-2 shadow-[0_8px_30px_rgba(0,0,0,0.04)] sm:p-4 xl:h-[calc(100vh-140px)]">
             <div className="p-4 sm:p-6">
-            {tab === 'personal' && (
-              <PersonalForm content={content} onChange={updatePersonal} resumeId={resumeId} />
-            )}
-            {tab === 'experience' && (
-              <ExperienceList
-                items={content.experience}
-                onAdd={addExperience}
-                onUpdate={updateExperience}
-                onRemove={removeExperience}
-              />
-            )}
-            {tab === 'education' && (
-              <EducationList
-                items={content.education}
-                onAdd={addEducation}
-                onUpdate={updateEducation}
-                onRemove={removeEducation}
-              />
-            )}
-            {tab === 'skills' && (
-              <SkillsList
-                items={content.skills}
-                onAdd={addSkill}
-                onUpdate={updateSkill}
-                onRemove={removeSkill}
-              />
-            )}
-            {tab === 'projects' && (
-              <ProjectsList
-                items={content.projects}
-                onAdd={addProject}
-                onUpdate={updateProject}
-                onRemove={removeProject}
-              />
-            )}
-            {tab === 'languages' && (
-              <LanguagesList
-                items={content.languages}
-                onAdd={addLanguage}
-                onUpdate={updateLanguage}
-                onRemove={removeLanguage}
-              />
-            )}
-            {tab === 'certifications' && (
-              <CertificationsList
-                items={content.certifications}
-                onAdd={addCertification}
-                onUpdate={updateCertification}
-                onRemove={removeCertification}
-              />
-            )}
+              {tab === 'personal' && (
+                <PersonalForm content={content} onChange={updatePersonal} resumeId={resumeId} />
+              )}
+              {tab === 'experience' && (
+                <ExperienceList
+                  items={content.experience}
+                  onAdd={addExperience}
+                  onUpdate={updateExperience}
+                  onRemove={removeExperience}
+                />
+              )}
+              {tab === 'education' && (
+                <EducationList
+                  items={content.education}
+                  onAdd={addEducation}
+                  onUpdate={updateEducation}
+                  onRemove={removeEducation}
+                />
+              )}
+              {tab === 'skills' && (
+                <SkillsList
+                  items={content.skills}
+                  onAdd={addSkill}
+                  onUpdate={updateSkill}
+                  onRemove={removeSkill}
+                />
+              )}
+              {tab === 'projects' && (
+                <ProjectsList
+                  items={content.projects}
+                  onAdd={addProject}
+                  onUpdate={updateProject}
+                  onRemove={removeProject}
+                />
+              )}
+              {tab === 'languages' && (
+                <LanguagesList
+                  items={content.languages}
+                  onAdd={addLanguage}
+                  onUpdate={updateLanguage}
+                  onRemove={removeLanguage}
+                />
+              )}
+              {tab === 'certifications' && (
+                <CertificationsList
+                  items={content.certifications}
+                  onAdd={addCertification}
+                  onUpdate={updateCertification}
+                  onRemove={removeCertification}
+                />
+              )}
             </div>
           </Card>
         </div>
@@ -569,16 +568,16 @@ export function ResumeEditor({
         <div className="hidden xl:flex min-h-0 flex-col rounded-[32px] border border-slate-100 bg-[radial-gradient(circle_at_top,#eff6ff,transparent_35%),linear-gradient(180deg,#f8fafc_0%,#eef2f7_100%)] p-2 shadow-[0_24px_60px_rgba(15,23,42,0.06)] h-[calc(100vh-140px)]">
           <div className="flex items-center justify-between gap-4 px-5 py-4">
             <span className="text-sm font-semibold text-slate-700">Preview</span>
-            
+
             <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white/80 p-1 shadow-sm backdrop-blur">
-              <button 
+              <button
                 onClick={() => setPreviewScale(s => Math.max(50, s - 10))}
                 className="flex h-7 w-7 items-center justify-center rounded-full hover:bg-slate-100 text-slate-600 transition-colors"
               >
                 <ZoomOut className="h-4 w-4" />
               </button>
               <span className="w-12 text-center text-xs font-semibold text-slate-700">{previewScale}%</span>
-              <button 
+              <button
                 onClick={() => setPreviewScale(s => Math.min(150, s + 10))}
                 className="flex h-7 w-7 items-center justify-center rounded-full hover:bg-slate-100 text-slate-600 transition-colors"
               >

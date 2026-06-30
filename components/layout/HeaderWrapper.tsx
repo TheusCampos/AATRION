@@ -4,7 +4,6 @@ import { usePathname } from 'next/navigation';
 
 export function HeaderWrapper({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  // Se for a tela de editor (ex: /editor/123), não limitamos o tamanho
   const isEditor = pathname?.startsWith('/editor') || pathname?.includes('/edit');
 
   return (

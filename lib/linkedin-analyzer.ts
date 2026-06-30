@@ -1,6 +1,3 @@
-// LinkedIn Profile Analyzer (heurístico, sem IA).
-// Recebe texto do perfil e retorna score, seções, issues e sugestões.
-
 export type AuditSeverity = 'high' | 'medium' | 'low';
 
 export type AuditIssue = {

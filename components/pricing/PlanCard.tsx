@@ -24,18 +24,12 @@ export function PlanCard({
   cta: string;
   href?: string;
   highlight?: boolean;
-  /** Se true, o botão requer autenticação antes do checkout */
   requiresAuth?: boolean;
-  /** Se o usuário está logado (passado pelo server component pai) */
   isLoggedIn?: boolean;
 }) {
-  // Calcula a URL de destino do botão
-  // - Se não requer auth ou já está logado → usa href normalmente
-  // - Se requer auth e não está logado → redireciona para login com redirect_url
   const resolvedHref = (() => {
     if (!href) return undefined;
     if (requiresAuth && !isLoggedIn) {
-      // Preserva a rota de destino (ex: /api/stripe/checkout?plan=PRO)
       return `/login?redirect_url=${encodeURIComponent(href)}`;
     }
     return href;
@@ -43,11 +37,10 @@ export function PlanCard({
 
   return (
     <div
-      className={`relative flex flex-col rounded-3xl border p-6 transition-all duration-300 hover:shadow-lg ${
-        highlight
+      className={`relative flex flex-col rounded-3xl border p-6 transition-all duration-300 hover:shadow-lg ${highlight
           ? 'border-transparent bg-slate-900 text-white shadow-xl shadow-indigo-500/10 scale-102 z-10'
           : 'border-border/60 bg-card/70 backdrop-blur-sm hover:border-indigo-500/30'
-      }`}
+        }`}
     >
       {highlight && (
         <span className="absolute -top-3 right-6 rounded-full bg-gradient-to-r from-indigo-500 to-fuchsia-500 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-white shadow">
@@ -68,7 +61,7 @@ export function PlanCard({
           </li>
         ))}
       </ul>
-      
+
       {resolvedHref ? (
         resolvedHref.startsWith('/api') || resolvedHref.startsWith('http') ? (
           <a href={resolvedHref} className="block w-full">

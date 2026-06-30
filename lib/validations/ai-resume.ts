@@ -1,13 +1,5 @@
 import { z } from 'zod';
-
-/**
- * Schemas para os endpoints de IA do curriculo:
- *   - POST /api/resumes/[id]/analyze  -> analisa e da nota + melhorias
- *   - POST /api/resumes/[id]/adapt    -> adapta o curriculo para uma vaga
- */
-
 export const analyzeResumeSchema = z.object({
-  // sem body obrigatorio, mas mantemos extensivel
   targetJob: z.string().max(200).optional(),
 });
 
