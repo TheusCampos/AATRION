@@ -18,6 +18,7 @@ import { SignInButton, SignUpButton, SignedIn, SignedOut } from '@clerk/nextjs';
 import { fadeUp, fadeIn, fadeDown, staggerContainer, hoverLift, scaleIn } from '@/lib/animations';
 import { useState } from 'react';
 import { ResumeCardPreview } from '@/components/resume/ResumeCardPreview';
+import { Resume3DShowcase } from '@/components/resume/Resume3DShowcase';
 import type { ResumeContent } from '@/lib/validations/resume';
 
 const DUMMY_CONTENT: ResumeContent = {
@@ -439,6 +440,8 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      <Resume3DShowcase />
 
       <section id="features" className="relative scroll-mt-20 py-20 md:py-24 bg-slate-50 border-y border-slate-200/60 overflow-hidden">
         <div 
