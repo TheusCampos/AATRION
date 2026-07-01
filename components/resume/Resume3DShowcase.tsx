@@ -154,8 +154,12 @@ export function Resume3DShowcase() {
             {/* Perfil */}
             <div className="flex flex-col items-center md:items-start text-center md:text-left pop-out-heavy">
               <div className="w-20 h-20 rounded-full border-2 border-indigo-500 overflow-hidden mb-4 shadow-[0_5px_15px_rgba(99,102,241,0.3)] bg-slate-800 flex items-center justify-center transition-transform hover:scale-105">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src="https://placehold.co/200x200/1e293b/ffffff?text=FOTO" alt="Sua Foto" className="w-full h-full object-cover" />
+                <svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+                  <rect width="80" height="80" fill="#1e293b" />
+                  <circle cx="40" cy="30" r="14" fill="#4f46e5" opacity="0.8" />
+                  <ellipse cx="40" cy="70" rx="22" ry="18" fill="#4f46e5" opacity="0.6" />
+                  <text x="40" y="56" textAnchor="middle" fontSize="9" fill="rgba(255,255,255,0.5)" fontFamily="sans-serif">FOTO</text>
+                </svg>
               </div>
               <h1 className="text-xl font-bold tracking-tight mb-1">Ana Silva</h1>
               <h2 className="text-indigo-400 font-medium text-[10px] uppercase tracking-wider">Gerente de Projetos</h2>

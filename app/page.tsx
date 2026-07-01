@@ -86,7 +86,7 @@ export default function HomePage() {
 
   return (
     <main className="relative min-h-screen overflow-x-hidden bg-[#F8FAFC] text-slate-900 selection:bg-blue-500/10 selection:text-blue-600">
-      <div className="absolute inset-0 -z-10 bg-[linear-gradient(to_right,#e2e8f0_1px,transparent_1px),linear-gradient(to_bottom,#e2e8f0_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:polygon(0_0,100%_0,100%_100%,0_100%)] opacity-40" />
+      <div className="absolute inset-0 -z-10 bg-[linear-gradient(to_right,#e2e8f0_1px,transparent_1px),linear-gradient(to_bottom,#e2e8f0_1px,transparent_1px)] bg-[size:4rem_4rem] [-webkit-mask-image:polygon(0_0,100%_0,100%_100%,0_100%)] [mask-image:polygon(0_0,100%_0,100%_100%,0_100%)] opacity-40" />
       <div 
         className="absolute top-20 left-10 -z-10 w-32 h-32 rotate-12 border border-blue-500/10 rounded-lg pointer-events-none" 
       />
@@ -157,7 +157,10 @@ export default function HomePage() {
               className="text-balance font-sans text-4xl font-extrabold leading-[1.1] tracking-tight text-slate-900 sm:text-5xl md:text-6xl"
             >
               Crie currículos que{' '}
-              <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+              <span
+                className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent"
+                style={{ WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}
+              >
                 passam no ATS
               </span>{' '}
               e se destaque.
@@ -257,7 +260,7 @@ export default function HomePage() {
               <motion.div
                 initial={reduce ? false : 'hidden'}
                 whileInView={reduce ? undefined : 'visible'}
-                viewport={{ once: true }}
+                viewport={{ once: true, amount: 0 }}
                 variants={staggerContainer(0.15)}
                 className="mt-8 space-y-5 w-full"
               >
@@ -287,8 +290,8 @@ export default function HomePage() {
             <div className="lg:col-span-7 relative">
               <motion.div
                 initial={reduce ? false : { opacity: 0, x: 20 }}
-                animate={reduce ? undefined : { opacity: 1, x: 0 }}
-                viewport={{ once: true }}
+                whileInView={reduce ? undefined : { opacity: 1, x: 0 }}
+                viewport={{ once: true, amount: 0 }}
                 transition={{ duration: 0.6 }}
                 className="relative w-full"
               >
@@ -330,7 +333,7 @@ export default function HomePage() {
           <motion.div
             initial={reduce ? false : 'hidden'}
             whileInView={reduce ? undefined : 'visible'}
-            viewport={{ once: true }}
+            viewport={{ once: true, amount: 0 }}
             variants={fadeUp}
             className="grid gap-6 md:grid-cols-2 lg:grid-cols-4"
           >
@@ -465,7 +468,7 @@ export default function HomePage() {
           <motion.div
             initial={reduce ? false : 'hidden'}
             whileInView={reduce ? undefined : 'visible'}
-            viewport={{ once: true }}
+            viewport={{ once: true, amount: 0 }}
             variants={fadeUp}
             className="mx-auto mb-16 max-w-2xl text-center"
           >
@@ -481,7 +484,7 @@ export default function HomePage() {
           <motion.div
             initial={reduce ? false : 'hidden'}
             whileInView={reduce ? undefined : 'visible'}
-            viewport={{ once: true }}
+            viewport={{ once: true, amount: 0 }}
             variants={staggerContainer(0.06, 0.1)}
             className="grid gap-6 md:grid-cols-12"
           >
@@ -577,7 +580,7 @@ export default function HomePage() {
       </section>
 
       <section id="pricing" className="relative scroll-mt-20 py-20 md:py-24 bg-white overflow-hidden">
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#f1f5f9_1px,transparent_1px),linear-gradient(to_bottom,#f1f5f9_1px,transparent_1px)] bg-[size:3rem_3rem] [mask-image:linear-gradient(to_bottom,transparent,black_10%,black_90%,transparent)] opacity-30 pointer-events-none" />
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#f1f5f9_1px,transparent_1px),linear-gradient(to_bottom,#f1f5f9_1px,transparent_1px)] bg-[size:3rem_3rem] [-webkit-mask-image:linear-gradient(to_bottom,transparent,black_10%,black_90%,transparent)] [mask-image:linear-gradient(to_bottom,transparent,black_10%,black_90%,transparent)] opacity-30 pointer-events-none" />
         <div 
           className="absolute left-1/4 top-1/4 w-12 h-12 bg-blue-100 rotate-45 pointer-events-none" 
         />
@@ -586,7 +589,7 @@ export default function HomePage() {
           <motion.div
             initial={reduce ? false : 'hidden'}
             whileInView={reduce ? undefined : 'visible'}
-            viewport={{ once: true }}
+            viewport={{ once: true, amount: 0 }}
             variants={fadeUp}
             className="mx-auto mb-16 max-w-2xl text-center"
           >
@@ -602,7 +605,7 @@ export default function HomePage() {
           <motion.div
             initial={reduce ? false : 'hidden'}
             whileInView={reduce ? undefined : 'visible'}
-            viewport={{ once: true }}
+            viewport={{ once: true, amount: 0 }}
             variants={staggerContainer(0.08, 0.1)}
             className="grid gap-6 max-w-5xl mx-auto md:grid-cols-3 items-stretch"
           >
@@ -639,7 +642,7 @@ export default function HomePage() {
           <motion.div
             initial={reduce ? false : 'hidden'}
             whileInView={reduce ? undefined : 'visible'}
-            viewport={{ once: true }}
+            viewport={{ once: true, amount: 0 }}
             variants={scaleIn}
             className="relative mx-auto max-w-5xl overflow-hidden rounded-3xl bg-gradient-to-t from-blue-950 to-blue-600 p-8 md:p-12 text-white shadow-lg shadow-blue-500/10"
           >
