@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 import { SignInButton, SignUpButton, SignedIn, SignedOut } from '@clerk/nextjs';
 import { fadeUp, fadeIn, fadeDown, staggerContainer, hoverLift, scaleIn } from '@/lib/animations';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 const ResumeCardPreview = dynamic(
   () => import('@/components/resume/ResumeCardPreview').then(m => m.ResumeCardPreview),
@@ -32,9 +32,9 @@ const DUMMY_CONTENT: ResumeContent = {
   personal: {
     name: "Nome Completo",
     jobTitle: "Cargo Profissional",
-    email: "contato@email.com",
-    phone: "(11) 99999-9999",
-    location: "São Paulo, SP",
+    email: "[EMAIL_ADDRESS]",
+    phone: "(65) 99999-9999",
+    location: "Cuiabá, MT",
     linkedin: "linkedin.com/in/nome",
     github: "",
     website: "",
@@ -77,26 +77,32 @@ import { LandingMobileMenu } from '@/components/layout/LandingMobileMenu';
 export default function HomePage() {
   const reduce = useReducedMotion();
   const [selectedTemplate, setSelectedTemplate] = useState<'modern' | 'classic' | 'creative' | 'sidebar'>('modern');
+  // mounted garante que animações só aplicam no cliente confirmado
+  // Evita elementos presos em opacity:0 quando framer-motion nao dispara
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
 
-  // Used for elements visible on first load (hero section)
-  const motionProps = (variants: Parameters<typeof motion.div>[0]['variants']) =>
-    reduce ? undefined : { initial: 'hidden', animate: 'visible', variants };
+  // Animações apenas quando montado no cliente — fallback: sem animação (conteúdo visível)
+  const motionProps = (variants: Parameters<typeof motion.div>[0]['variants']) => {
+    if (!mounted || reduce) return undefined;
+    return { initial: 'hidden', animate: 'visible', variants };
+  };
 
 
 
   return (
     <main className="relative min-h-screen overflow-x-hidden bg-[#F8FAFC] text-slate-900 selection:bg-blue-500/10 selection:text-blue-600">
       <div className="absolute inset-0 -z-10 bg-[linear-gradient(to_right,#e2e8f0_1px,transparent_1px),linear-gradient(to_bottom,#e2e8f0_1px,transparent_1px)] bg-[size:4rem_4rem] [-webkit-mask-image:polygon(0_0,100%_0,100%_100%,0_100%)] [mask-image:polygon(0_0,100%_0,100%_100%,0_100%)] opacity-40" />
-      <div 
-        className="absolute top-20 left-10 -z-10 w-32 h-32 rotate-12 border border-blue-500/10 rounded-lg pointer-events-none" 
+      <div
+        className="absolute top-20 left-10 -z-10 w-32 h-32 rotate-12 border border-blue-500/10 rounded-lg pointer-events-none"
       />
-      <div 
-        className="absolute top-60 right-20 -z-10 w-24 h-24 -rotate-12 bg-blue-500/5 rounded-lg pointer-events-none" 
+      <div
+        className="absolute top-60 right-20 -z-10 w-24 h-24 -rotate-12 bg-blue-500/5 rounded-lg pointer-events-none"
       />
       <motion.header
-        variants={reduce ? undefined : fadeDown}
-        initial={reduce ? false : 'hidden'}
-        animate={reduce ? false : 'visible'}
+        variants={mounted && !reduce ? fadeDown : undefined}
+        initial={mounted && !reduce ? 'hidden' : false}
+        animate={mounted && !reduce ? 'visible' : false}
         className="sticky top-4 z-40 mx-auto w-full max-w-6xl px-4"
       >
         <div className="flex h-16 items-center justify-between rounded-2xl border border-slate-200/80 bg-white/80 px-4 sm:px-6 shadow-sm backdrop-blur-md relative">
@@ -216,8 +222,8 @@ export default function HomePage() {
 
           <div className="lg:col-span-7 flex justify-center lg:justify-end">
             <motion.div
-              initial={reduce ? false : { opacity: 0, scale: 0.98, x: 15 }}
-              animate={reduce ? false : { opacity: 1, scale: 1, x: 0 }}
+              initial={mounted && !reduce ? { opacity: 0, scale: 0.98, x: 15 } : false}
+              animate={mounted && !reduce ? { opacity: 1, scale: 1, x: 0 } : false}
               transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
               className="relative w-full max-w-[640px]"
             >
@@ -238,11 +244,11 @@ export default function HomePage() {
       </section>
 
       <section id="curriculo" className="relative border-y border-slate-200/60 bg-slate-50 py-20 md:py-24 overflow-hidden">
-        <div 
-          className="absolute top-10 left-10 w-64 h-64 border-2 border-blue-100 rotate-45 pointer-events-none opacity-50" 
+        <div
+          className="absolute top-10 left-10 w-64 h-64 border-2 border-blue-100 rotate-45 pointer-events-none opacity-50"
         />
-        <div 
-          className="absolute bottom-10 right-20 w-48 h-48 bg-indigo-50 rotate-12 pointer-events-none" 
+        <div
+          className="absolute bottom-10 right-20 w-48 h-48 bg-indigo-50 rotate-12 pointer-events-none"
         />
 
         <div className="mx-auto max-w-6xl px-4 relative">
@@ -258,8 +264,8 @@ export default function HomePage() {
               </p>
 
               <motion.div
-                initial={reduce ? false : 'hidden'}
-                whileInView={reduce ? undefined : 'visible'}
+                initial={mounted && !reduce ? 'hidden' : false}
+                whileInView={mounted && !reduce ? 'visible' : undefined}
                 viewport={{ once: true, amount: 0 }}
                 variants={staggerContainer(0.15)}
                 className="mt-8 space-y-5 w-full"
@@ -289,8 +295,8 @@ export default function HomePage() {
 
             <div className="lg:col-span-7 relative">
               <motion.div
-                initial={reduce ? false : { opacity: 0, x: 20 }}
-                whileInView={reduce ? undefined : { opacity: 1, x: 0 }}
+                initial={mounted && !reduce ? { opacity: 0, x: 20 } : false}
+                whileInView={mounted && !reduce ? { opacity: 1, x: 0 } : undefined}
                 viewport={{ once: true, amount: 0 }}
                 transition={{ duration: 0.6 }}
                 className="relative w-full"
@@ -312,11 +318,11 @@ export default function HomePage() {
       </section>
 
       <section id="templates" className="relative bg-white py-20 md:py-24 overflow-hidden">
-        <div 
-          className="absolute -left-20 top-40 w-96 h-96 border border-slate-100 rotate-[30deg] pointer-events-none" 
+        <div
+          className="absolute -left-20 top-40 w-96 h-96 border border-slate-100 rotate-[30deg] pointer-events-none"
         />
-        <div 
-          className="absolute right-10 bottom-20 w-32 h-32 bg-blue-50/50 rotate-45 pointer-events-none" 
+        <div
+          className="absolute right-10 bottom-20 w-32 h-32 bg-blue-50/50 rotate-45 pointer-events-none"
         />
 
         <div className="mx-auto max-w-6xl px-4 relative z-10">
@@ -331,8 +337,8 @@ export default function HomePage() {
           </div>
 
           <motion.div
-            initial={reduce ? false : 'hidden'}
-            whileInView={reduce ? undefined : 'visible'}
+            initial={mounted && !reduce ? 'hidden' : false}
+            whileInView={mounted && !reduce ? 'visible' : undefined}
             viewport={{ once: true, amount: 0 }}
             variants={fadeUp}
             className="grid gap-6 md:grid-cols-2 lg:grid-cols-4"
@@ -460,14 +466,14 @@ export default function HomePage() {
       <Resume3DShowcase />
 
       <section id="features" className="relative scroll-mt-20 py-20 md:py-24 bg-slate-50 border-y border-slate-200/60 overflow-hidden">
-        <div 
-          className="absolute top-0 right-0 w-[500px] h-[500px] border-[40px] border-white/40 -translate-y-1/2 translate-x-1/3 rotate-12 pointer-events-none" 
+        <div
+          className="absolute top-0 right-0 w-[500px] h-[500px] border-[40px] border-white/40 -translate-y-1/2 translate-x-1/3 rotate-12 pointer-events-none"
         />
 
         <div className="mx-auto max-w-6xl px-4 relative z-10">
           <motion.div
-            initial={reduce ? false : 'hidden'}
-            whileInView={reduce ? undefined : 'visible'}
+            initial={mounted && !reduce ? 'hidden' : false}
+            whileInView={mounted && !reduce ? 'visible' : undefined}
             viewport={{ once: true, amount: 0 }}
             variants={fadeUp}
             className="mx-auto mb-16 max-w-2xl text-center"
@@ -482,8 +488,8 @@ export default function HomePage() {
           </motion.div>
 
           <motion.div
-            initial={reduce ? false : 'hidden'}
-            whileInView={reduce ? undefined : 'visible'}
+            initial={mounted && !reduce ? 'hidden' : false}
+            whileInView={mounted && !reduce ? 'visible' : undefined}
             viewport={{ once: true, amount: 0 }}
             variants={staggerContainer(0.06, 0.1)}
             className="grid gap-6 md:grid-cols-12"
@@ -581,14 +587,14 @@ export default function HomePage() {
 
       <section id="pricing" className="relative scroll-mt-20 py-20 md:py-24 bg-white overflow-hidden">
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#f1f5f9_1px,transparent_1px),linear-gradient(to_bottom,#f1f5f9_1px,transparent_1px)] bg-[size:3rem_3rem] [-webkit-mask-image:linear-gradient(to_bottom,transparent,black_10%,black_90%,transparent)] [mask-image:linear-gradient(to_bottom,transparent,black_10%,black_90%,transparent)] opacity-30 pointer-events-none" />
-        <div 
-          className="absolute left-1/4 top-1/4 w-12 h-12 bg-blue-100 rotate-45 pointer-events-none" 
+        <div
+          className="absolute left-1/4 top-1/4 w-12 h-12 bg-blue-100 rotate-45 pointer-events-none"
         />
 
         <div className="mx-auto max-w-6xl px-4 relative z-10">
           <motion.div
-            initial={reduce ? false : 'hidden'}
-            whileInView={reduce ? undefined : 'visible'}
+            initial={mounted && !reduce ? 'hidden' : false}
+            whileInView={mounted && !reduce ? 'visible' : undefined}
             viewport={{ once: true, amount: 0 }}
             variants={fadeUp}
             className="mx-auto mb-16 max-w-2xl text-center"
@@ -603,8 +609,8 @@ export default function HomePage() {
           </motion.div>
 
           <motion.div
-            initial={reduce ? false : 'hidden'}
-            whileInView={reduce ? undefined : 'visible'}
+            initial={mounted && !reduce ? 'hidden' : false}
+            whileInView={mounted && !reduce ? 'visible' : undefined}
             viewport={{ once: true, amount: 0 }}
             variants={staggerContainer(0.08, 0.1)}
             className="grid gap-6 max-w-5xl mx-auto md:grid-cols-3 items-stretch"
@@ -640,8 +646,8 @@ export default function HomePage() {
       <section className="py-20 md:py-24 bg-white border-t border-slate-200/60">
         <div className="mx-auto max-w-6xl px-4">
           <motion.div
-            initial={reduce ? false : 'hidden'}
-            whileInView={reduce ? undefined : 'visible'}
+            initial={mounted && !reduce ? 'hidden' : false}
+            whileInView={mounted && !reduce ? 'visible' : undefined}
             viewport={{ once: true, amount: 0 }}
             variants={scaleIn}
             className="relative mx-auto max-w-5xl overflow-hidden rounded-3xl bg-gradient-to-t from-blue-950 to-blue-600 p-8 md:p-12 text-white shadow-lg shadow-blue-500/10"
@@ -692,8 +698,8 @@ export default function HomePage() {
 
               <div className="md:col-span-5 flex justify-center relative">
                 <motion.div
-                  initial={reduce ? false : { opacity: 0, scale: 0.95 }}
-                  animate={reduce ? undefined : { opacity: 1, scale: 1 }}
+                  initial={mounted && !reduce ? { opacity: 0, scale: 0.95 } : false}
+                  animate={mounted && !reduce ? { opacity: 1, scale: 1 } : false}
                   viewport={{ once: true }}
                   transition={{ duration: 0.5 }}
                   className="w-full relative"
@@ -810,7 +816,7 @@ function FeatureCard({
       ? 'bg-gradient-to-br from-[#0c1231] to-[#162463] text-white shadow-lg shadow-blue-500/10'
       : 'border border-slate-200 bg-white text-slate-900 shadow-sm hover:border-slate-300 hover:shadow-md hover:shadow-blue-500/5'
       } ${className}`}>
-      
+
       {highlight && !children && (
         <svg className="absolute bottom-0 right-0 w-full h-32 text-white/5 pointer-events-none" viewBox="0 0 100 50" fill="none" stroke="currentColor" strokeWidth="0.5" preserveAspectRatio="none">
           <path d="M0 45 C 30 35, 60 45, 100 35 M0 40 C 30 30, 60 40, 100 30 M0 35 C 30 25, 60 35, 100 25 M0 30 C 30 20, 60 30, 100 20 M0 25 C 30 15, 60 25, 100 15" />
