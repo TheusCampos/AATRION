@@ -257,7 +257,7 @@ export default function HomePage() {
               <motion.div
                 initial={reduce ? false : 'hidden'}
                 whileInView={reduce ? undefined : 'visible'}
-                viewport={{ once: true, margin: '-80px' }}
+                viewport={{ once: true }}
                 variants={staggerContainer(0.15)}
                 className="mt-8 space-y-5 w-full"
               >
@@ -330,7 +330,7 @@ export default function HomePage() {
           <motion.div
             initial={reduce ? false : 'hidden'}
             whileInView={reduce ? undefined : 'visible'}
-            viewport={{ once: true, margin: '-80px' }}
+            viewport={{ once: true }}
             variants={fadeUp}
             className="grid gap-6 md:grid-cols-2 lg:grid-cols-4"
           >
@@ -465,7 +465,7 @@ export default function HomePage() {
           <motion.div
             initial={reduce ? false : 'hidden'}
             whileInView={reduce ? undefined : 'visible'}
-            viewport={{ once: true, margin: '-80px' }}
+            viewport={{ once: true }}
             variants={fadeUp}
             className="mx-auto mb-16 max-w-2xl text-center"
           >
@@ -481,7 +481,7 @@ export default function HomePage() {
           <motion.div
             initial={reduce ? false : 'hidden'}
             whileInView={reduce ? undefined : 'visible'}
-            viewport={{ once: true, margin: '-80px' }}
+            viewport={{ once: true }}
             variants={staggerContainer(0.06, 0.1)}
             className="grid gap-6 md:grid-cols-12"
           >
@@ -586,7 +586,7 @@ export default function HomePage() {
           <motion.div
             initial={reduce ? false : 'hidden'}
             whileInView={reduce ? undefined : 'visible'}
-            viewport={{ once: true, margin: '-80px' }}
+            viewport={{ once: true }}
             variants={fadeUp}
             className="mx-auto mb-16 max-w-2xl text-center"
           >
@@ -602,7 +602,7 @@ export default function HomePage() {
           <motion.div
             initial={reduce ? false : 'hidden'}
             whileInView={reduce ? undefined : 'visible'}
-            viewport={{ once: true, margin: '-80px' }}
+            viewport={{ once: true }}
             variants={staggerContainer(0.08, 0.1)}
             className="grid gap-6 max-w-5xl mx-auto md:grid-cols-3 items-stretch"
           >
@@ -639,7 +639,7 @@ export default function HomePage() {
           <motion.div
             initial={reduce ? false : 'hidden'}
             whileInView={reduce ? undefined : 'visible'}
-            viewport={{ once: true, margin: '-80px' }}
+            viewport={{ once: true }}
             variants={scaleIn}
             className="relative mx-auto max-w-5xl overflow-hidden rounded-3xl bg-gradient-to-t from-blue-950 to-blue-600 p-8 md:p-12 text-white shadow-lg shadow-blue-500/10"
           >
