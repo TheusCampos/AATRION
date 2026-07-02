@@ -1,13 +1,14 @@
 'use client';
 
 import Link from 'next/link';
-import { motion, useReducedMotion } from 'framer-motion';
-import { FileText, Plus, Star, Download, MoreHorizontal, PenLine } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { useState, useEffect, useRef } from 'react';
+import { motion, useReducedMotion, AnimatePresence } from 'framer-motion';
+import { FileText, Plus, Star, Download, MoreHorizontal, PenLine, Copy, Trash2, Loader2, AlertTriangle } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { calculateCompleteness } from '@/lib/completeness';
 import type { ResumeContent } from '@/lib/validations/resume';
-import { DeleteResumeButton } from './DeleteResumeButton';
 import { ResumeCardPreview } from './ResumeCardPreview';
 import { fadeUp, fadeIn, staggerContainer } from '@/lib/animations';
 
@@ -23,7 +24,92 @@ export type ResumeListItem = {
 };
 
 export function DashboardResumes({ resumes }: { resumes: ResumeListItem[] }) {
+  const router = useRouter();
   const reduce = useReducedMotion();
+  const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
+  const [renamingResume, setRenamingResume] = useState<{ id: string; title: string } | null>(null);
+  const [deletingResume, setDeletingResume] = useState<{ id: string; title: string } | null>(null);
+  const [actionLoading, setActionLoading] = useState<'rename' | 'duplicate' | 'delete' | null>(null);
+  const dropdownRef = useRef<HTMLDivElement | null>(null);
+
+  // Fecha o dropdown ao clicar fora
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setActiveDropdown(null);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  async function handleDuplicate(resume: ResumeListItem) {
+    if (actionLoading) return;
+    setActionLoading('duplicate');
+    try {
+      const res = await fetch('/api/resumes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: `${resume.title} (Cópia)`,
+          templateId: resume.templateId,
+          content: resume.content,
+          colorScheme: resume.colorScheme,
+        }),
+      });
+      if (res.ok) {
+        router.refresh();
+      } else {
+        const data = await res.json();
+        alert(data.error || 'Erro ao duplicar currículo');
+      }
+    } catch {
+      alert('Erro de conexão ao duplicar');
+    } finally {
+      setActionLoading(null);
+      setActiveDropdown(null);
+    }
+  }
+
+  async function handleRename(id: string, newTitle: string) {
+    if (!newTitle.trim() || actionLoading) return;
+    setActionLoading('rename');
+    try {
+      const res = await fetch(`/api/resumes/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title: newTitle }),
+      });
+      if (res.ok) {
+        setRenamingResume(null);
+        router.refresh();
+      } else {
+        alert('Erro ao renomear currículo');
+      }
+    } catch {
+      alert('Erro de conexão ao renomear');
+    } finally {
+      setActionLoading(null);
+    }
+  }
+
+  async function handleDelete(id: string) {
+    if (actionLoading) return;
+    setActionLoading('delete');
+    try {
+      const res = await fetch(`/api/resumes/${id}`, { method: 'DELETE' });
+      if (res.ok) {
+        setDeletingResume(null);
+        router.refresh();
+      } else {
+        alert('Erro ao excluir currículo');
+      }
+    } catch {
+      alert('Erro de conexão ao excluir');
+    } finally {
+      setActionLoading(null);
+    }
+  }
 
   if (resumes.length === 0) {
     return (
@@ -66,7 +152,7 @@ export function DashboardResumes({ resumes }: { resumes: ResumeListItem[] }) {
           if (parsed?.personal) content = parsed;
         } catch {}
         const completeness = content ? calculateCompleteness(content) : 0;
-        const isMain = index === 0; // Exemplo: o primeiro é o principal
+        const isMain = index === 0;
 
         return (
           <motion.div key={resume.id} variants={fadeUp} className="w-full">
@@ -115,8 +201,6 @@ export function DashboardResumes({ resumes }: { resumes: ResumeListItem[] }) {
                       </span>
                     </div>
                   </div>
-                  
-                  <DeleteResumeButton resumeId={resume.id} title={resume.title} />
                 </div>
 
                 <div className="mt-6 mb-6">
@@ -140,13 +224,68 @@ export function DashboardResumes({ resumes }: { resumes: ResumeListItem[] }) {
                       Editar
                     </Button>
                   </Link>
-                  <Button variant="secondary" className="flex-1 sm:flex-none h-10 rounded-xl font-semibold gap-2 text-slate-600">
-                    <Download className="h-4 w-4" />
-                    Baixar PDF
-                  </Button>
-                  <Button variant="secondary" className="h-10 w-10 rounded-xl text-slate-600 p-0">
-                    <MoreHorizontal className="h-4 w-4" />
-                  </Button>
+                  <Link href={`/editor/${resume.id}?download=true`} className="flex-1 sm:flex-none">
+                    <Button variant="secondary" className="w-full sm:w-auto h-10 rounded-xl font-semibold gap-2 text-slate-600 hover:bg-slate-100">
+                      <Download className="h-4 w-4" />
+                      Baixar PDF
+                    </Button>
+                  </Link>
+                  
+                  {/* Menu Dropdown de Ações */}
+                  <div className="relative" ref={activeDropdown === resume.id ? dropdownRef : null}>
+                    <Button
+                      variant="secondary"
+                      onClick={() => setActiveDropdown(activeDropdown === resume.id ? null : resume.id)}
+                      className="h-10 w-10 rounded-xl text-slate-600 p-0 hover:bg-slate-100"
+                    >
+                      <MoreHorizontal className="h-4 w-4" />
+                    </Button>
+
+                    <AnimatePresence>
+                      {activeDropdown === resume.id && (
+                        <motion.div
+                          initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                          animate={{ opacity: 1, scale: 1, y: 0 }}
+                          exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                          className="absolute right-0 bottom-12 z-50 w-48 rounded-2xl border border-border/80 bg-white p-2 shadow-xl backdrop-blur-md"
+                        >
+                          <button
+                            onClick={() => {
+                              setRenamingResume({ id: resume.id, title: resume.title });
+                              setActiveDropdown(null);
+                            }}
+                            className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors"
+                          >
+                            <PenLine className="h-4 w-4 text-slate-500" />
+                            Renomear
+                          </button>
+                          <button
+                            onClick={() => handleDuplicate(resume)}
+                            disabled={actionLoading !== null}
+                            className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors disabled:opacity-50"
+                          >
+                            {actionLoading === 'duplicate' && activeDropdown === resume.id ? (
+                              <Loader2 className="h-4 w-4 animate-spin text-slate-500" />
+                            ) : (
+                              <Copy className="h-4 w-4 text-slate-500" />
+                            )}
+                            Duplicar
+                          </button>
+                          <div className="my-1 border-t border-slate-100" />
+                          <button
+                            onClick={() => {
+                              setDeletingResume({ id: resume.id, title: resume.title });
+                              setActiveDropdown(null);
+                            }}
+                            className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm font-medium text-destructive hover:bg-destructive/5 transition-colors"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                            Excluir
+                          </button>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
                 </div>
               </div>
 
@@ -154,6 +293,76 @@ export function DashboardResumes({ resumes }: { resumes: ResumeListItem[] }) {
           </motion.div>
         );
       })}
+
+      {/* Modal de Renomear */}
+      {renamingResume && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+          <div className="w-full max-w-md rounded-2xl bg-white border border-border p-6 shadow-2xl animate-in zoom-in-95 duration-200">
+            <h3 className="text-lg font-bold text-slate-900 mb-4">Renomear Currículo</h3>
+            <input
+              type="text"
+              defaultValue={renamingResume.title}
+              id="rename-input"
+              placeholder="Nome do currículo"
+              className="w-full h-11 px-4 rounded-xl border border-border bg-slate-50 text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 mb-6"
+            />
+            <div className="flex justify-end gap-3">
+              <Button
+                variant="secondary"
+                onClick={() => setRenamingResume(null)}
+                disabled={actionLoading !== null}
+              >
+                Cancelar
+              </Button>
+              <Button
+                variant="primary"
+                onClick={() => {
+                  const input = document.getElementById('rename-input') as HTMLInputElement | null;
+                  if (input) handleRename(renamingResume.id, input.value);
+                }}
+                isLoading={actionLoading === 'rename'}
+              >
+                Salvar
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Excluir */}
+      {deletingResume && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+          <div className="w-full max-w-md rounded-2xl bg-white border border-border p-6 shadow-2xl animate-in zoom-in-95 duration-200">
+            <div className="flex items-start gap-4 mb-6">
+              <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-destructive/10 text-destructive">
+                <AlertTriangle className="h-5 w-5" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-slate-900">Excluir Currículo</h3>
+                <p className="mt-1.5 text-sm text-slate-500 leading-relaxed">
+                  Tem certeza que deseja excluir <strong>&quot;{deletingResume.title}&quot;</strong>? Esta ação é definitiva e não poderá ser desfeita.
+                </p>
+              </div>
+            </div>
+            <div className="flex justify-end gap-3">
+              <Button
+                variant="secondary"
+                onClick={() => setDeletingResume(null)}
+                disabled={actionLoading !== null}
+              >
+                Cancelar
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={() => handleDelete(deletingResume.id)}
+                isLoading={actionLoading === 'delete'}
+              >
+                Sim, excluir
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </motion.div>
   );
 }

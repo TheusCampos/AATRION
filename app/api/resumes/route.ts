@@ -29,6 +29,8 @@ export async function GET() {
 
 const createResumeSchemaWithTemplate = createResumeSchema.extend({
   templateId: z.string().optional(),
+  content: z.string().optional(),
+  colorScheme: z.string().optional(),
 });
 
 export async function POST(req: NextRequest) {
@@ -71,7 +73,8 @@ export async function POST(req: NextRequest) {
       userId: user.id,
       title: parsed.data.title,
       templateId: parsed.data.templateId || 'classic',
-      content: JSON.stringify(emptyResumeContent()),
+      content: parsed.data.content || JSON.stringify(emptyResumeContent()),
+      colorScheme: parsed.data.colorScheme,
     },
     select: { id: true, title: true, createdAt: true, updatedAt: true },
   });

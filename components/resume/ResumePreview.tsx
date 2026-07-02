@@ -22,6 +22,8 @@ import {
   MinimalGreyLayout,
   YellowHeaderLayout,
   BlueRightSidebarLayout,
+  CorporateLayout,
+  ExecutiveProLayout,
 } from './templates';
 
 export type { ResumeStyle, LayoutProps } from './templates';
@@ -100,6 +102,8 @@ export function ResumePreview({ content, templateId = 'classic', style = DEFAULT
   if (templateId === 'minimal-grey') return <MinimalGreyLayout {...layoutProps} />;
   if (templateId === 'yellow-header') return <YellowHeaderLayout {...layoutProps} />;
   if (templateId === 'blue-right-sidebar') return <BlueRightSidebarLayout {...layoutProps} />;
+  if (templateId === 'corporate') return <CorporateLayout {...layoutProps} />;
+  if (templateId === 'executive-pro') return <ExecutiveProLayout {...layoutProps} />;
 
   return <ClassicLayout {...layoutProps} />;
 }

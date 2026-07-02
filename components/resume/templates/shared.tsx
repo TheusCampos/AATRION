@@ -57,14 +57,15 @@ interface ResumeAvatarProps {
   name?: string;
   size?: string;
   borderColor?: string;
+  shape?: 'circle' | 'square';
 }
 
-export function ResumeAvatar({ photo, name, size = '90px', borderColor }: ResumeAvatarProps) {
+export function ResumeAvatar({ photo, name, size = '90px', borderColor, shape = 'circle' }: ResumeAvatarProps) {
   if (!photo) return null;
 
   return (
     <div
-      className="relative overflow-hidden rounded-full flex-shrink-0"
+      className={`relative overflow-hidden flex-shrink-0 ${shape === 'circle' ? 'rounded-full' : 'rounded-md shadow-sm'}`}
       style={{
         width: size,
         height: size,

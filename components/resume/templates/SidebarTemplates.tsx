@@ -16,7 +16,7 @@ export function BrownSidebarLayout(p: LayoutProps) {
         <aside className="w-[32%] p-6 text-slate-800 flex flex-col gap-6" style={{ backgroundColor: sidebarBg }}>
           {p.personal.photo && (
             <div className="mb-2">
-              <ResumeAvatar photo={p.personal.photo} name={p.personal.name} size="120px" borderColor={headerBg} />
+              <ResumeAvatar photo={p.personal.photo} name={p.personal.name} size="120px" borderColor={headerBg} shape="square" />
             </div>
           )}
 
@@ -157,7 +157,7 @@ export function BlueRightSidebarLayout(p: LayoutProps) {
         <main className="w-[65%] p-8 flex flex-col bg-white">
           <header className="flex items-center gap-4 border-b border-slate-200 pb-6 mb-6">
             {p.personal.photo && (
-              <ResumeAvatar photo={p.personal.photo} name={p.personal.name} size="70px" />
+              <ResumeAvatar photo={p.personal.photo} name={p.personal.name} size="70px" shape="square" />
             )}
             <div>
               <h1 className="text-3xl font-bold tracking-tight text-slate-900">{p.personal.name || 'Nome Completo'}</h1>
