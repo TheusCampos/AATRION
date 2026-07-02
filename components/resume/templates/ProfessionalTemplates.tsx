@@ -1,5 +1,5 @@
 import React from 'react';
-import { Mail, MapPin, Phone, Linkedin, Globe, Github } from 'lucide-react';
+import { Mail, MapPin, Phone, Linkedin } from 'lucide-react';
 import type { LayoutProps } from './types';
 import { DEFAULT_STYLE } from './types';
 import { ResumeAvatar } from './shared';
