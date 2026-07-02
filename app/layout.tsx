@@ -73,17 +73,21 @@ export default function RootLayout({
       </head>
       <body className="min-h-screen bg-background font-sans antialiased">
         <Script
-          src="https://www.googletagmanager.com/gtag/js?id=G-BKJWBMLHEE"
           strategy="afterInteractive"
+          src="https://www.googletagmanager.com/gtag/js?id=G-D5YXYY3RLY"
         />
-        <Script id="google-analytics" strategy="afterInteractive">
-          {`
+        <Script
+          id="google-analytics"
+          strategy="afterInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `
             window.dataLayer = window.dataLayer || [];
             function gtag(){dataLayer.push(arguments);}
             gtag('js', new Date());
-            gtag('config', 'G-BKJWBMLHEE');
-          `}
-        </Script>
+            gtag('config', 'G-D5YXYY3RLY');
+          `,
+          }}
+        />
         <ClerkProvider
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           localization={ptBR as any}

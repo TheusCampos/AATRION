@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import {
   ArrowLeft,
   Check,
@@ -69,6 +69,7 @@ export function ResumeEditor({
   initialAction,
 }: Props) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [title, setTitle] = useState(initialTitle);
   const [content, setContent] = useState<ResumeContent>(initialContent);
   const [tab, setTab] = useState<TabId>('personal');
@@ -242,6 +243,17 @@ export function ResumeEditor({
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
   }, [title, content, templateId, style, save]);
+
+  useEffect(() => {
+    if (searchParams && searchParams.get('download') === 'true') {
+      handleDownloadPdf();
+      const params = new URLSearchParams(searchParams.toString());
+      params.delete('download');
+      const newQuery = params.toString() ? `?${params.toString()}` : '';
+      router.replace(`/editor/${resumeId}${newQuery}`);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams, router, resumeId]);
 
   useEffect(() => {
     const serialized = JSON.stringify(style);

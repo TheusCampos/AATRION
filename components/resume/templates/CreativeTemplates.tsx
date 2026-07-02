@@ -197,9 +197,12 @@ export function YellowHeaderLayout(p: LayoutProps) {
       <div className="flex-1 flex overflow-y-auto print:overflow-visible">
         {/* Left Column */}
         <aside className="w-[35%] flex flex-col">
-          {/* Top Photo Area (White) */}
-          <div className="bg-white p-6 flex justify-center items-center" style={{ minHeight: '220px' }}>
-            <ResumeAvatar photo={p.personal.photo} name={p.personal.name} size="140px" />
+          {/* Top Photo Area (White/Full) */}
+          <div className="bg-white flex justify-center items-center overflow-hidden aspect-square w-full">
+            {p.personal.photo ? (
+              /* eslint-disable-next-line @next/next/no-img-element */
+              <img src={p.personal.photo} alt={p.personal.name || 'Foto'} className="w-full h-full object-cover" crossOrigin="anonymous" />
+            ) : null}
           </div>
 
           {/* Bottom Sidebar Area (Beige) */}

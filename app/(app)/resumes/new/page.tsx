@@ -165,8 +165,12 @@ export default function NewResumePage() {
       } else if (res.status >= 500) {
         message = 'Erro interno no servidor. Tente novamente em alguns instantes.';
       }
-      setModalMessage(message);
-      setShowUpgradeModal(true);
+      if (res.status === 403) {
+        setModalMessage(message);
+        setShowUpgradeModal(true);
+      } else {
+        alert(message);
+      }
     } catch (err) {
       clearTimeout(timeoutId);
       if (err instanceof DOMException && err.name === 'AbortError') {

@@ -19,6 +19,8 @@ const TEMPLATES = [
   { id: 'minimal-grey', name: 'Cinza Minimalista', desc: 'Clean, focado em texto e separadores' },
   { id: 'yellow-header', name: 'Amarelo Criativo', desc: 'Destaque no cabeçalho amarelo com foto' },
   { id: 'blue-right-sidebar', name: 'Azul Profissional', desc: 'Elegante com sidebar na direita' },
+  { id: 'corporate', name: 'Corporativo (Elegante)', desc: 'Design estruturado e altamente profissional' },
+  { id: 'executive-pro', name: 'Executivo Pro', desc: 'Minimalista e focado na trajetória executiva' },
 ] as const;
 
 export { TEMPLATES };

@@ -6,16 +6,14 @@ const isProtectedRoute = createRouteMatcher([
   '/resumes(.*)',
   '/linkedin(.*)',
   '/settings(.*)',
+  '/admin(.*)',
 ]);
 
 export default clerkMiddleware(async (auth, req) => {
   if (isProtectedRoute(req)) {
     await auth().protect();
   }
-  // Security headers (CSP, X-Frame-Options, etc.) are set in next.config.mjs.
-  // Do NOT set them here — duplicate CSP headers cause the browser to enforce
-  // the most restrictive combination, which blocks resources and causes blank pages.
-});
+}, { allowedClockSkewInMs: 300000, clockSkewInMs: 300000 } as any);
 
 export const config = {
   matcher: [

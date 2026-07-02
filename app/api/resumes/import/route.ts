@@ -37,7 +37,6 @@ async function extractPdfText(buffer: Buffer): Promise<ExtractedFile> {
       warnings: [],
     };
   } finally {
-    // Garante liberação dos recursos do worker
     try {
       await parser.destroy();
     } catch {
@@ -164,19 +163,20 @@ export async function POST(req: NextRequest) {
       extracted = await extractDocxText(buffer);
     }
   } catch (err) {
+    const errorMessage = err instanceof Error ? err.message : String(err);
     console.error(`[IMPORT] Falha ao extrair texto (${isPdf ? 'PDF' : 'DOCX'}):`, err);
     // SEC-011: Não expor detalhes internos ao cliente
     return NextResponse.json(
       {
         error: isPdf
-          ? 'Falha ao processar o PDF. O arquivo pode estar corrompido, protegido por senha ou conter apenas imagens sem texto.'
-          : 'Falha ao processar o DOCX. O arquivo pode estar corrompido ou em formato não suportado.',
+          ? `Falha ao processar o PDF. O arquivo pode estar corrompido, protegido por senha ou conter apenas imagens sem texto. Detalhes: ${errorMessage}`
+          : `Falha ao processar o DOCX. O arquivo pode estar corrompido ou em formato não suportado. Detalhes: ${errorMessage}`,
       },
       { status: 422 }
     );
   }
 
-  const text = extracted.text;
+  const text = extracted.text.replace(/\0/g, '');
 
   if (!text || text.length < 20) {
     return NextResponse.json(
@@ -199,6 +199,9 @@ Sua função é analisar o texto extraído de um currículo e transformar as inf
 
 Você NÃO deve melhorar, reescrever criativamente, resumir com exageros ou inventar informações.
 Você deve apenas extrair, organizar, normalizar e estruturar os dados encontrados.
+
+REGRA CRÍTICA PARA AS CHAVES DO JSON:
+NÃO TRADUZA AS CHAVES DO JSON PARA O PORTUGUÊS! As chaves (keys) do JSON devem ser EXATAMENTE as listadas abaixo, estritamente em inglês (ex: "personal", "name", "experience", "company"). Nunca use "pessoal", "nome", "experiencia", etc. O conteúdo (os valores) deve permanecer no idioma original, mas a ESTRUTURA (chaves) deve ser mantida em inglês.
 
 REGRA PRINCIPAL:
 Se uma informação não estiver claramente presente no currículo, preencha o campo com string vazia "" ou array vazio [], conforme o tipo esperado.
@@ -672,19 +675,27 @@ Nunca retorne itens vazios apenas para preencher o array.
 `;
 
     const aiResponse = await runAI({
-      model: 'google/gemini-2.5-flash-lite',
+      model: 'google/gemini-2.5-flash',
       systemInstruction,
-      userText: `Extraia as informações do seguinte currículo:\n\n${text.substring(0, 8000)}`,
+      userText: `Extraia as informações do seguinte currículo:\n\n${text.substring(0, 15000)}`,
       responseJson: true,
       temperature: 0.1,
-      maxOutputTokens: 2500,
+      maxOutputTokens: 8000,
     });
 
     const parsed = safeParseJSON<ResumeContent>(aiResponse.text);
-    if (parsed && parsed.personal) {
-      // Garantindo defaults do ResumeContent
-      initialContent = { ...emptyResumeContent(), ...parsed };
+    if (!parsed) {
+      console.error('[IMPORT] IA retornou texto que não é um JSON válido. Resposta da IA:', aiResponse.text);
+      throw new Error('JSON Inválido retornado pela IA');
     }
+    if (!parsed.personal) {
+      console.error('[IMPORT] IA retornou JSON válido mas sem o campo "personal". Resposta:', parsed);
+      throw new Error('Estrutura JSON incorreta (sem personal)');
+    }
+    
+    // Garantindo defaults do ResumeContent
+    initialContent = { ...emptyResumeContent(), ...parsed };
+    
   } catch (err) {
     console.error('[IMPORT] IA falhou ao estruturar (mantendo texto bruto):', err);
     // Mantém initialContent com o texto bruto no summary

@@ -23,6 +23,8 @@ model User {
   name      String
   // Plano do usuario: FREE | PRO | MAX (ver lib/plan.ts)
   plan      String   @default("FREE")
+  // Papel do usuario no sistema: USER ou ADMIN
+  role      String   @default("USER")
   // Quando o plano foi iniciado. Usado para calcular "dias ate a renovacao".
   planStartedAt DateTime?
   // Data de expiracao/renovacao. null = sem expiracao (FREE vitalicio).
@@ -120,3 +122,14 @@ model ActivityLog {
   @@index([action])
   @@index([createdAt])
 }
+
+// =====================================================
+// Eventos Processados (Idempotência de Webhooks)
+// =====================================================
+
+model ProcessedEvent {
+  id        String   @id // ID do evento do Stripe (ex: evt_123)
+  type      String   // Tipo do evento (ex: checkout.session.completed)
+  createdAt DateTime @default(now())
+}
+
