@@ -53,6 +53,7 @@ enum AICallType  {
 | `name` | String? | Nome de exibição |
 | `image` | String? | Avatar (URL R2) |
 | `plan` | Plan | `FREE` ou `PRO` |
+| `role` | String | Papel do usuário (`USER` ou `ADMIN`) |
 | `phone_enc` | String? | Telefone criptografado AES-256 |
 | `mfaEnabled` | Boolean | MFA TOTP ativo |
 | `mfaSecret_enc` | String? | Secret TOTP criptografado |
@@ -254,6 +255,14 @@ enum AICallType  {
 | `fileSize` | Int | Bytes |
 | `watermark` | Boolean | Marca d'água do Free? |
 | `expiresAt` | DateTime? | URL assinada expira em 24h |
+
+### `processed_events` (Idempotência Stripe)
+
+| Coluna | Tipo | Descrição |
+|---|---|---|
+| `id` | String | PK (ID do evento Stripe `evt_...`) |
+| `type` | String | Tipo de evento (ex: `checkout.session.completed`) |
+| `createdAt` | DateTime | Data do processamento |
 
 ## Estratégia de Criptografia
 

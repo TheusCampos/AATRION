@@ -22,11 +22,12 @@ O ATRION é um ecossistema completo para candidatos que buscam se destacar no me
 O ATRION é estruturado como uma aplicação moderna em **Next.js 14** utilizando as melhores práticas do mercado:
 
 ### Arquitetura e Fluxo de Dados
-1. **Autenticação Segura**: Gerenciada pelo **Clerk**, assegurando o login social (Google) e tradicional de forma robusta. O middleware protege as rotas privadas.
+1. **Autenticação Segura e Controle de Acesso**: Gerenciada pelo **Clerk**, assegurando o login social (Google) e tradicional de forma robusta. O middleware protege as rotas privadas. Existe uma hierarquia de acesso (`role`) suportando perfis de `USER` e `ADMIN`.
 2. **Camada de Banco de Dados**: Utiliza o **Prisma ORM** conectado a um banco de dados **PostgreSQL (NeonDB)** em produção/desenvolvimento.
 3. **Mecanismo de IA**: O wrapper dinâmico em `lib/ai.ts` processa as solicitações através da API oficial do **Google Gemini** (padrão) e possui fallback automático para o **OpenRouter** (modelos grátis) em caso de instabilidade. Se ambos falharem, há um sistema de regras heurísticas locais para análise básica.
 4. **Exportação de PDF**: Realizada diretamente no navegador do cliente usando `html2canvas` para renderizar o layout do currículo em alta definição e `jsPDF` para gerar o documento A4 sem perdas de formatação ou problemas de quebra de página.
-5. **Integração de Pagamento**: O **Stripe** processa as assinaturas mensais e pagamentos semanais através de Stripe Checkout e gerencia as atualizações de planos de forma assíncrona por meio de Webhooks seguros.
+5. **Integração de Pagamento Segura**: O **Stripe** processa assinaturas com Webhooks validados, incluindo verificação de **idempotência** local para evitar duplicidade.
+6. **Privacidade (LGPD)**: Quando o usuário exclui a conta, seus dados são expurgados do banco, do Clerk e **a assinatura do Stripe é automaticamente cancelada**, garantindo que nenhuma cobrança indevida ocorra.
 
 ---
 
@@ -114,6 +115,7 @@ O ATRION conta com restrições automáticas de recursos baseadas no nível do p
 ```
 app/
   (app)/                    # Área autenticada da aplicação
+    admin/                  # Painel restrito a administradores (`role === 'ADMIN'`)
     dashboard/              # Painel do usuário e lista de currículos
     editor/[id]/            # Editor de currículo dinâmico, Preview e IA
     jobs/                   # Busca de vagas em tempo real (Adzuna)

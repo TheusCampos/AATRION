@@ -62,6 +62,19 @@ export async function POST(request: Request) {
 
   console.log(`[Stripe Webhook] Evento recebido: ${event.type}`);
 
+  // SEC-003: Idempotência de Webhook
+  try {
+    const existingEvent = await prisma.processedEvent.findUnique({
+      where: { id: event.id },
+    });
+    if (existingEvent) {
+      console.log(`[Stripe Webhook] Evento ${event.id} já foi processado. Ignorando.`);
+      return NextResponse.json({ received: true, ignored: true });
+    }
+  } catch (err) {
+    console.warn(`[Stripe Webhook] Falha ao verificar idempotência, continuando...`, err);
+  }
+
   try {
     switch (event.type) {
       case 'checkout.session.completed': {
@@ -196,6 +209,18 @@ export async function POST(request: Request) {
         }
         break;
       }
+    }
+
+    // Registra o evento como processado
+    try {
+      await prisma.processedEvent.create({
+        data: {
+          id: event.id,
+          type: event.type,
+        },
+      });
+    } catch (err) {
+      console.warn(`[Stripe Webhook] Falha ao salvar ProcessedEvent:`, err);
     }
   } catch (error) {
     console.error('[Stripe Webhook] Erro no processamento:', error);

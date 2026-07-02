@@ -14,6 +14,7 @@ type PrismaUserLite = {
   email: string;
   name: string;
   plan: string;
+  role: string;
   clerkId: string | null;
   phone: string | null;
   jobTitle: string | null;
@@ -39,6 +40,7 @@ export type AuthUser = {
   email: string;
   name: string;
   plan: PlanCode;
+  role: string;
   clerkId: string | null;
   phone: string | null;
   jobTitle: string | null;
@@ -104,6 +106,7 @@ async function enrich(user: PrismaUserLite): Promise<AuthUser> {
     email: user.email,
     name: user.name,
     plan: normalizePlan(user.plan),
+    role: user.role,
     clerkId: user.clerkId,
     phone: user.phone,
     jobTitle: user.jobTitle,

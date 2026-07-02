@@ -3,37 +3,19 @@
 > Nível de **produção comercial**. Cobre autenticação, autorização, criptografia,
 > rate limiting, headers HTTP, auditoria, backup e conformidade LGPD.
 
-## 1. Autenticação (Better Auth)
+## 1. Autenticação e Controle de Acesso (Clerk)
 
 | Camada | Implementação | Detalhe |
 |---|---|---|
-| **Senha** | bcrypt rounds 12 | Hash unidirecional, nunca armazenado em texto puro |
-| **Sessão** | JWT HS256 + refresh rotativo | Expiração 30 dias, refresh automático, revogação por userId |
-| **OAuth** | Google + GitHub | Delegado ao provider, sem senha armazenada |
-| **MFA TOTP** | otplib + qrcode | Google Authenticator / Authy, QR Code na ativação, 8 códigos de backup |
-| **Verificação email** | Código 6 dígitos, 15min TTL | Obrigatório para acessar o editor, reenviável |
-| **Recuperação senha** | Token único, 1h TTL | Enviado via Resend, invalidado após uso |
+| **Senha** | Gerenciada pelo Clerk | Hash seguro na infra do provedor, sem contato direto com nosso DB |
+| **Sessão** | Clerk Middleware | Protege rotas sensíveis e APIs. Injeção de `userId` nos requests |
+| **OAuth** | Google | Delegado ao provider |
+| **Roles** | Implementação local (DB) | Coluna `role` no banco (`USER` ou `ADMIN`), validada no servidor |
+| **Verificação** | Email/Senhas OTP via Clerk | Sem complexidade local, garantido pelo provedor de Auth |
 
-### Fluxo de ativação MFA
+### Fluxo de Controle Admin
 
-```mermaid
-sequenceDiagram
-    participant U as Usuário
-    participant FE as Frontend
-    participant API as API Route
-    participant DB as Neon
-
-    U->>FE: Settings → Ativar MFA
-    FE->>API: POST /api/auth/mfa/enable
-    API->>DB: Gera secret TOTP criptografado
-    API-->>FE: { secret, otpauthUrl, qrCodeDataUrl }
-    FE->>U: Exibe QR Code
-    U->>FE: Digita código 6 dígitos
-    FE->>API: POST /api/auth/mfa/verify { code }
-    API->>API: Valida com otplib
-    API->>DB: mfaEnabled = true, salva 8 backup codes
-    API-->>FE: 200 OK
-```
+Somente usuários com o campo `role` definido como `ADMIN` no banco de dados podem acessar rotas em `app/admin`. O Clerk bloqueia usuários não autenticados, e nosso código verifica a permissão logo em seguida.
 
 ## 2. Anti-Bot (Cloudflare Turnstile)
 
@@ -50,13 +32,9 @@ Aplicado em:
 
 | Endpoint | Algoritmo | Limite | Penalidade |
 |---|---|---|---|
-| `POST /api/auth/*` | Fixed Window / Sliding Window | Varia | Bloquear IP temporariamente |
-| `POST /api/ai/*` | Sliding Window | 5 chamadas / minuto por userId | HTTP 429 + `Retry-After` |
-| `POST /api/upload/*` | Sliding Window | 10 req / minuto por userId | HTTP 429 |
-| `GET /api/jobs` | Sliding Window | 30 req / minuto por userId | HTTP 429 |
-| `POST /api/stripe/checkout`| Sliding Window | 3 req / minuto por userId | HTTP 429 |
-| `POST /api/stripe/webhook`| — | Ilimitado | Verificação de assinatura Stripe |
-| API Geral / CRUD | Sliding Window | 30 req / minuto por userId | HTTP 429 |
+| `POST /api/ai/*` | Sliding Window | Limite ajustável | HTTP 429 + `Retry-After` |
+| `POST /api/upload/*` | Sliding Window | Limite ajustável | HTTP 429 |
+| `POST /api/stripe/webhook`| Idempotência local | Ilimitado | Validação de Assinatura e Eventos Únicos (`ProcessedEvent`) |
 
 ## 4. Headers HTTP de Segurança
 
@@ -77,9 +55,10 @@ Aplicados em **todas** as rotas via `next.config.mjs`:
 
 ## 4.1. Prevenção de XSS e Vazamentos
 
-- Renderização de conteúdo de terceiros (como vagas da Adzuna) passa por um utilitário `stripHtml`, prevenindo XSS via `dangerouslySetInnerHTML`.
-- Erros internos detalhados gerados por libs (como pdf-parse) não são expostos em JSON no ambiente de produção.
-- Rotas de visualização de arquivos via R2 (`/api/files/[...key]`) validam a autenticação da sessão e propriedade (`ownership`) conferindo se o UUID da pasta pertence ao usuário.
+- Renderização de conteúdo de terceiros passa por sanitização.
+- Erros internos detalhados gerados por libs não são expostos em JSON no ambiente de produção.
+- Rotas de visualização de arquivos via R2 (`/api/files/[...key]`) validam a autenticação da sessão e propriedade conferindo se a URL `/photos/{userId}/` pertence ao usuário logado.
+- Os webhooks da Stripe garantem **Idempotência**, impedindo execução duplicada de atualizações de conta via tabela `ProcessedEvent`.
 
 ## 5. Criptografia de Dados Pessoais
 
@@ -154,22 +133,18 @@ Eventos rastreados:
 | Item | Versão alvo | Status |
 |---|---|---|
 | HTTPS em todos os endpoints | V1 | ✅ Vercel garante |
-| Security headers (CSP, HSTS, ...) | V1 | 🔨 Implementar no middleware |
-| Rate limiting por endpoint | V1 | 🔨 Upstash Redis |
-| Validação de input (Zod) em toda API | V1 | 🔨 Em todos os routes |
-| Cloudflare Turnstile no cadastro/login | V1 | 🔨 Integrar |
-| Senhas com bcrypt (salt 12) | V1 | ✅ Better Auth built-in |
-| JWT com expiração adequada | V1 | ✅ Better Auth config |
-| Auditoria de ações críticas | V2 | 🔨 Tabela `AuditLog` |
-| MFA (TOTP) | V2 | 🔨 Better Auth plugin |
-| Criptografia AES-256 dados pessoais | V2 | 🔨 `lib/crypto.ts` |
-| Backup diário do banco | V2 | 🔨 Neon built-in + pg_dump |
-| Backup semanal do storage | V2 | 🔨 Script no Fly.io |
+| Security headers (CSP, HSTS, ...) | V1 | ✅ Aplicado no `next.config.mjs` |
+| Rate limiting por endpoint | V1 | ✅ Aplicado via Upstash Redis |
+| Validação de input (Zod) em toda API | V1 | ✅ Implementado |
+| Cloudflare Turnstile anti-bot | V1 | ✅ Integrado quando necessário |
+| Auth seguro via provedor | V1 | ✅ Clerk integrado |
+| Idempotência e validação webhook | V1 | ✅ Implementado com Tabela ProcessedEvent |
+| Controle de Acesso Administrativo | V1 | ✅ Modelagem de Role no BD e rotas restritas |
+| Criptografia AES-256 dados pessoais | V2 | ⏳ Para features futuras |
+| Backup diário do banco | V2 | ✅ Neon built-in + pg_dump se configurado |
 | Penetration test básico | V3 | ⏳ OWASP ZAP ou similar |
-| LGPD: política de privacidade | Lançamento | ⏳ Redigir com advogado |
-| LGPD: endpoint de exclusão de dados | Lançamento | ⏳ `DELETE /api/users/me` |
+| LGPD: Exclusão com Cancelamento | V1 | ✅ Exclui dados + cancela Sub da Stripe |
 | LGPD: consentimento explícito marketing | Lançamento | ⏳ Checkbox no cadastro |
-| DPO definido + email de contato | Lançamento | ⏳ `privacy@cvforge.com.br` |
 
 ## 9. Resposta a Incidentes
 
