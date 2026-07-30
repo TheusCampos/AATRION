@@ -1,5 +1,6 @@
 import { prisma } from './prisma';
 import { headers } from 'next/headers';
+import { captureServerEvent } from './posthog-server';
 
 export type UserActionType =
   | 'USER_LOGIN'
@@ -12,6 +13,11 @@ export type UserActionType =
   | 'RAN_LINKEDIN_AUDIT'
   | 'UPDATED_SETTINGS'
   | 'VIEWED_PRICING'
+  | 'PLAN_UPGRADED'
+  | 'PLAN_DOWNGRADED'
+  | 'SUBSCRIPTION_CANCELLED'
+  | 'PAYMENT_REFUNDED'
+  | 'CHECKOUT_STARTED'
   | 'OTHER';
 
 interface LogOptions {
@@ -33,6 +39,14 @@ export async function logUserAction({ userId, action, details }: LogOptions) {
       // headers() indisponível neste contexto
     }
 
+    // Enviar evento ao PostHog
+    captureServerEvent(userId, `user_action_${action.toLowerCase()}`, {
+      action,
+      ipAddress,
+      userAgent,
+      ...(details || {}),
+    });
+
     await prisma.activityLog.create({
       data: {
         userId,
@@ -46,3 +60,31 @@ export async function logUserAction({ userId, action, details }: LogOptions) {
     console.error('Falha ao gravar ActivityLog:', error);
   }
 }
+
+/**
+ * SEC-FIX: Versão para contextos onde headers() não está disponível (webhooks).
+ * Não tenta extrair IP/UserAgent — marca como ação do sistema.
+ */
+export async function logSystemAction({ userId, action, details }: LogOptions) {
+  try {
+    // Enviar evento ao PostHog
+    captureServerEvent(userId, `system_action_${action.toLowerCase()}`, {
+      action,
+      userAgent: 'system/webhook',
+      ...(details || {}),
+    });
+
+    await prisma.activityLog.create({
+      data: {
+        userId,
+        action,
+        details: details ? JSON.stringify(details) : null,
+        ipAddress: null,
+        userAgent: 'system/webhook',
+      },
+    });
+  } catch (error) {
+    console.error('Falha ao gravar ActivityLog (system):', error);
+  }
+}
+

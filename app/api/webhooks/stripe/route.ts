@@ -3,6 +3,8 @@ import { NextResponse } from 'next/server';
 import { stripe } from '@/lib/stripe';
 import { prisma } from '@/lib/prisma';
 import Stripe from 'stripe';
+import { logSystemAction } from '@/lib/logger';
+import { startTimer, trackApiCall } from '@/lib/api-telemetry';
 
 /**
  * Determina o plano (FREE/PRO/MAX) a partir do price do Stripe.
@@ -34,6 +36,7 @@ async function resolvePlan(stripePrice: Stripe.Price): Promise<string> {
 }
 
 export async function POST(request: Request) {
+  const getElapsed = startTimer();
   const body = await request.text();
   const signature = request.headers.get('stripe-signature');
 
@@ -41,6 +44,13 @@ export async function POST(request: Request) {
   const secret = process.env.STRIPE_WEBHOOK_SECRET;
   if (!secret) {
     console.error('[Stripe Webhook] STRIPE_WEBHOOK_SECRET não está configurada. Recusando request.');
+    trackApiCall({
+      req: request,
+      routeName: '/api/webhooks/stripe',
+      status: 500,
+      durationMs: getElapsed(),
+      responseMessage: 'Webhook não configurado corretamente.',
+    });
     return NextResponse.json(
       { error: 'Webhook não configurado corretamente.' },
       { status: 500 }
@@ -49,6 +59,13 @@ export async function POST(request: Request) {
 
   if (!signature) {
     console.warn('[Stripe Webhook] Request sem header stripe-signature.');
+    trackApiCall({
+      req: request,
+      routeName: '/api/webhooks/stripe',
+      status: 400,
+      durationMs: getElapsed(),
+      responseMessage: 'Missing signature',
+    });
     return NextResponse.json({ error: 'Missing signature' }, { status: 400 });
   }
 
@@ -57,6 +74,14 @@ export async function POST(request: Request) {
     event = stripe.webhooks.constructEvent(body, signature, secret);
   } catch (err: any) {
     console.warn('[Stripe Webhook] Verificação de assinatura falhou:', err.message);
+    trackApiCall({
+      req: request,
+      routeName: '/api/webhooks/stripe',
+      status: 400,
+      durationMs: getElapsed(),
+      responseMessage: 'Invalid signature',
+      error: err,
+    });
     return NextResponse.json({ error: 'Invalid signature' }, { status: 400 });
   }
 
@@ -69,6 +94,14 @@ export async function POST(request: Request) {
     });
     if (existingEvent) {
       console.log(`[Stripe Webhook] Evento ${event.id} já foi processado. Ignorando.`);
+      trackApiCall({
+        req: request,
+        routeName: '/api/webhooks/stripe',
+        status: 200,
+        durationMs: getElapsed(),
+        responseMessage: 'Event already processed',
+        details: { eventType: event.type, eventId: event.id, ignored: true },
+      });
       return NextResponse.json({ received: true, ignored: true });
     }
   } catch (err) {
@@ -107,6 +140,14 @@ export async function POST(request: Request) {
                   aiAuditUsed: 0,
                 },
               });
+              
+              // SEC-FIX: Log da ação do sistema (upgrade via assinatura)
+              await logSystemAction({ 
+                userId, 
+                action: 'PLAN_UPGRADED', 
+                details: { plan, priceId, via: 'subscription' } 
+              });
+              
               console.log(`[Stripe Webhook] Upgrade Subscription: user ${userId} -> ${plan}`);
             } catch (subErr: any) {
               console.error('[Stripe Webhook] Erro ao processar subscription:', subErr.message);
@@ -121,8 +162,6 @@ export async function POST(request: Request) {
                 const priceId = stripePrice.id;
                 const plan = await resolvePlan(stripePrice);
                 
-                // One-time payments give lifetime access (or special credits)
-                // For UNIC or PC_PRO, we just set the plan.
                 await prisma.user.update({
                   where: { id: userId },
                   data: {
@@ -130,11 +169,18 @@ export async function POST(request: Request) {
                     stripePriceId: priceId,
                     plan,
                     planStartedAt: new Date(),
-                    // one-time payments do not renew
                     planRenewsAt: null, 
                     stripeCurrentPeriodEnd: null,
                   },
                 });
+
+                // SEC-FIX: Log da ação do sistema (upgrade via pagamento único)
+                await logSystemAction({ 
+                  userId, 
+                  action: 'PLAN_UPGRADED', 
+                  details: { plan, priceId, via: 'payment' } 
+                });
+                
                 console.log(`[Stripe Webhook] Upgrade Payment: user ${userId} -> ${plan}`);
               }
             } catch (payErr: any) {
@@ -160,7 +206,7 @@ export async function POST(request: Request) {
         const status = subscription.status;
         const isActive = status === 'active' || status === 'trialing';
 
-        await prisma.user.updateMany({
+        const updatedUsers = await prisma.user.updateMany({
           where: { stripeCustomerId: customerId },
           data: {
             stripePriceId: priceId,
@@ -169,6 +215,16 @@ export async function POST(request: Request) {
             plan: isActive ? plan : 'FREE',
           },
         });
+
+        // SEC-FIX: Log da mudança de status da assinatura (upgrade/downgrade)
+        if (updatedUsers.count > 0) {
+            await logSystemAction({ 
+              userId: 'customer-' + customerId, 
+              action: isActive ? 'PLAN_UPGRADED' : 'PLAN_DOWNGRADED', 
+              details: { plan, customerId, status: subscription.status } 
+            });
+        }
+
         console.log(`[Stripe Webhook] Subscription updated: customer ${customerId} -> ${isActive ? plan : 'FREE'}`);
         break;
       }
@@ -186,6 +242,14 @@ export async function POST(request: Request) {
             planRenewsAt: null,
           },
         });
+        
+        // SEC-FIX: Log do cancelamento de assinatura
+        await logSystemAction({ 
+          userId: 'customer-' + customerId, 
+          action: 'SUBSCRIPTION_CANCELLED', 
+          details: { customerId } 
+        });
+        
         console.log(`[Stripe Webhook] Cancelamento de assinatura para customer ${customerId}`);
         break;
       }
@@ -205,6 +269,14 @@ export async function POST(request: Request) {
               stripeCurrentPeriodEnd: null,
             },
           });
+          
+          // SEC-FIX: Log do estorno de pagamento
+          await logSystemAction({ 
+            userId: 'customer-' + customerId, 
+            action: 'PAYMENT_REFUNDED', 
+            details: { customerId, chargeId: charge.id } 
+          });
+          
           console.log(`[Stripe Webhook] Estorno (Refund) processado. Conta rebaixada para FREE do customer ${customerId}`);
         }
         break;
@@ -224,8 +296,25 @@ export async function POST(request: Request) {
     }
   } catch (error) {
     console.error('[Stripe Webhook] Erro no processamento:', error);
+    trackApiCall({
+      req: request,
+      routeName: '/api/webhooks/stripe',
+      status: 500,
+      durationMs: getElapsed(),
+      responseMessage: 'Webhook handler failed',
+      error,
+    });
     return NextResponse.json({ error: 'Webhook handler failed' }, { status: 500 });
   }
 
+  trackApiCall({
+    req: request,
+    routeName: '/api/webhooks/stripe',
+    status: 200,
+    durationMs: getElapsed(),
+    details: { eventType: event.type, eventId: event.id },
+  });
+
   return NextResponse.json({ received: true });
 }
+

@@ -14,8 +14,8 @@ import {
   Instagram,
   Crosshair,
 } from 'lucide-react';
-import { SignInButton, SignUpButton, SignedIn, SignedOut } from '@clerk/nextjs';
-import { fadeUp, fadeIn, fadeDown, staggerContainer, hoverLift, scaleIn } from '@/lib/animations';
+import { SignedIn, SignedOut } from '@clerk/nextjs';
+import { fadeUp, fadeIn, staggerContainer, hoverLift, scaleIn } from '@/lib/animations';
 import { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 const ResumeCardPreview = dynamic(
@@ -99,12 +99,7 @@ export default function HomePage() {
       <div
         className="absolute top-60 right-20 -z-10 w-24 h-24 -rotate-12 bg-blue-500/5 rounded-lg pointer-events-none"
       />
-      <motion.header
-        variants={mounted && !reduce ? fadeDown : undefined}
-        initial={mounted && !reduce ? 'hidden' : false}
-        animate={mounted && !reduce ? 'visible' : false}
-        className="sticky top-4 z-40 mx-auto w-full max-w-6xl px-4"
-      >
+      <header className="sticky top-4 z-40 mx-auto w-full max-w-6xl px-4">
         <div className="flex h-16 items-center justify-between rounded-2xl border border-slate-200/80 bg-white/80 px-4 sm:px-6 shadow-sm backdrop-blur-md relative">
           <Link href="/" className="flex items-center gap-2 font-bold transition-opacity hover:opacity-95">
             <Image src="/Logo-atrion.png" alt="ATRION" width={110} height={26} className="h-6 w-auto" />
@@ -120,24 +115,20 @@ export default function HomePage() {
 
           <div className="flex items-center gap-2 sm:gap-3">
             <SignedOut>
-              <SignInButton mode="modal" forceRedirectUrl="/dashboard">
-                <button
-                  type="button"
-                  className="hidden h-10 items-center justify-center rounded-full px-4 text-sm font-semibold text-slate-700 transition-colors hover:text-slate-950 sm:inline-flex"
-                >
-                  Entrar
-                </button>
-              </SignInButton>
-              <SignUpButton mode="modal" forceRedirectUrl="/dashboard">
-                <button
-                  type="button"
-                  className="inline-flex h-10 items-center justify-center gap-1.5 rounded-full bg-blue-600 px-4 sm:px-5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-blue-700 hover:scale-[1.01] active:scale-95 cursor-pointer"
-                >
-                  <span className="hidden sm:inline">Começar grátis</span>
-                  <span className="sm:hidden">Começar</span>
-                  <ArrowRight className="h-4 w-4" />
-                </button>
-              </SignUpButton>
+              <Link
+                href="/login"
+                className="inline-flex h-10 items-center justify-center rounded-full px-3 sm:px-4 text-sm font-semibold text-slate-700 transition-colors hover:text-blue-600 hover:bg-slate-100 cursor-pointer"
+              >
+                Entrar
+              </Link>
+              <Link
+                href="/register"
+                className="inline-flex h-10 items-center justify-center gap-1.5 rounded-full bg-blue-600 px-4 sm:px-5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-blue-700 hover:scale-[1.01] active:scale-95 cursor-pointer"
+              >
+                <span className="hidden sm:inline">Começar grátis</span>
+                <span className="sm:hidden">Começar</span>
+                <ArrowRight className="h-4 w-4" />
+              </Link>
             </SignedOut>
             <SignedIn>
               <Link
@@ -152,7 +143,7 @@ export default function HomePage() {
             <LandingMobileMenu />
           </div>
         </div>
-      </motion.header>
+      </header>
 
       <section className="mx-auto max-w-6xl px-4 pt-16 pb-20 md:pt-24 md:pb-28">
         <div className="grid gap-12 lg:grid-cols-12 lg:items-center">
@@ -184,7 +175,7 @@ export default function HomePage() {
               className="mt-8 flex flex-col items-stretch gap-3 sm:flex-row sm:items-center w-full sm:w-auto"
             >
               <SignedOut>
-                <SignUpButton mode="modal" forceRedirectUrl="/dashboard">
+                <Link href="/register">
                   <motion.button
                     {...hoverLift}
                     type="button"
@@ -193,7 +184,7 @@ export default function HomePage() {
                     Criar Currículo Grátis
                     <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
                   </motion.button>
-                </SignUpButton>
+                </Link>
               </SignedOut>
               <SignedIn>
                 <Link href="/dashboard" className="w-full sm:w-auto">
@@ -666,7 +657,7 @@ export default function HomePage() {
                 </p>
                 <div className="mt-8 flex flex-wrap items-center gap-4">
                   <SignedOut>
-                    <SignUpButton mode="modal" forceRedirectUrl="/dashboard">
+                    <Link href="/register">
                       <motion.button
                         {...hoverLift}
                         type="button"
@@ -674,7 +665,15 @@ export default function HomePage() {
                       >
                         Cadastrar Grátis <ArrowRight className="h-3.5 w-3.5" />
                       </motion.button>
-                    </SignUpButton>
+                    </Link>
+                    <Link href="/login">
+                      <button
+                        type="button"
+                        className="inline-flex h-11 items-center gap-1 rounded-full border border-white/30 px-5 text-xs font-bold text-white transition-colors hover:bg-white/10 cursor-pointer"
+                      >
+                        Entrar
+                      </button>
+                    </Link>
                   </SignedOut>
                   <SignedIn>
                     <Link href="/dashboard">

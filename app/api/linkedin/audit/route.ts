@@ -68,69 +68,118 @@ export async function POST(req: NextRequest) {
 
   const { profileText, profileUrl, area, targetJob } = parsed.data;
 
-  const systemInstruction = `Você é um consultor de carreira e headhunter. Analise o perfil do LinkedIn e retorne APENAS JSON válido:
+  const systemInstruction = `Você é um Consultor de Carreira Sênior e Especialista em Recrutamento Tech.
+Analise detalhadamente o perfil do LinkedIn fornecido e retorne APENAS um JSON válido que siga ESTRITAMENTE a estrutura abaixo:
 
 {
   "overallScore": 85,
-  "summary": "Resumo em 1-2 frases.",
-  "sections": [
-    {"key": "headline", "label": "Título", "present": true, "score": 90, "notes": ["nota1"]},
-    {"key": "about", "label": "Sobre", "present": true, "score": 80, "notes": ["nota1"]},
-    {"key": "experience", "label": "Experiência", "present": true, "score": 85, "notes": []},
-    {"key": "skills", "label": "Habilidades", "present": true, "score": 75, "notes": []},
-    {"key": "education", "label": "Formação", "present": false, "score": 0, "notes": ["ausente"]},
-    {"key": "image", "label": "Imagem e Banner", "present": true, "score": 80, "notes": []},
-    {"key": "posts", "label": "Postagens e Atividade", "present": true, "score": 70, "notes": []}
+  "executiveSummary": "Resumo executivo de 2-3 frases sobre como um recrutador vê esse perfil.",
+  "categories": [
+    {
+      "id": "ats",
+      "title": "Compatibilidade ATS",
+      "score": 90,
+      "explanation": "Breve explicação do porquê desta nota.",
+      "recommendations": ["Ação prática 1", "Ação prática 2"]
+    },
+    // Incluir TODOS os IDs exatos: 'ats', 'seo', 'personal_brand', 'experience', 'skills', 'projects', 'certifications', 'general_quality'
   ],
-  "issues": [
-    {"id": "i1", "severity": "high", "area": "Sobre", "message": "Mensagem curta."}
+  "keywords": {
+    "missing": ["Palavra1", "Palavra2"],
+    "suggested": ["Sugestão1", "Sugestão2"],
+    "matchWithTarget": "Análise de como o perfil bate com a vaga alvo."
+  },
+  "generatedContent": {
+    "headline": "Sua nova sugestão de título profissional",
+    "about": "Um novo texto 'Sobre' otimizado, persuasivo e profissional (use quebras de linha \\n)",
+    "experienceImprovements": [
+      {
+        "companyOrRole": "Nome da Empresa ou Cargo",
+        "suggestion": "Como reescrever os bullet points dessa experiência focando em métricas e impacto."
+      }
+    ]
+  },
+  "actionPlan": [
+    {
+      "id": "action_1",
+      "priority": "high",
+      "action": "O que fazer exatamente",
+      "impact": "O que isso vai melhorar (ex: +15% de alcance)"
+    }
   ],
-  "suggestions": [
-    {"id": "s1", "area": "Experiência", "message": "Adicione métricas."}
-  ],
-  "postIdeas": ["Ideia 1", "Ideia 2", "Ideia 3"],
-  "metrics": {"charCount": 0, "wordCount": 0, "lineCount": 0, "hasNumbers": false, "hasLinks": false, "hasBullets": false}
+  "metrics": {
+    "charCount": 0,
+    "wordCount": 0,
+    "hasNumbers": false,
+    "hasLinks": false
+  }
 }
 
-Regras: Faça uma leitura completa do perfil (imagem, texto, postagens, e outros campos). As 'sections' DEVE conter headline, about, experience, skills, education, image, posts. issues máx 6. suggestions máx 6. postIdeas de 3-5.`;
+REGRAS CRÍTICAS:
+1. Retorne APENAS o JSON, sem blocos \`\`\`json ou texto adicional.
+2. Seja rigoroso nas notas (0 a 100). Perfis medianos devem ter notas entre 50-70.
+3. Se algo estiver ausente (ex: certificações), dê nota 0 e recomende a inclusão.
+4. As categorias ("categories") DEVEM ter exatamente os seguintes IDs: 'ats', 'seo', 'personal_brand', 'experience', 'skills', 'projects', 'certifications', 'general_quality'.
+5. NUNCA use quebras de linha reais (raw newlines) dentro dos valores das strings. Se precisar quebrar linha, use literalmente os caracteres \\n. JSONs com quebras de linha literais vão quebrar a aplicação.`;
+
+  // Limitamos a 12.000 chars para garantir que o output caiba no limite de tokens
+  const textForAI = profileText.substring(0, 12000);
 
   const userPrompt = `Área atual/foco: ${area || 'Não informado'}
 Vaga/Objetivo Alvo: ${targetJob || 'Não informado'}
 
-TEXTO DO PERFIL DO LINKEDIN (Pode incluir descrições visuais de imagens, publicações, atividades, etc):
-${profileText.substring(0, 20000)}`;
+TEXTO DO PERFIL DO LINKEDIN (Conteúdo bruto colado pelo usuário):
+${textForAI}`;
 
   let result: AuditResult;
   try {
-    const aiResponse = await runAI({
+    // Tenta primeiro com o modelo mais leve
+    let aiResponse = await runAI({
       model: 'google/gemini-2.5-flash-lite',
       systemInstruction,
       userText: userPrompt,
       responseJson: true,
       temperature: 0.2,
-      maxOutputTokens: 4096,
+      maxOutputTokens: 16000,
     });
 
-    const parsedResult = safeParseJSON<AuditResult>(aiResponse.text);
+    let parsedResult = safeParseJSON<AuditResult>(aiResponse.text);
+
+    // Se falhou o parse, tenta novamente com um modelo incrivelmente estável para JSON (gpt-4o-mini)
     if (!parsedResult || typeof parsedResult.overallScore !== 'number') {
-      throw new Error('JSON inválido retornado pela IA');
+      console.warn('[LinkedIn Audit] JSON inválido do flash-lite, tentando com gpt-4o-mini...');
+      console.warn('[LinkedIn Audit] Resposta bruta (primeiros 500 chars):', aiResponse.text?.substring(0, 500));
+
+      aiResponse = await runAI({
+        model: 'openai/gpt-4o-mini',
+        systemInstruction,
+        userText: userPrompt,
+        responseJson: true,
+        temperature: 0.1,
+        maxOutputTokens: 16000,
+      });
+
+      parsedResult = safeParseJSON<AuditResult>(aiResponse.text);
+
+      if (!parsedResult || typeof parsedResult.overallScore !== 'number') {
+        console.error('[LinkedIn Audit] Falha no parse mesmo com gpt-4o-mini. Resposta bruta:', aiResponse.text?.substring(0, 500));
+        throw new Error('JSON inválido retornado pela IA após retry');
+      }
     }
+
     result = parsedResult;
     
-    // Calcula métricas básicas de texto para o JSON de saída caso a IA zere
     if (!result.metrics || result.metrics.charCount === 0) {
       result.metrics = {
         charCount: profileText.length,
         wordCount: profileText.split(/\s+/).length,
-        lineCount: profileText.split('\n').length,
         hasNumbers: /\d/.test(profileText),
         hasLinks: /http|www/.test(profileText),
-        hasBullets: /[-•*]/.test(profileText),
       };
     }
   } catch (err) {
     console.error('Falha na IA do LinkedIn:', err);
-    return NextResponse.json({ error: 'Falha ao analisar o perfil com IA.' }, { status: 500 });
+    return NextResponse.json({ error: 'Falha ao analisar o perfil com IA. Tente novamente em instantes.' }, { status: 500 });
   }
 
   const audit = await prisma.linkedInAudit.create({
@@ -149,7 +198,7 @@ ${profileText.substring(0, 20000)}`;
 
   let usage;
   try {
-    usage = await consumeAIUsage(user.id, 'audit');
+    usage = await consumeAIUsage(user.id, user.plan, 'audit');
   } catch (err) {
     console.error('[/linkedin/audit] erro ao contabilizar uso:', err);
   }

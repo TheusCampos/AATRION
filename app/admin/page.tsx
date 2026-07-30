@@ -9,7 +9,7 @@ export default async function AdminPage() {
 
   // SEC-015: Proteção explícita de rota Admin
   if (!user) {
-    redirect('/sign-in');
+    redirect('/login');
   }
 
   if (user.role !== 'ADMIN') {

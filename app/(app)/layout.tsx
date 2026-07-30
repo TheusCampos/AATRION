@@ -2,7 +2,6 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { LayoutDashboard, Linkedin, Briefcase, Settings as SettingsIcon } from 'lucide-react';
 import { UserButton } from '@clerk/nextjs';
-import { auth } from '@clerk/nextjs/server';
 import Image from 'next/image';
 import { getCurrentUser } from '@/lib/auth';
 import { HeaderWrapper } from '@/components/layout/HeaderWrapper';
@@ -14,9 +13,9 @@ export default async function AppLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { userId } = auth();
-  if (!userId) redirect('/login');
-
+  // The middleware already protects these routes via clerkMiddleware.
+  // We only call getCurrentUser() to populate the UI (name, plan, etc).
+  // Avoid calling auth() directly here to prevent clock-skew redirect loops.
   const user = await getCurrentUser();
   if (!user) redirect('/login');
 

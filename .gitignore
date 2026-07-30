@@ -27,6 +27,7 @@ bun.lockb
 .continue/
 .codebuddy/
 .github/
+my-project/
 
 # --- Next.js
 .next/
@@ -37,6 +38,9 @@ dist/
 # --- Production
 *.tgz
 *.tar.gz
+
+# --- tests
+.testsprite_tests/
 
 # --- Testing
 coverage/
@@ -110,6 +114,12 @@ extract_docx.mjs
 .eslintcache
 .parcel-cache
 
+# --- test
+
+.tests
+.test-results
+.testsprite_tests
+
 # --- Sentry
 .sentryclirc
 
@@ -124,3 +134,5 @@ docker-compose.override.yml
 *.exe
 stripe.exe
 webhook.log
+
+testsprite_tests\tmp\config.json

@@ -473,7 +473,10 @@ Se não houver cargo-alvo, faça uma análise geral baseada no histórico aprese
 
   let usage;
   try {
-    usage = await consumeAIUsage(user.id, 'analyze');
+    usage = await consumeAIUsage(user.id, user.plan, 'analyze');
+    if (!usage) {
+      console.warn('[/analyze] quota excedida por race condition');
+    }
   } catch (err) {
     console.error('[/analyze] erro ao contabilizar uso de IA:', err);
   }

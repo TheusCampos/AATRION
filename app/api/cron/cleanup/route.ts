@@ -35,11 +35,24 @@ export async function GET(request: Request) {
       }
     });
 
-    console.log(`[Cron Cleanup] Execução concluída com sucesso. ${deletedResumes.count} currículos antigos removidos.`);
+    // SEC-FIX: Limpeza de logs de atividade > 90 dias
+    const logDateLimit = new Date();
+    logDateLimit.setDate(logDateLimit.getDate() - 90);
+
+    const deletedLogs = await prisma.activityLog.deleteMany({
+      where: { createdAt: { lt: logDateLimit } },
+    });
+
+    // Limpar eventos processados do Stripe > 90 dias
+    const deletedEvents = await prisma.processedEvent.deleteMany({
+      where: { createdAt: { lt: logDateLimit } },
+    });
+
+    console.log(`[Cron Cleanup] Concluído: ${deletedResumes.count} currículos, ${deletedLogs.count} logs, ${deletedEvents.count} eventos removidos.`);
 
     return NextResponse.json({
       success: true,
-      message: `Limpeza finalizada. ${deletedResumes.count} registros deletados.`
+      message: `Limpeza finalizada. ${deletedResumes.count} currículos, ${deletedLogs.count} logs, ${deletedEvents.count} eventos deletados.`
     });
   } catch (error) {
     console.error('[Cron Cleanup] Erro durante a limpeza:', error);

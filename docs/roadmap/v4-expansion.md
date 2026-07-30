@@ -52,7 +52,7 @@
 | 18 | Migrar para Postgres cluster (Neon Scale) | > 10k usuários |
 | 19 | CDN agressivo para templates | > 50k usuários |
 | 20 | Workers Puppeteer em pool (3–5 instâncias) | > 100 PDFs/dia |
-| 21 | Cache de prompts comuns (Redis) | Quando custo IA > 30% da receita |
+| 21 | Cache de prompts e consultas ao DB (Redis) | Quando custo IA > 30% ou gargalo no banco de dados |
 | 22 | Backup automatizado R2 → S3 Glacier | Sempre |
 | 23 | Plano de disaster recovery documentado | V4.1 |
 

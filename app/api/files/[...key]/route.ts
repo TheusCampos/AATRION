@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { GetObjectCommand } from '@aws-sdk/client-s3';
 import { r2Client } from '@/lib/r2';
 import { getCurrentUser } from '@/lib/auth';
+import { checkRateLimit, RATE_LIMITS } from '@/lib/rate-limit';
 
 export async function GET(
   req: NextRequest,
@@ -13,6 +14,10 @@ export async function GET(
     if (!user) {
       return new NextResponse('Não autenticado', { status: 401 });
     }
+
+    // SEC-FIX: Rate limiting no acesso a arquivos
+    const rl = await checkRateLimit(`files:${user.id}`, RATE_LIMITS.general);
+    if (!rl.allowed) return rl.response;
 
     if (!params.key || params.key.length === 0) {
       return new NextResponse('Caminho do arquivo não fornecido', { status: 400 });

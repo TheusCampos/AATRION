@@ -7,7 +7,12 @@ import { Input } from '@/components/ui/Input';
 
 
 function stripHtml(html: string): string {
-  return html.replace(/<[^>]*>/g, '');
+  if (!html) return '';
+  return html
+    .replace(/<script\b[^<]*>([\s\S]*?)<\/script>/gi, '')
+    .replace(/<style\b[^<]*>([\s\S]*?)<\/style>/gi, '')
+    .replace(/<[^>]*>/g, '')
+    .trim();
 }
 
 interface JobResult {

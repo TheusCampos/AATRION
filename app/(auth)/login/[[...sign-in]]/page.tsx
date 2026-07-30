@@ -2,25 +2,22 @@ import { SignIn } from '@clerk/nextjs';
 
 /**
  * Pagina de login do ATRION.
- *
- * Renderiza o componente oficial do Clerk com aparencia customizada
- * para casar com a identidade visual da plataforma. Apos o login
- * bem-sucedido, o usuario e redirecionado para /dashboard via
- * a variavel NEXT_PUBLIC_CLERK_SIGN_IN_FALLBACK_REDIRECT_URL.
  */
 export default function LoginPage() {
   return (
-    <SignIn
-      routing="path"
-      path="/login"
-      appearance={{
-        elements: {
-          card: 'shadow-2xl',
-          formButtonPrimary: 'bg-indigo-600 hover:bg-indigo-700',
-        },
-      }}
-      signUpUrl="/register"
-      fallbackRedirectUrl="/dashboard"
-    />
+    <div className="w-full flex flex-col items-center justify-center min-h-[450px]">
+      <SignIn
+        routing="path"
+        path="/login"
+        appearance={{
+          elements: {
+            card: 'shadow-2xl border border-slate-200/80 rounded-2xl',
+            formButtonPrimary: 'bg-indigo-600 hover:bg-indigo-700 text-white font-medium',
+          },
+        }}
+        signUpUrl="/register"
+        fallbackRedirectUrl="/dashboard"
+      />
+    </div>
   );
 }

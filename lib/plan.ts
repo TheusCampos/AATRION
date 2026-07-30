@@ -121,10 +121,40 @@ export async function checkAIQuota(
   };
 }
 
-export async function consumeAIUsage(userId: string, kind: UsageKind) {
+/**
+ * SEC-FIX: Consumo atômico de quota de IA.
+ * Usa increment condicional para evitar race condition:
+ * só incrementa se o valor atual ainda estiver abaixo do limite.
+ * Retorna null se a quota foi excedida (outro request consumiu antes).
+ */
+export async function consumeAIUsage(userId: string, plan: string | null, kind: UsageKind) {
   await ensureFreshUsagePeriod(userId);
-  const data = { [fieldFor(kind)]: { increment: 1 } } as const;
-  return prisma.user.update({ where: { id: userId }, data });
+  const limits = getPlanLimits(plan);
+  const cap = quotaFor(limits, kind);
+  const field = fieldFor(kind);
+
+  // Se ilimitado, apenas incrementa
+  if (cap === -1) {
+    return prisma.user.update({
+      where: { id: userId },
+      data: { [field]: { increment: 1 } },
+    });
+  }
+
+  // Increment condicional: só incrementa se ainda abaixo do limite
+  const result = await prisma.user.updateMany({
+    where: {
+      id: userId,
+      [field]: { lt: cap },
+    },
+    data: { [field]: { increment: 1 } },
+  });
+
+  if (result.count === 0) {
+    return null; // Quota excedida (race condition detectada)
+  }
+
+  return prisma.user.findUnique({ where: { id: userId } });
 }
 
 export function daysUntilRenewal(planRenewsAt: Date | null | undefined, now: Date = new Date()): number | null {

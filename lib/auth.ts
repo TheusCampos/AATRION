@@ -70,32 +70,41 @@ function pickClerkName(clerk: ClerkUser, email: string): string {
 }
 
 async function syncClerkUser(clerk: ClerkUser): Promise<PrismaUserLite | null> {
-  const email = clerk.emailAddresses?.[0]?.emailAddress;
+  const email =
+    clerk.emailAddresses?.find((e) => e.id === clerk.primaryEmailAddressId)?.emailAddress ||
+    clerk.emailAddresses?.[0]?.emailAddress ||
+    (clerk.username ? `${clerk.username}@clerk.user` : `${clerk.id}@clerk.user`);
+  
   if (!email) return null;
   const name = pickClerkName(clerk, email);
 
-  const byClerk = await prisma.user.findUnique({ where: { clerkId: clerk.id } });
-  if (byClerk) {
-    if (byClerk.email !== email || byClerk.name !== name) {
-      return prisma.user.update({
-        where: { id: byClerk.id },
-        data: { email, name },
+  try {
+    const byClerk = await prisma.user.findUnique({ where: { clerkId: clerk.id } });
+    if (byClerk) {
+      if (byClerk.email !== email || byClerk.name !== name) {
+        return await prisma.user.update({
+          where: { id: byClerk.id },
+          data: { email, name },
+        });
+      }
+      return byClerk;
+    }
+
+    const byEmail = await prisma.user.findUnique({ where: { email } });
+    if (byEmail) {
+      return await prisma.user.update({
+        where: { id: byEmail.id },
+        data: { clerkId: clerk.id, name },
       });
     }
-    return byClerk;
-  }
 
-  const byEmail = await prisma.user.findUnique({ where: { email } });
-  if (byEmail) {
-    return prisma.user.update({
-      where: { id: byEmail.id },
-      data: { clerkId: clerk.id, name },
+    return await prisma.user.create({
+      data: { email, name, clerkId: clerk.id, plan: 'FREE' },
     });
+  } catch (err) {
+    console.error('[Auth] syncClerkUser error:', err);
+    return null;
   }
-
-  return prisma.user.create({
-    data: { email, name, clerkId: clerk.id, plan: 'FREE' },
-  });
 }
 
 async function enrich(user: PrismaUserLite): Promise<AuthUser> {
@@ -130,7 +139,7 @@ async function enrich(user: PrismaUserLite): Promise<AuthUser> {
 
 export const getCurrentUser = cache(async (): Promise<AuthUser | null> => {
   try {
-    const { userId: clerkId } = auth();
+    const { userId: clerkId } = await auth();
     if (!clerkId) return null;
 
     let user = await prisma.user.findUnique({
@@ -138,12 +147,65 @@ export const getCurrentUser = cache(async (): Promise<AuthUser | null> => {
     });
     if (!user) {
       const clerk = await currentUser();
-      if (!clerk) return null;
-      user = await syncClerkUser(clerk);
+      if (clerk) {
+        user = await syncClerkUser(clerk);
+      }
     }
-    if (!user) return null;
-    return enrich(user);
-  } catch (error) {
+    if (user) {
+      return await enrich(user);
+    }
+
+    // Fallback: If user is authenticated in Clerk but DB sync failed, create emergency user or return fallback
+    const clerk = await currentUser();
+    const email =
+      clerk?.emailAddresses?.find((e) => e.id === clerk?.primaryEmailAddressId)?.emailAddress ||
+      clerk?.emailAddresses?.[0]?.emailAddress ||
+      (clerk?.username ? `${clerk.username}@clerk.user` : `${clerkId}@clerk.user`);
+    const name = clerk ? pickClerkName(clerk, email) : 'Usuário';
+
+    try {
+      const emergencyUser = await prisma.user.upsert({
+        where: { clerkId },
+        update: { email, name },
+        create: {
+          clerkId,
+          email,
+          name,
+          plan: 'FREE',
+        },
+      });
+      return await enrich(emergencyUser);
+    } catch (e) {
+      console.error('[Auth] Emergency user creation failed:', e);
+    }
+
+    const { getPlanLimits, currentPeriod } = await import('./plan');
+    return {
+      id: clerkId,
+      email,
+      name,
+      plan: 'FREE',
+      role: 'USER',
+      clerkId,
+      phone: null,
+      jobTitle: null,
+      location: null,
+      linkedinUrl: null,
+      allowPdfDownload: true,
+      planRenewsAt: null,
+      planStartedAt: null,
+      stripeSubscriptionId: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      limits: getPlanLimits('FREE'),
+      usage: {
+        period: currentPeriod(),
+        analyzeUsed: 0,
+        adaptUsed: 0,
+        auditUsed: 0,
+      },
+    };
+  } catch (error: unknown) {
     console.error('getCurrentUser ERROR:', error);
     return null;
   }

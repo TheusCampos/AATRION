@@ -1,4 +1,5 @@
 import { redirect } from 'next/navigation';
+import { isRedirectError } from 'next/dist/client/components/redirect';
 import Link from 'next/link';
 import { Sparkles, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
@@ -75,6 +76,7 @@ export default async function DashboardPage({
         redirect('/dashboard');
       }
     } catch (e) {
+      if (isRedirectError(e)) throw e;
       console.error('[Dashboard] Falha ao verificar session_id:', e);
     }
   }

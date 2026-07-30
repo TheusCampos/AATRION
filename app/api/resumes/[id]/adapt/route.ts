@@ -458,7 +458,7 @@ Adapte o curriculo acima para esta vaga. Mantenha o que existe, ajuste linguagem
   // Consome a cota de IA so apos adaptacao bem-sucedida
   let usage;
   try {
-    usage = await consumeAIUsage(user.id, 'adapt');
+    usage = await consumeAIUsage(user.id, user.plan, 'adapt');
   } catch (err) {
     console.error('[/adapt] erro ao contabilizar uso de IA:', err);
   }

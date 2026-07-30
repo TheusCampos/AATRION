@@ -1,0 +1,47 @@
+[
+  {
+    "id": "TC001",
+    "title": "test_resume_crud_operations",
+    "description": "Verify that authenticated users can create, retrieve, update, and delete resumes via the /api/resumes and /api/resumes/[id] endpoints, ensuring data integrity and proper authorization."
+  },
+  {
+    "id": "TC002",
+    "title": "test_ats_analysis_with_ai",
+    "description": "Test the /api/resumes/[id]/analyze endpoint to ensure it returns accurate ATS scores, improvement suggestions, and handles optional target job input correctly for authenticated users."
+  },
+  {
+    "id": "TC003",
+    "title": "test_resume_adaptation_for_job",
+    "description": "Validate the /api/resumes/[id]/adapt endpoint to confirm it tailors resumes to specific job descriptions using AI, returns adapted content and change logs, and requires authentication."
+  },
+  {
+    "id": "TC004",
+    "title": "test_resume_import_functionality",
+    "description": "Check the /api/resumes/import endpoint to ensure users can upload PDF or DOCX files, that the content is correctly extracted into editable resumes, and that the process handles errors gracefully."
+  },
+  {
+    "id": "TC005",
+    "title": "test_linkedin_audit_creation_and_listing",
+    "description": "Verify the /api/linkedin/audit endpoint supports creating new LinkedIn profile audits and listing existing audits for authenticated users, returning scores and actionable suggestions."
+  },
+  {
+    "id": "TC006",
+    "title": "test_linkedin_audit_retrieval_and_deletion",
+    "description": "Test the /api/linkedin/audit/[id] endpoint to ensure authenticated users can retrieve specific LinkedIn audit results and delete audits as needed, with proper authorization checks."
+  },
+  {
+    "id": "TC007",
+    "title": "test_job_search_functionality",
+    "description": "Validate the /api/jobs endpoint to confirm it returns relevant job listings based on role keywords and location parameters, handles empty or invalid queries, and requires authentication."
+  },
+  {
+    "id": "TC008",
+    "title": "test_user_settings_retrieval_and_update",
+    "description": "Test the /api/user/settings endpoint to ensure authenticated users can retrieve their current settings and update preferences successfully, with proper validation and persistence."
+  },
+  {
+    "id": "TC009",
+    "title": "test_health_check_endpoint",
+    "description": "Verify the /api/health endpoint responds correctly without authentication, indicating the service status and readiness."
+  }
+]

@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getCurrentUser } from '@/lib/auth';
 import { updateResumeSchema } from '@/lib/validations/resume';
+import { checkRateLimit, RATE_LIMITS } from '@/lib/rate-limit';
+import { revalidatePath } from 'next/cache';
 
 type Params = { params: { id: string } };
 
@@ -14,6 +16,10 @@ export async function GET(_req: NextRequest, { params }: Params) {
   if (!user) {
     return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
   }
+
+  // SEC-FIX: Rate limiting no acesso a currículos
+  const rl = await checkRateLimit(`resumes:${user.id}`, RATE_LIMITS.general);
+  if (!rl.allowed) return rl.response;
 
   const resume = await prisma.resume.findFirst({
     where: { id: params.id, userId: user.id },
@@ -36,6 +42,10 @@ export async function PUT(req: NextRequest, { params }: Params) {
   if (!user) {
     return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
   }
+
+  // SEC-FIX: Rate limiting na atualização de currículos
+  const rl = await checkRateLimit(`resumes:${user.id}`, RATE_LIMITS.general);
+  if (!rl.allowed) return rl.response;
 
   let body: unknown;
   try {
@@ -73,6 +83,8 @@ export async function PUT(req: NextRequest, { params }: Params) {
     select: { id: true, title: true, updatedAt: true },
   });
 
+  revalidatePath('/dashboard');
+
   return NextResponse.json({ resume });
 }
 
@@ -86,6 +98,10 @@ export async function DELETE(_req: NextRequest, { params }: Params) {
     return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
   }
 
+  // SEC-FIX: Rate limiting na deleção de currículos
+  const rl = await checkRateLimit(`resumes:${user.id}`, RATE_LIMITS.general);
+  if (!rl.allowed) return rl.response;
+
   const existing = await prisma.resume.findFirst({
     where: { id: params.id, userId: user.id },
     select: { id: true },
@@ -95,5 +111,8 @@ export async function DELETE(_req: NextRequest, { params }: Params) {
   }
 
   await prisma.resume.delete({ where: { id: params.id } });
+  
+  revalidatePath('/dashboard');
+  
   return NextResponse.json({ ok: true });
 }

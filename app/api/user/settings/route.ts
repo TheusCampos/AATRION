@@ -4,6 +4,7 @@ import { getCurrentUser } from '@/lib/auth';
 import { updateSettingsSchema } from '@/lib/validations/user-settings';
 import { daysUntilRenewal } from '@/lib/plan';
 import { stripe } from '@/lib/stripe';
+import { checkRateLimit, RATE_LIMITS } from '@/lib/rate-limit';
 
 export const dynamic = 'force-dynamic';
 
@@ -12,6 +13,10 @@ export async function GET() {
   if (!user) {
     return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
   }
+
+  // SEC-FIX: Rate limiting nas configurações
+  const rl = await checkRateLimit(`settings:${user.id}`, RATE_LIMITS.general);
+  if (!rl.allowed) return rl.response;
 
   let cancelAtPeriodEnd = false;
   if (user.stripeSubscriptionId) {
@@ -51,6 +56,10 @@ export async function PUT(req: NextRequest) {
   if (!user) {
     return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
   }
+
+  // SEC-FIX: Rate limiting na atualização de configurações
+  const rl = await checkRateLimit(`settings:${user.id}`, RATE_LIMITS.general);
+  if (!rl.allowed) return rl.response;
 
   if (!user.limits.allowSettings) {
     return NextResponse.json(

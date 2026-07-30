@@ -19,41 +19,43 @@ export function ResumeCardPreview({ content, templateId, colorScheme, className 
   }
 
   return (
-    <div className={cn("relative flex h-48 w-full justify-center overflow-hidden bg-muted/30 border-b border-border/40", className)}>
-      {/* O currículo escalado e centralizado no topo */}
-      <div className="absolute top-4 origin-top transform-gpu scale-[0.30] shadow-sm ring-1 ring-border/50 transition-transform duration-500 ease-out group-hover:scale-[0.32]">
-        <div 
-          className="overflow-hidden bg-white"
-          style={{ width: '210mm', minHeight: '297mm' }}
-        >
-          {(() => {
-            let parsedStyle = DEFAULT_STYLE;
-            if (colorScheme && colorScheme.startsWith('{')) {
-              try {
+    <div className={cn("relative flex h-48 w-full justify-center items-start overflow-hidden bg-slate-50/80 border-b border-slate-100", className)}>
+      {/* O currículo escalado e centralizado */}
+      <div className="relative mt-3 flex justify-center" style={{ width: '222px', height: '315px' }}>
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[210mm] origin-top transform-gpu scale-[0.28] shadow-sm ring-1 ring-border/50 transition-transform duration-500 ease-out group-hover:scale-[0.30]">
+          <div 
+            className="overflow-hidden bg-white text-left"
+            style={{ width: '210mm', minHeight: '297mm' }}
+          >
+            {(() => {
+              let parsedStyle = DEFAULT_STYLE;
+              if (colorScheme && colorScheme.startsWith('{')) {
+                try {
+                  parsedStyle = {
+                    ...DEFAULT_STYLE,
+                    ...JSON.parse(colorScheme),
+                  };
+                } catch {}
+              } else if (colorScheme) {
                 parsedStyle = {
                   ...DEFAULT_STYLE,
-                  ...JSON.parse(colorScheme),
+                  primaryColor: colorScheme,
                 };
-              } catch {}
-            } else if (colorScheme) {
-              parsedStyle = {
-                ...DEFAULT_STYLE,
-                primaryColor: colorScheme,
-              };
-            }
-            return (
-              <ResumePreview
-                content={content}
-                templateId={templateId || 'classic'}
-                style={parsedStyle}
-              />
-            );
-          })()}
+              }
+              return (
+                <ResumePreview
+                  content={content}
+                  templateId={templateId || 'classic'}
+                  style={parsedStyle}
+                />
+              );
+            })()}
+          </div>
         </div>
       </div>
       
       {/* Gradiente de fade no rodapé para integrar suavemente com o card */}
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-card to-transparent" />
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-white via-white/80 to-transparent" />
     </div>
   );
 }

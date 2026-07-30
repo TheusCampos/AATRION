@@ -56,7 +56,6 @@ export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
 };
-
 export default function RootLayout({
   children,
 }: {
@@ -89,6 +88,11 @@ export default function RootLayout({
           }}
         />
         <ClerkProvider
+          publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}
+          signInUrl={process.env.NEXT_PUBLIC_CLERK_SIGN_IN_URL || '/login'}
+          signUpUrl={process.env.NEXT_PUBLIC_CLERK_SIGN_UP_URL || '/register'}
+          signInFallbackRedirectUrl={process.env.NEXT_PUBLIC_CLERK_SIGN_IN_FALLBACK_REDIRECT_URL || '/dashboard'}
+          signUpFallbackRedirectUrl={process.env.NEXT_PUBLIC_CLERK_SIGN_UP_FALLBACK_REDIRECT_URL || '/dashboard'}
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           localization={ptBR as any}
           appearance={{

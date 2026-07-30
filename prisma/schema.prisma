@@ -1,5 +1,5 @@
-// CVForge / ATRION — Schema Prisma
-// Banco atual: SQLite (./prisma/dev.db). Para Postgres troque o provider e DATABASE_URL.
+// ATRION CVForge — Schema Prisma
+// Banco: PostgreSQL (NeonDB). Configuração via DATABASE_URL no .env.
 
 generator client {
   provider = "prisma-client-js"

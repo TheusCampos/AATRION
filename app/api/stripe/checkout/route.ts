@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { getCurrentUser } from '@/lib/auth';
 import { stripe } from '@/lib/stripe';
+import { checkRateLimit, RATE_LIMITS } from '@/lib/rate-limit';
+import { startTimer, trackApiCall } from '@/lib/api-telemetry';
 
 export const dynamic = 'force-dynamic';
 
@@ -14,28 +16,60 @@ export const dynamic = 'force-dynamic';
  * escolhido via redirect_url, para que após o login ele vá direto ao checkout.
  */
 export async function GET(request: Request) {
+  const getElapsed = startTimer();
   const { searchParams, host, protocol } = new URL(request.url);
   const plan = searchParams.get('plan');
   console.log(`[Stripe Checkout] Plan requested: ${plan}`);
+
+  let currentUserId: string | null = null;
 
   try {
     // 1. Verifica se o usuário está logado
     const user = await getCurrentUser();
     if (!user) {
       console.log('[Stripe Checkout] User not authenticated, redirecting to login with plan context.');
-      // Preserva o plano escolhido na URL de redirect para que após o login
-      // o Clerk redirecione automaticamente para o checkout do plano certo
       const checkoutUrl = encodeURIComponent(`/api/stripe/checkout?plan=${plan}`);
+      trackApiCall({
+        req: request,
+        routeName: '/api/stripe/checkout',
+        status: 302,
+        durationMs: getElapsed(),
+        responseMessage: 'Redirect to /login',
+        details: { plan },
+      });
       return NextResponse.redirect(new URL(`/login?redirect_url=${checkoutUrl}`, request.url));
     }
+    currentUserId = user.id;
 
     // 2. Garante que o usuário tem um e-mail vinculado
     if (!user.email) {
       console.warn(`[Stripe Checkout] User ${user.id} does not have an email address linked.`);
+      trackApiCall({
+        req: request,
+        routeName: '/api/stripe/checkout',
+        status: 400,
+        durationMs: getElapsed(),
+        userId: user.id,
+        responseMessage: 'E-mail vinculado necessário para pagamento.',
+      });
       return NextResponse.json(
         { error: 'Você precisa ter um e-mail vinculado à sua conta para realizar o pagamento.' },
         { status: 400 }
       );
+    }
+
+    // SEC-FIX: Rate limiting no checkout
+    const rl = await checkRateLimit(`checkout:${user.id}`, RATE_LIMITS.checkout);
+    if (!rl.allowed) {
+      trackApiCall({
+        req: request,
+        routeName: '/api/stripe/checkout',
+        status: 429,
+        durationMs: getElapsed(),
+        userId: user.id,
+        responseMessage: 'Rate limit excedido',
+      });
+      return rl.response;
     }
 
     console.log(`[Stripe Checkout] User: ${user.id} (${user.email})`);
@@ -56,19 +90,24 @@ export async function GET(request: Request) {
       mode = 'payment'; // Pagamento único
     } else {
       console.warn(`[Stripe Checkout] Invalid plan param: ${plan}`);
+      trackApiCall({
+        req: request,
+        routeName: '/api/stripe/checkout',
+        status: 400,
+        durationMs: getElapsed(),
+        userId: user.id,
+        responseMessage: 'Plano inválido.',
+      });
       return NextResponse.json(
         { error: 'Plano inválido. Utilize PRO, MAX, UNIC ou CANDIDATURA.' },
         { status: 400 }
       );
     }
 
-    // Usa a URL de origem da requisição como prioridade para evitar
-    // redirecionamentos para a porta errada (ex: localhost:3000 vs 3001).
-    // Fallback para NEXT_PUBLIC_APP_URL se a origem não estiver disponível.
     const originUrl = request.headers.get('origin') || `${protocol}//${host}`;
     const appUrl = originUrl || process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, '');
 
-    // 4. Prepara o line item (suporta tanto Price ID quanto Product ID com preços dinâmicos)
+    // 4. Prepara o line item
     const isProduct = priceId.startsWith('prod_');
     const unitAmount = (plan === 'CANDIDATURA' || plan === 'PC_PRO') ? 1490 : 990;
     
@@ -99,15 +138,34 @@ export async function GET(request: Request) {
 
     console.log(`[Stripe Checkout] Session created: ${session.id}. Redirecting to: ${session.url}`);
 
+    trackApiCall({
+      req: request,
+      routeName: '/api/stripe/checkout',
+      status: 302,
+      durationMs: getElapsed(),
+      userId: user.id,
+      responseMessage: 'Redirect to Stripe Checkout Session',
+      details: { plan, sessionId: session.id },
+    });
+
     return NextResponse.redirect(session.url as string);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     console.error('[Stripe Checkout] Unexpected error:', message);
-    // SEC-012: Não expor detalhes internos ao cliente
+    trackApiCall({
+      req: request,
+      routeName: '/api/stripe/checkout',
+      status: 500,
+      durationMs: getElapsed(),
+      userId: currentUserId,
+      responseMessage: 'Erro interno no checkout.',
+      error,
+    });
     return NextResponse.json(
       { error: 'Erro interno no checkout. Tente novamente em alguns instantes.' },
       { status: 500 }
     );
   }
 }
+
 

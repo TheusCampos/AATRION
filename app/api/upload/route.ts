@@ -3,6 +3,7 @@ import { PutObjectCommand } from '@aws-sdk/client-s3';
 import { r2Client } from '@/lib/r2';
 import { getCurrentUser } from '@/lib/auth';
 import { checkRateLimit, RATE_LIMITS } from '@/lib/rate-limit';
+import crypto from 'crypto';
 
 export async function POST(req: NextRequest) {
   try {
@@ -30,30 +31,54 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
-    if (!allowedTypes.includes(file.type)) {
+    const mimeToExt: Record<string, string> = {
+      'image/jpeg': 'jpg',
+      'image/jpg': 'jpg',
+      'image/png': 'png',
+      'image/webp': 'webp',
+    };
+
+    const ext = mimeToExt[file.type];
+    if (!ext) {
       return NextResponse.json(
         { error: 'Formato de arquivo inválido. Apenas JPG, JPEG, PNG e WEBP são permitidos.' },
         { status: 400 }
       );
     }
 
-    const userName = formData.get('userName') as string || 'usuario';
-    const resumeId = formData.get('resumeId') as string || 'geral';
-
-    // Remove acentos e caracteres especiais para não dar erro no R2
-    const safeUserName = userName
+    const userName = (formData.get('userName') as string || 'usuario')
       .normalize('NFD')
       .replace(/[\u0300-\u036f]/g, '')
       .replace(/[^a-zA-Z0-9]/g, '-')
       .toLowerCase();
 
-    const fileExtension = file.name.split('.').pop() || 'png';
-    const cleanFileName = `${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${fileExtension}`;
-    const key = `photos/${user.id}/${safeUserName}/${resumeId}/${cleanFileName}`;
+    const resumeId = (formData.get('resumeId') as string || 'geral')
+      .replace(/[^a-zA-Z0-9-]/g, '');
+
+    // SEC-010: Prevenção total de Path Traversal via UUID seguro
+    const cleanFileName = `${Date.now()}-${crypto.randomUUID()}.${ext}`;
+    const key = `photos/${encodeURIComponent(user.id)}/${userName}/${resumeId}/${cleanFileName}`;
 
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
+
+    // SEC-FIX: Validar magic bytes do arquivo além do MIME type
+    const magicBytes: Record<string, number[]> = {
+      jpg: [0xFF, 0xD8, 0xFF],
+      png: [0x89, 0x50, 0x4E, 0x47],
+      webp: [0x52, 0x49, 0x46, 0x46], // RIFF header
+    };
+    const expected = magicBytes[ext];
+    if (expected) {
+      const header = Array.from(buffer.slice(0, expected.length));
+      const valid = expected.every((byte, i) => header[i] === byte);
+      if (!valid) {
+        return NextResponse.json(
+          { error: 'O conteúdo do arquivo não corresponde ao formato declarado.' },
+          { status: 400 }
+        );
+      }
+    }
 
     await r2Client.send(
       new PutObjectCommand({

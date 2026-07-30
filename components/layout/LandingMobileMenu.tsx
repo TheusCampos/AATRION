@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { Menu, X } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 
-import { SignInButton, SignUpButton, SignedIn, SignedOut } from '@clerk/nextjs';
+import { SignedIn, SignedOut } from '@clerk/nextjs';
 import { ArrowRight } from 'lucide-react';
 
 export function LandingMobileMenu() {
@@ -64,25 +64,21 @@ export function LandingMobileMenu() {
               
               <div className="border-t border-slate-100 my-2 pt-2 flex flex-col gap-2">
                 <SignedOut>
-                  <SignInButton mode="modal" forceRedirectUrl="/dashboard">
-                    <button
-                      type="button"
-                      onClick={() => setIsOpen(false)}
-                      className="flex w-full items-center justify-center rounded-xl border border-slate-200 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer"
-                    >
-                      Entrar
-                    </button>
-                  </SignInButton>
-                  <SignUpButton mode="modal" forceRedirectUrl="/dashboard">
-                    <button
-                      type="button"
-                      onClick={() => setIsOpen(false)}
-                      className="flex w-full items-center justify-center gap-1.5 rounded-xl bg-blue-600 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 transition-colors cursor-pointer"
-                    >
-                      Começar grátis
-                      <ArrowRight className="h-4 w-4" />
-                    </button>
-                  </SignUpButton>
+                  <Link
+                    href="/login"
+                    onClick={() => setIsOpen(false)}
+                    className="flex w-full items-center justify-center rounded-xl border border-slate-200 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer"
+                  >
+                    Entrar
+                  </Link>
+                  <Link
+                    href="/register"
+                    onClick={() => setIsOpen(false)}
+                    className="flex w-full items-center justify-center gap-1.5 rounded-xl bg-blue-600 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 transition-colors cursor-pointer"
+                  >
+                    Começar grátis
+                    <ArrowRight className="h-4 w-4" />
+                  </Link>
                 </SignedOut>
                 <SignedIn>
                   <Link

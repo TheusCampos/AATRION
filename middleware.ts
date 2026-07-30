@@ -9,11 +9,19 @@ const isProtectedRoute = createRouteMatcher([
   '/admin(.*)',
 ]);
 
-export default clerkMiddleware(async (auth, req) => {
-  if (isProtectedRoute(req)) {
-    await auth().protect();
+export default clerkMiddleware(
+  async (auth, req) => {
+    if (isProtectedRoute(req)) {
+      await auth.protect();
+    }
+  },
+  {
+    // Tolerate up to 3 minutes of clock skew between the server and Clerk servers.
+    // This prevents redirect loops caused by JWT 'not before' (nbf) errors when
+    // the local system clock is slightly behind.
+    clockSkewInMs: 180_000,
   }
-}, { allowedClockSkewInMs: 300000, clockSkewInMs: 300000 } as any);
+);
 
 export const config = {
   matcher: [

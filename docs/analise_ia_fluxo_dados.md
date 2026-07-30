@@ -11,8 +11,9 @@ Este documento apresenta uma análise profunda sobre como o sistema gerencia as 
    - **Rate Limiting e Cota**: Valida os limites de uso contra abusos (Rate Limit) e verifica as cotas do plano ativo do usuário (mensais).
    - **Propriedade**: O sistema busca o currículo no banco e **assegura** que `resume.userId === user.id`.
 3. **Processamento**:
-   - O conteúdo em JSON do currículo é convertido para texto através da função `buildResumeText`, enviando apenas os dados estritamente necessários para a IA (omite dados sensíveis desnecessários, como e-mail/telefone - SEC-014).
-   - Um prompt estruturado e robusto é enviado ao Gemini (ou provedor configurado).
+   - O conteúdo do currículo (importado via upload Base64 para a Visão Multimodal do Gemini, eliminando libs nativas de PDF) é convertido para texto. Na análise de um currículo já existente no banco, omitimos dados sensíveis (SEC-014).
+   - Um prompt estruturado e robusto é enviado ao Gemini Flash 2.5.
+   - **Mecanismo de Fallback Seguro:** Se o Gemini falhar na estruturação JSON (o que pode ocorrer em currículos longos ou prompts complexos), o sistema invoca silenciosamente a API da OpenAI (`gpt-4o-mini`) para garantir que o usuário não receba um Erro 500.
 4. **Retorno**: A IA devolve um JSON com melhorias (resumo, pontos fortes, dicas de ATS, falhas, gap de palavras-chave e pontuação geral).
 5. **Atualização**: A pontuação `atsScore` é salva automaticamente no banco e a cota de uso do usuário é consumida.
 
@@ -23,6 +24,19 @@ Este documento apresenta uma análise profunda sobre como o sistema gerencia as 
    - A IA propõe textos novos para as seções (resumo, descrição de experiências, habilidades).
    - **Crucial**: O sistema usa a função `mergeAdapted()` que **cruza os IDs originais** dos itens (experiência, projetos) com os retornados pela IA. Isso garante que a IA não altere datas, cargos base ou invente dados. Ela apenas aprimora as descrições dos nós que já existiam, mantendo total fidelidade histórica.
 4. **Devolução**: O JSON fundido e aprimorado é retornado ao cliente. O salvamento final do currículo completo ocorre de forma tradicional através de um `PUT` na rota `/api/resumes/[id]`.
+
+### Auditoria de LinkedIn (`/api/linkedin/audit`)
+1. **Requisição**: O usuário envia uma URL do LinkedIn (extração via Server Action), o texto bruto colado, ou realiza o **Upload de um PDF nativo do LinkedIn**.
+2. **Extração de Texto (PDFs e Sanitização)**:
+   - Se for PDF, o arquivo é convertido em Base64 e processado pelo **Gemini Flash Lite** (via OpenRouter) para transcrição bruta. Isso evitou falhas catastróficas em produção (Next.js/Vercel) originadas pela finada biblioteca `pdf-parse`.
+   - Antes do envio para a etapa final, a função `cleanLinkedInGarbage` varre os dados para remover menus, e bad words de interface do LinkedIn.
+3. **Validações Preliminares**: Ocorre validação estrita via Zod (`createAuditSchema`), checagem de Quota (`checkAIQuota` para o tipo `audit`), limitando via plano e Rate Limit.
+4. **Processamento GenAI**: 
+   - Ao contrário do modelo antigo que usava Regex e prompts estritos únicos, a nova arquitetura envia os dados limpos primariamente para o `gemini-2.5-flash-lite`. 
+   - Se houver falha de truncamento JSON, o limite de tokens da IA é esticado e transferido em fallback para o **OpenAI `gpt-4o-mini`**, que garante maior estabilidade em schemas grandes.
+   - O *System Instruction* exige o retorno rigoroso em formato JSON estruturado (`AuditResultV2`), contemplando scores isolados para categorias (ATS, SEO, etc).
+5. **Armazenamento Seguro**: A resposta JSON bruta é validada via Zod. O resultado é salvo na tabela autônoma `LinkedInAudit`, vinculada ao ID do usuário. O consumo de IA é deduzido em `consumeAIUsage`.
+
 
 ---
 
@@ -58,8 +72,8 @@ Após auditoria do código, **NÃO há risco evidente de mistura de dados entre 
 
 Apesar de a implementação atual ser extremamente bem-feita, seguem melhorias arquiteturais e operacionais:
 
-1. **Sanitização de Outputs da IA em Produção (Fallback Timeout)**:
-   - O uso de `runAI` e `gemini-2.5-flash` pode sofrer picos de latência. O fallback heurístico existe na rota `analyze`, mas na rota `adapt` o código retorna erro 502 se a IA falhar. Seria interessante devolver pelo menos os apontamentos da IA até o erro, usando um streaming response (SSE) para engajamento em tempo real do frontend.
+1. **Expansão de Logs de Fallback e Tratativa de Timeout (Solucionado parcialmente)**:
+   - O uso de `runAI` e `gemini-2.5-flash` pode sofrer picos de latência. A criação recente da arquitetura de **duplo motor (Gemini + OpenAI)** resolve a maioria das falhas (truncamento, JSON syntax errors), mas em operações que tomam mais de 60 segundos na Vercel (plano Free/Hobby), o Timeout ainda é o limite maior. Pode-se estudar um fluxo Serverless via Edge / Background Jobs no futuro para as adaptações pesadas.
 2. **Versioning do Content (Histórico do Currículo)**:
    - Como o `adapt` substitui as informações originais do currículo, e se a versão IA não for satisfatória para o usuário? Aconselha-se implementar um mecanismo de *undo* local ou versionamento (`ResumeVersion` no banco de dados) para evitar a perda das informações originais ao clicar em "Adaptar".
 3. **Telemetria dos Prompts**:

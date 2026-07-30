@@ -4,10 +4,10 @@ import { getCurrentUser } from '@/lib/auth';
 import { emptyResumeContent, type ResumeContent } from '@/lib/validations/resume';
 import { runAI, safeParseJSON } from '@/lib/ai';
 import mammoth from 'mammoth';
-import { PDFParse } from 'pdf-parse';
 import { checkRateLimit, RATE_LIMITS } from '@/lib/rate-limit';
+import { revalidatePath } from 'next/cache';
 
-// Forçar runtime Node.js: pdf-parse v2 + mammoth usam APIs nativas do Node
+// Forçar runtime Node.js: mammoth usa APIs nativas do Node
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
@@ -24,25 +24,66 @@ type ExtractedFile = {
 };
 
 /**
- * Extrai texto de um PDF usando pdf-parse v2 (pdfjs-dist v5).
- * O parser é destruído após o uso para liberar memória.
+ * Extrai texto de um PDF usando a visão multimodal do Gemini Flash Lite via OpenRouter.
+ * O PDF é enviado como base64, eliminando dependência de libs nativas que quebram o build.
  */
 async function extractPdfText(buffer: Buffer): Promise<ExtractedFile> {
-  const parser = new PDFParse({ data: buffer });
-  try {
-    const result = await parser.getText();
-    return {
-      text: (result.text ?? '').trim(),
-      pages: result.total ?? 0,
-      warnings: [],
-    };
-  } finally {
-    try {
-      await parser.destroy();
-    } catch {
-      // ignora erro de destroy
-    }
+  const base64Pdf = buffer.toString('base64');
+  const apiKey = process.env.OPENROUTER_API_KEY;
+  
+  if (!apiKey) {
+    throw new Error('OPENROUTER_API_KEY não está configurada.');
   }
+
+  const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+      'HTTP-Referer': process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
+      'X-Title': 'ATRION CVForge',
+    },
+    body: JSON.stringify({
+      model: 'google/gemini-2.5-flash-lite',
+      messages: [
+        { 
+          role: 'system', 
+          content: 'Você é um extrator de texto de currículos em PDF. Extraia todo o texto de forma limpa e cronológica. Não resuma, apenas converta o visual para texto puro.' 
+        },
+        {
+          role: 'user',
+          content: [
+            {
+              type: 'text',
+              text: 'Extraia todo o texto deste currículo PDF.',
+            },
+            {
+              type: 'file',
+              file: {
+                filename: 'curriculo.pdf',
+                file_data: `data:application/pdf;base64,${base64Pdf}`,
+              },
+            },
+          ],
+        },
+      ],
+      temperature: 0.1,
+      max_tokens: 8192,
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Falha na IA de extração de PDF (${response.status})`);
+  }
+
+  const result = await response.json();
+  const rawText = result.choices?.[0]?.message?.content || '';
+
+  return {
+    text: rawText.trim(),
+    pages: 1, // Não temos a contagem exata de páginas via IA
+    warnings: [],
+  };
 }
 
 /**
@@ -674,23 +715,40 @@ Exemplo:
 Nunca retorne itens vazios apenas para preencher o array.
 `;
 
-    const aiResponse = await runAI({
+    let aiResponse = await runAI({
       model: 'google/gemini-2.5-flash',
       systemInstruction,
       userText: `Extraia as informações do seguinte currículo:\n\n${text.substring(0, 15000)}`,
       responseJson: true,
       temperature: 0.1,
-      maxOutputTokens: 8000,
+      maxOutputTokens: 16000,
     });
 
-    const parsed = safeParseJSON<ResumeContent>(aiResponse.text);
-    if (!parsed) {
-      console.error('[IMPORT] IA retornou texto que não é um JSON válido. Resposta da IA:', aiResponse.text);
-      throw new Error('JSON Inválido retornado pela IA');
-    }
-    if (!parsed.personal) {
-      console.error('[IMPORT] IA retornou JSON válido mas sem o campo "personal". Resposta:', parsed);
-      throw new Error('Estrutura JSON incorreta (sem personal)');
+    let parsed = safeParseJSON<ResumeContent>(aiResponse.text);
+
+    // Fallback: Se o Gemini falhar (truncamento ou JSON mal formatado), tentar com gpt-4o-mini
+    if (!parsed || !parsed.personal) {
+      console.warn('[IMPORT] JSON inválido ou incompleto do Gemini, tentando com gpt-4o-mini...');
+      
+      aiResponse = await runAI({
+        model: 'openai/gpt-4o-mini',
+        systemInstruction,
+        userText: `Extraia as informações do seguinte currículo:\n\n${text.substring(0, 15000)}`,
+        responseJson: true,
+        temperature: 0.1,
+        maxOutputTokens: 16000,
+      });
+
+      parsed = safeParseJSON<ResumeContent>(aiResponse.text);
+      
+      if (!parsed) {
+        console.error('[IMPORT] IA (gpt-4o-mini) retornou texto que não é um JSON válido. Resposta da IA:', aiResponse.text);
+        throw new Error('JSON Inválido retornado pela IA após retry');
+      }
+      if (!parsed.personal) {
+        console.error('[IMPORT] IA (gpt-4o-mini) retornou JSON válido mas sem o campo "personal". Resposta:', parsed);
+        throw new Error('Estrutura JSON incorreta (sem personal) após retry');
+      }
     }
     
     // Garantindo defaults do ResumeContent
@@ -713,6 +771,8 @@ Nunca retorne itens vazios apenas para preencher o array.
       },
       select: { id: true, title: true, createdAt: true, updatedAt: true },
     });
+
+    revalidatePath('/dashboard');
 
     return NextResponse.json({ resume }, { status: 201 });
   } catch (err) {

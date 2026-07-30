@@ -12,7 +12,7 @@ O ATRION é um ecossistema completo para candidatos que buscam se destacar no me
 - **Criação Rápida e Customizada**: Editor intuitivo e dinâmico com diversos templates profissionais.
 - **Adaptação Estratégica**: Reescreve e otimiza seções do currículo com base nos requisitos e palavras-chave de uma vaga específica usando IA (Gemini & OpenRouter), sem inventar dados falsos.
 - **Análise ATS Avançada**: Avalia o currículo, atribui uma nota de 0 a 100 e aponta pontos fortes, gaps de palavras-chave e melhorias de escrita necessárias.
-- **Auditoria de LinkedIn**: Analisa a estrutura e o conteúdo do perfil para aumentar o alcance orgânico e a atratividade para recrutadores.
+- **Auditoria de LinkedIn**: Analisa a estrutura e o conteúdo do perfil utilizando modelos avançados de Inteligência Artificial para avaliar quesitos como SEO, Marca Pessoal, Compatibilidade ATS e gera automaticamente melhorias prontas para o seu perfil (Aceita Upload de PDF nativo, URL ou texto livre).
 - **Busca de Vagas Integrada**: Painel para buscar vagas reais do mercado em tempo real via API da Adzuna.
 
 ---
@@ -24,7 +24,7 @@ O ATRION é estruturado como uma aplicação moderna em **Next.js 14** utilizand
 ### Arquitetura e Fluxo de Dados
 1. **Autenticação Segura e Controle de Acesso**: Gerenciada pelo **Clerk**, assegurando o login social (Google) e tradicional de forma robusta. O middleware protege as rotas privadas. Existe uma hierarquia de acesso (`role`) suportando perfis de `USER` e `ADMIN`.
 2. **Camada de Banco de Dados**: Utiliza o **Prisma ORM** conectado a um banco de dados **PostgreSQL (NeonDB)** em produção/desenvolvimento.
-3. **Mecanismo de IA**: O wrapper dinâmico em `lib/ai.ts` processa as solicitações através da API oficial do **Google Gemini** (padrão) e possui fallback automático para o **OpenRouter** (modelos grátis) em caso de instabilidade. Se ambos falharem, há um sistema de regras heurísticas locais para análise básica.
+3. **Mecanismo de IA (Duplo Motor)**: O wrapper dinâmico em `lib/ai.ts` processa as solicitações através da API do **Gemini 2.5 Flash / Lite (Multimodal)**. Em tarefas complexas que exijam grandes respostas estruturadas, conta com **Fallback Automático para a OpenAI (GPT-4o-mini)**, prevenindo Erros 500 ou quebras de JSON por truncamento. PDFs são lidos puramente em Base64, dispensando dependências de C/C++.
 4. **Exportação de PDF**: Realizada diretamente no navegador do cliente usando `html2canvas` para renderizar o layout do currículo em alta definição e `jsPDF` para gerar o documento A4 sem perdas de formatação ou problemas de quebra de página.
 5. **Integração de Pagamento Segura**: O **Stripe** processa assinaturas com Webhooks validados, incluindo verificação de **idempotência** local para evitar duplicidade.
 6. **Privacidade (LGPD)**: Quando o usuário exclui a conta, seus dados são expurgados do banco, do Clerk e **a assinatura do Stripe é automaticamente cancelada**, garantindo que nenhuma cobrança indevida ocorra.
