@@ -95,7 +95,7 @@ REGRAS:
       headers: {
         'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
-        'HTTP-Referer': process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
+        'HTTP-Referer': process.env.NEXT_PUBLIC_APP_URL || 'https://www.aatrion.com.br',
         'X-Title': 'ATRION CVForge',
       },
       body: JSON.stringify({
