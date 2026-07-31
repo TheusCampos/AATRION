@@ -72,9 +72,18 @@ export function ResumePreview({ content, templateId = 'classic', style = DEFAULT
   const containerClass = fullscreen
     ? 'w-full bg-white flex flex-col break-words'
     : 'w-full max-w-[210mm] mx-auto bg-white shadow-lg flex flex-col break-words';
-  const containerStyle = fullscreen
-    ? { fontFamily, fontSize, lineHeight, letterSpacing, color: '#1e293b', minHeight: '297mm', ...watermarkStyle }
-    : { fontFamily, fontSize, lineHeight, letterSpacing, color: '#1e293b', minHeight: '297mm', ...watermarkStyle };
+  const baseContainerStyle = {
+    fontFamily,
+    fontSize,
+    lineHeight,
+    letterSpacing,
+    color: '#1e293b',
+    minHeight: '297mm',
+    '--resume-section-spacing': sectionSpacing,
+    ...watermarkStyle
+  } as React.CSSProperties;
+
+  const containerStyle = fullscreen ? baseContainerStyle : baseContainerStyle;
 
   const layoutProps = {
     containerClass,
