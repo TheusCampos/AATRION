@@ -169,7 +169,7 @@ export function ModernLayout(p: LayoutProps) {
                 >
                   Skills
                 </h2>
-                <ul className="flex flex-wrap gap-[calc(var(--resume-section-spacing)*0.25)].5">
+                <ul className="flex flex-wrap gap-[calc(var(--resume-section-spacing)*0.25)]">
                   {p.skills.map((skill) => (
                     <li
                       key={skill.id}
@@ -411,7 +411,7 @@ export function ModernPhotoLayout(p: LayoutProps) {
                 >
                   Skills
                 </h2>
-                <ul className="flex flex-wrap gap-[calc(var(--resume-section-spacing)*0.25)].5">
+                <ul className="flex flex-wrap gap-[calc(var(--resume-section-spacing)*0.25)]">
                   {p.skills.map((skill) => (
                     <li
                       key={skill.id}
@@ -547,7 +547,7 @@ export function TechLayout(p: LayoutProps) {
               >
                 {">"} stack
               </h2>
-              <div className="flex flex-wrap gap-[calc(var(--resume-section-spacing)*0.25)].5">
+              <div className="flex flex-wrap gap-[calc(var(--resume-section-spacing)*0.25)]">
                 {p.skills.map((skill) => (
                   <span
                     key={skill.id}

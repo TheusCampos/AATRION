@@ -250,7 +250,7 @@ export function CreativePhotoLayout(p: LayoutProps) {
               <h2 className="text-[0.85em] font-bold uppercase tracking-widest mb-[calc(var(--resume-section-spacing)*0.75)] opacity-90 border-b border-white/20 pb-[calc(var(--resume-section-spacing)*0.25)]">
                 Habilidades
               </h2>
-              <ul className="flex flex-wrap gap-[calc(var(--resume-section-spacing)*0.25)].5 text-[0.85em]">
+              <ul className="flex flex-wrap gap-[calc(var(--resume-section-spacing)*0.25)] text-[0.85em]">
                 {p.skills.map((skill) => (
                   <li
                     key={skill.id}

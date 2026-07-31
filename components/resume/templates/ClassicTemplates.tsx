@@ -562,7 +562,7 @@ export function ExecutiveLayout(p: LayoutProps) {
                       {exp.company}
                     </p>
                     {exp.description && (
-                      <p className="text-[1em] text-slate-700 whitespace-pre-wrap mt-[calc(var(--resume-section-spacing)*0.25)].5">
+                      <p className="text-[1em] text-slate-700 whitespace-pre-wrap mt-[calc(var(--resume-section-spacing)*0.25)]">
                         {exp.description}
                       </p>
                     )}
@@ -699,7 +699,7 @@ export function MinimalistLayout(p: LayoutProps) {
                     {exp.company}
                   </p>
                   {exp.description && (
-                    <p className="text-[1em] text-slate-600 whitespace-pre-wrap mt-[calc(var(--resume-section-spacing)*0.25)].5">
+                    <p className="text-[1em] text-slate-600 whitespace-pre-wrap mt-[calc(var(--resume-section-spacing)*0.25)]">
                       {exp.description}
                     </p>
                   )}

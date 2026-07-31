@@ -39,25 +39,25 @@ export function CorporateLayout(p: LayoutProps) {
           </div>
           <div className="relative z-10 mt-[calc(var(--resume-section-spacing)*1.5)] flex flex-wrap gap-[var(--resume-section-spacing)] text-[0.85em] font-medium opacity-95">
             {p.personal.phone && (
-              <span className="flex items-center leading-none gap-[calc(var(--resume-section-spacing)*0.25)].5">
+              <span className="flex items-center leading-none gap-[calc(var(--resume-section-spacing)*0.25)]">
                 <Phone className="w-3.5 h-3.5 flex-shrink-0" />{" "}
                 {p.personal.phone}
               </span>
             )}
             {p.personal.email && (
-              <span className="flex items-center leading-none gap-[calc(var(--resume-section-spacing)*0.25)].5">
+              <span className="flex items-center leading-none gap-[calc(var(--resume-section-spacing)*0.25)]">
                 <Mail className="w-3.5 h-3.5 flex-shrink-0" />{" "}
                 {p.personal.email}
               </span>
             )}
             {p.personal.location && (
-              <span className="flex items-center leading-none gap-[calc(var(--resume-section-spacing)*0.25)].5">
+              <span className="flex items-center leading-none gap-[calc(var(--resume-section-spacing)*0.25)]">
                 <MapPin className="w-3.5 h-3.5 flex-shrink-0" />{" "}
                 {p.personal.location}
               </span>
             )}
             {p.personal.linkedin && (
-              <span className="flex items-center leading-none gap-[calc(var(--resume-section-spacing)*0.25)].5">
+              <span className="flex items-center leading-none gap-[calc(var(--resume-section-spacing)*0.25)]">
                 <Linkedin className="w-3.5 h-3.5 flex-shrink-0" />{" "}
                 {p.personal.linkedin}
               </span>
@@ -163,7 +163,7 @@ export function CorporateLayout(p: LayoutProps) {
                   >
                     Competências
                   </h2>
-                  <div className="flex flex-wrap gap-[calc(var(--resume-section-spacing)*0.25)].5">
+                  <div className="flex flex-wrap gap-[calc(var(--resume-section-spacing)*0.25)]">
                     {p.skills.map((skill) => (
                       <span
                         key={skill.id}
@@ -291,7 +291,7 @@ export function ExecutiveProLayout(p: LayoutProps) {
             )}
             <div className="mt-[calc(var(--resume-section-spacing)*0.75)] flex flex-wrap gap-x-5 gap-y-1.5 text-[0.85em] font-semibold text-slate-600">
               {p.personal.phone && (
-                <span className="flex items-center leading-none gap-[calc(var(--resume-section-spacing)*0.25)].5">
+                <span className="flex items-center leading-none gap-[calc(var(--resume-section-spacing)*0.25)]">
                   <Phone
                     className="w-3.5 h-3.5 flex-shrink-0"
                     style={{ color: accent }}
@@ -300,7 +300,7 @@ export function ExecutiveProLayout(p: LayoutProps) {
                 </span>
               )}
               {p.personal.email && (
-                <span className="flex items-center leading-none gap-[calc(var(--resume-section-spacing)*0.25)].5">
+                <span className="flex items-center leading-none gap-[calc(var(--resume-section-spacing)*0.25)]">
                   <Mail
                     className="w-3.5 h-3.5 flex-shrink-0"
                     style={{ color: accent }}
@@ -309,7 +309,7 @@ export function ExecutiveProLayout(p: LayoutProps) {
                 </span>
               )}
               {p.personal.location && (
-                <span className="flex items-center leading-none gap-[calc(var(--resume-section-spacing)*0.25)].5">
+                <span className="flex items-center leading-none gap-[calc(var(--resume-section-spacing)*0.25)]">
                   <MapPin
                     className="w-3.5 h-3.5 flex-shrink-0"
                     style={{ color: accent }}
@@ -318,7 +318,7 @@ export function ExecutiveProLayout(p: LayoutProps) {
                 </span>
               )}
               {p.personal.linkedin && (
-                <span className="flex items-center leading-none gap-[calc(var(--resume-section-spacing)*0.25)].5">
+                <span className="flex items-center leading-none gap-[calc(var(--resume-section-spacing)*0.25)]">
                   <Linkedin
                     className="w-3.5 h-3.5 flex-shrink-0"
                     style={{ color: accent }}
@@ -421,7 +421,18 @@ export function ExecutiveProLayout(p: LayoutProps) {
                 {p.projects.map((proj) => (
                   <div key={proj.id}>
                     <h3 className="font-bold text-slate-900 text-[0.85em] mb-[calc(var(--resume-section-spacing)*0.25)]">
-                      {proj.name}
+                      {proj.url ? (
+                        <a
+                          href={proj.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="hover:underline"
+                        >
+                          {proj.name}
+                        </a>
+                      ) : (
+                        proj.name
+                      )}
                     </h3>
                     {proj.description && (
                       <p className="text-[0.85em] text-slate-700 whitespace-pre-wrap">
@@ -438,10 +449,10 @@ export function ExecutiveProLayout(p: LayoutProps) {
         <div className="grid grid-cols-3 gap-[calc(var(--resume-section-spacing)*1.5)]">
           {p.skills.length > 0 && (
             <section>
-              <h2 className="text-[1em] font-bold uppercase tracking-widest text-slate-900 mb-[var(--resume-section-spacing)] text-center">
+              <h2 className="text-[1em] font-bold uppercase tracking-widest text-slate-900 mb-[var(--resume-section-spacing)]">
                 Habilidades
               </h2>
-              <ul className="flex flex-col gap-[calc(var(--resume-section-spacing)*0.25)].5 items-center text-[0.85em] font-medium text-slate-700 text-center">
+              <ul className="flex flex-col gap-[calc(var(--resume-section-spacing)*0.25)] text-[0.85em] font-medium text-slate-700">
                 {p.skills.map((skill) => (
                   <li key={skill.id}>{skill.name}</li>
                 ))}
@@ -450,10 +461,10 @@ export function ExecutiveProLayout(p: LayoutProps) {
           )}
           {p.languages.length > 0 && (
             <section>
-              <h2 className="text-[1em] font-bold uppercase tracking-widest text-slate-900 mb-[var(--resume-section-spacing)] text-center">
+              <h2 className="text-[1em] font-bold uppercase tracking-widest text-slate-900 mb-[var(--resume-section-spacing)]">
                 Idiomas
               </h2>
-              <ul className="flex flex-col gap-[calc(var(--resume-section-spacing)*0.25)].5 items-center text-[0.85em] font-medium text-slate-700 text-center">
+              <ul className="flex flex-col gap-[calc(var(--resume-section-spacing)*0.25)] text-[0.85em] font-medium text-slate-700">
                 {p.languages.map((lang) => (
                   <li key={lang.id}>
                     {lang.language} -{" "}
@@ -465,10 +476,10 @@ export function ExecutiveProLayout(p: LayoutProps) {
           )}
           {p.certifications.length > 0 && (
             <section>
-              <h2 className="text-[1em] font-bold uppercase tracking-widest text-slate-900 mb-[var(--resume-section-spacing)] text-center">
+              <h2 className="text-[1em] font-bold uppercase tracking-widest text-slate-900 mb-[var(--resume-section-spacing)]">
                 Certificações
               </h2>
-              <ul className="flex flex-col gap-[calc(var(--resume-section-spacing)*0.5)].5 items-center text-[0.85em] font-medium text-slate-700 text-center">
+              <ul className="flex flex-col gap-[calc(var(--resume-section-spacing)*0.5)] text-[0.85em] font-medium text-slate-700">
                 {p.certifications.map((cert) => (
                   <li key={cert.id}>
                     <span className="font-bold">{cert.name}</span>
