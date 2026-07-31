@@ -446,17 +446,18 @@ export function ExecutiveProLayout(p: LayoutProps) {
           )}
         </div>
 
-        <div className="grid grid-cols-3 gap-[calc(var(--resume-section-spacing)*1.5)]">
+        <div className="grid grid-cols-3 gap-[calc(var(--resume-section-spacing)*1.5)] break-inside-avoid">
           {p.skills.length > 0 && (
             <section>
               <h2 className="text-[1em] font-bold uppercase tracking-widest text-slate-900 mb-[var(--resume-section-spacing)]">
                 Habilidades
               </h2>
-              <ul className="flex flex-col gap-[calc(var(--resume-section-spacing)*0.25)] text-[0.85em] font-medium text-slate-700">
-                {p.skills.map((skill) => (
-                  <li key={skill.id}>{skill.name}</li>
-                ))}
-              </ul>
+              <p className="text-[0.85em] font-medium text-slate-700 leading-relaxed">
+                {p.skills
+                  .map((s) => s.name)
+                  .filter(Boolean)
+                  .join(" • ")}
+              </p>
             </section>
           )}
           {p.languages.length > 0 && (
