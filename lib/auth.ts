@@ -207,16 +207,7 @@ export const getCurrentUser = cache(async (): Promise<AuthUser | null> => {
       },
     };
   } catch (error: unknown) {
-    if (
-      typeof error === 'object' &&
-      error !== null &&
-      'digest' in error &&
-      typeof (error as { digest: unknown }).digest === 'string' &&
-      ((error as { digest: string }).digest === 'DYNAMIC_SERVER_USAGE' ||
-        (error as { digest: string }).digest.startsWith('NEXT_'))
-    ) {
-      throw error;
-    }
+    unstable_rethrow(error);
     console.error('getCurrentUser ERROR:', error);
     return null;
   }
