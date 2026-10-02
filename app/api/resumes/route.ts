@@ -7,6 +7,8 @@ import { checkRateLimit, RATE_LIMITS } from '@/lib/rate-limit';
 import { startTimer, trackApiCall } from '@/lib/api-telemetry';
 import { revalidatePath } from 'next/cache';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   const getElapsed = startTimer();
   const user = await getCurrentUser();

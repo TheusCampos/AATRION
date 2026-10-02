@@ -35,6 +35,8 @@ async function resolvePlan(stripePrice: Stripe.Price): Promise<string> {
   return 'FREE';
 }
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: Request) {
   const getElapsed = startTimer();
   const body = await request.text();

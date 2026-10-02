@@ -5,6 +5,8 @@ import { clerkClient } from '@clerk/nextjs/server';
 import { stripe } from '@/lib/stripe';
 import { startTimer, trackApiCall } from '@/lib/api-telemetry';
 
+export const dynamic = 'force-dynamic';
+
 /**
  * DELETE /api/user/delete
  * Remove completamente a conta do usuário e todos os seus dados do banco (Cascade) e do Clerk.

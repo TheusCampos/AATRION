@@ -4,6 +4,8 @@ import { getCurrentUser } from '@/lib/auth';
 
 type Params = { params: Promise<{ id: string }> };
 
+export const dynamic = 'force-dynamic';
+
 /**
  * GET /api/linkedin/audit/:id
  * Retorna uma auditoria LinkedIn específica do usuário autenticado.

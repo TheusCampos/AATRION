@@ -8,6 +8,8 @@ import { HeaderWrapper } from '@/components/layout/HeaderWrapper';
 
 import { MobileMenu } from '@/components/layout/MobileMenu';
 
+export const dynamic = 'force-dynamic';
+
 export default async function AppLayout({
   children,
 }: {

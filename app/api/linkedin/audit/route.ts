@@ -8,6 +8,8 @@ import type { AuditResult } from '@/lib/linkedin-analyzer';
 import { checkRateLimit, RATE_LIMITS } from '@/lib/rate-limit';
 import { sanitizeForAI, hasPromptInjection, sanitizeHtml } from '@/lib/sanitize';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   const user = await getCurrentUser();
   if (!user) {

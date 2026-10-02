@@ -8,6 +8,8 @@ import { revalidatePath } from 'next/cache';
 // Next.js 15: params é agora uma Promise
 type Params = { params: Promise<{ id: string }> };
 
+export const dynamic = 'force-dynamic';
+
 /**
  * GET /api/resumes/:id
  * Retorna um currículo do usuário autenticado.

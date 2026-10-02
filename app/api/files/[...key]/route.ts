@@ -4,6 +4,8 @@ import { r2Client } from '@/lib/r2';
 import { getCurrentUser } from '@/lib/auth';
 import { checkRateLimit, RATE_LIMITS } from '@/lib/rate-limit';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(
   req: NextRequest,
   context: { params: Promise<{ key: string[] }> }
