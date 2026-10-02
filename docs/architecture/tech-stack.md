@@ -1,29 +1,19 @@
-# Stack Tecnológica — Resumo
+# Stack técnica atual
 
-> Lista de alto nível. Detalhes de versões e propósito estão em
-> [`/docs/technologies/tech-stack.md`](../technologies/tech-stack.md).
+As versões abaixo vêm de `package.json`; use esse arquivo como fonte de verdade para upgrades.
 
-| Camada | Tecnologia | Função |
+| Categoria | Tecnologias | Uso no projeto |
 |---|---|---|
-| Frontend | **Next.js 14** (App Router) | Framework principal |
-| Linguagem | **TypeScript 5** | Tipagem estática end-to-end |
-| Estilização | **Tailwind CSS 3** + **shadcn/ui** | Utilitário + componentes headless |
-| Estado cliente | **Zustand 4** + **React Query 5** | Cache local + server state |
-| Formulários | **React Hook Form 7** + **Zod 3** | Validação performática |
-| Backend | **Next.js API Routes** + **Hono.js** | REST + middleware enxuto |
-| ORM | **Prisma 5** | Acesso type-safe ao banco |
-| Banco de dados | **PostgreSQL** (Neon serverless) | Persistência principal |
-| Auth | **Better Auth** | Email/senha + OAuth + MFA |
-| Cache | **Upstash Redis** | Rate limit + cache de sessão |
-| IA | **OpenAI GPT-4o mini** + **GPT-4o** | Currículos + LinkedIn |
-| PDF | **Puppeteer** (Fly.io) | HTML → PDF de alta qualidade |
-| Storage | **Cloudflare R2** | PDFs, fotos, backups |
-| Pagamentos | **Stripe** | Subscriptions + Checkout |
-| Email | **Resend** | Transacional + React Email |
-| Erros | **Sentry** | Monitoramento |
-| Anti-bot | **Cloudflare Turnstile** | CAPTCHA invisível |
-| Testes | **Vitest** + **Playwright** | Unit + E2E |
-| CI/CD | **GitHub Actions** + **Vercel** | Deploy automático |
+| Framework | Next.js 16.3, React 18, TypeScript 6 | App Router, páginas, Route Handlers e tipagem estrita |
+| UI | Tailwind CSS 3, Lucide, CVA, clsx | Interface e componentes reutilizáveis |
+| Formulários | React Hook Form, Zod | Validação de entrada e formulários |
+| Dados | Prisma 5, PostgreSQL | Persistência de usuários e conteúdo do produto |
+| Auth | Clerk | Sessão, login e sincronização com a tabela `User` |
+| IA | `@google/genai`, OpenRouter | Análise, adaptação, melhoria e extração de conteúdo |
+| Storage | AWS SDK S3 + Cloudflare R2 | Fotos usadas nos currículos |
+| Pagamentos | Stripe | Checkout, Portal e webhooks |
+| Rate limit | Upstash Ratelimit/Redis ou ioredis | Proteção das rotas de maior custo |
+| Telemetria | PostHog, OpenTelemetry, Traceloop | Eventos, traces e logs de IA |
+| Testes | Vitest, Playwright | Unitários e E2E |
 
-> Ver tabela completa com versões, justificativas e custos em
-> [`/docs/technologies/tech-stack.md`](../technologies/tech-stack.md).
+Não fazem parte da implementação atual: Better Auth, Hono, OpenAI SDK direto, Puppeteer/Fly.io, Resend, Sentry, Turnstile, QStash, React Email e Docker de banco. Podem ser avaliados futuramente, mas não devem ser configurados como pré-requisitos.

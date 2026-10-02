@@ -94,7 +94,7 @@
 
 ## Checklist Pré-Lançamento
 
-Veja [`/docs/architecture/security.md`](../architecture/security.md#8-checklist-de-segurança-para-go-live) e [`/docs/roadmap/checklist-lancamento.md`](./checklist-lancamento.md) (a criar).
+Veja [`/docs/architecture/security.md`](../architecture/security.md#8-checklist-de-segurança-para-go-live) e checklist de lançamento histórico (não incluído no repositório).
 
 ## Métricas de Validação
 
