@@ -96,9 +96,6 @@ export function ResumeEditor({
   const [fullscreen, setFullscreen] = useState(false);
   const [showStylePanel, setShowStylePanel] = useState(false);
   const [isExportingPdf, setIsExportingPdf] = useState(false);
-  const [pdfPreviewUrl, setPdfPreviewUrl] = useState<string | null>(null);
-  const [pdfInstance, setPdfInstance] = useState<unknown | null>(null);
-  const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
   const [previewScale, setPreviewScale] = useState(100);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [modalMessage, setModalMessage] = useState('');
@@ -135,104 +132,124 @@ export function ResumeEditor({
     router.refresh();
   }
 
-  async function handleDownloadPdf() {
+  function handleDownloadPdf() {
     if (typeof window === 'undefined') return;
-    printFrameTitleRef.current = title || 'curriculo';
     setIsExportingPdf(true);
 
-    try {
-      const target = (document.querySelector('.resume-export-root') ||
-        document.querySelector('.resume-print-root')) as HTMLElement | null;
-
-      if (!target) {
-        throw new Error('Preview do curriculo nao encontrada para exportacao.');
-      }
-
-      const [{ default: html2canvas }, { jsPDF }] = await Promise.all([
-        import('html2canvas'),
-        import('jspdf'),
-      ]);
-
-      const canvas = await html2canvas(target, {
-        scale: 2,
-        useCORS: true,
-        backgroundColor: '#ffffff',
-        windowWidth: target.scrollWidth,
-        windowHeight: target.scrollHeight,
-        scrollX: 0,
-        scrollY: -window.scrollY,
-        logging: false,
-      });
-
-      const imageData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF({
-        orientation: 'portrait',
-        unit: 'mm',
-        format: 'a4',
-      });
-
-      const pageWidth = 210;
-      const pageHeight = 297;
-      const imageWidth = pageWidth;
-      const imageHeight = (canvas.height * imageWidth) / canvas.width;
-
-      let remainingHeight = imageHeight;
-      let yPosition = 0;
-
-      pdf.addImage(imageData, 'PNG', 0, yPosition, imageWidth, imageHeight, undefined, 'FAST');
-      remainingHeight -= pageHeight;
-
-      while (remainingHeight > 5) {
-        yPosition = remainingHeight - imageHeight;
-        pdf.addPage();
-        pdf.addImage(imageData, 'PNG', 0, yPosition, imageWidth, imageHeight, undefined, 'FAST');
-        remainingHeight -= pageHeight;
-      }
-
-      const blob = pdf.output('blob');
-      const blobUrl = URL.createObjectURL(blob);
-      setPdfPreviewUrl(blobUrl);
-      setPdfInstance(pdf);
-      setIsPreviewModalOpen(true);
-    } catch (error) {
-      console.error('[ATRION] Falha ao gerar PDF do curriculo', error);
-      setSaveStatus('error');
-      window.print();
-    } finally {
+    const printTarget = document.querySelector('.resume-print-root') as HTMLElement | null;
+    if (!printTarget) {
       setIsExportingPdf(false);
+      window.print();
+      return;
     }
+
+    const safeTitle = (title || 'curriculo')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-zA-Z0-9-_ ]+/g, '')
+      .trim() || 'curriculo';
+
+    // Remove iframe anterior se houver
+    const oldIframe = document.getElementById('print-resume-iframe');
+    if (oldIframe) {
+      oldIframe.remove();
+    }
+
+    const printIframe = document.createElement('iframe');
+    printIframe.id = 'print-resume-iframe';
+    printIframe.style.position = 'fixed';
+    printIframe.style.right = '0';
+    printIframe.style.bottom = '0';
+    printIframe.style.width = '0';
+    printIframe.style.height = '0';
+    printIframe.style.border = '0';
+    printIframe.style.visibility = 'hidden';
+
+    document.body.appendChild(printIframe);
+
+    const iframeDoc = printIframe.contentDocument || printIframe.contentWindow?.document;
+    if (!iframeDoc) {
+      setIsExportingPdf(false);
+      window.print();
+      return;
+    }
+
+    // Coleta todas as folhas de estilos e links de fontes do documento atual
+    const styleTags = Array.from(document.querySelectorAll('style, link[rel="stylesheet"]'))
+      .map((el) => el.outerHTML)
+      .join('\n');
+
+    // Clona o nó e reseta transformações de escala do editor
+    const clonedTarget = printTarget.cloneNode(true) as HTMLElement;
+    clonedTarget.style.transform = 'none';
+    clonedTarget.style.margin = '0 auto';
+    clonedTarget.style.boxShadow = 'none';
+    clonedTarget.style.border = 'none';
+
+    iframeDoc.open();
+    iframeDoc.write(`
+      <!DOCTYPE html>
+      <html lang="pt-BR">
+        <head>
+          <meta charset="utf-8" />
+          <title>${safeTitle}</title>
+          ${styleTags}
+          <style>
+            @page {
+              size: A4 portrait;
+              margin: 0;
+            }
+            html, body {
+              margin: 0 !important;
+              padding: 0 !important;
+              background: #ffffff !important;
+              -webkit-print-color-adjust: exact !important;
+              print-color-adjust: exact !important;
+              color-adjust: exact !important;
+            }
+            .resume-print-wrapper {
+              width: 210mm;
+              min-height: 297mm;
+              margin: 0 auto;
+              background: #ffffff;
+              -webkit-print-color-adjust: exact !important;
+              print-color-adjust: exact !important;
+            }
+            header, aside {
+              display: revert !important;
+              visibility: visible !important;
+            }
+            section, .break-inside-avoid, [data-printable-item] {
+              break-inside: avoid !important;
+              page-break-inside: avoid !important;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="resume-print-wrapper">
+            ${clonedTarget.outerHTML}
+          </div>
+        </body>
+      </html>
+    `);
+    iframeDoc.close();
+
+    // Aguarda carregar as fontes/estilos e dispara a impressão do iframe
+    setTimeout(() => {
+      try {
+        printIframe.contentWindow?.focus();
+        printIframe.contentWindow?.print();
+      } catch (err) {
+        console.error('[ATRION] Erro ao imprimir pelo iframe:', err);
+        window.print();
+      } finally {
+        setIsExportingPdf(false);
+        setTimeout(() => {
+          printIframe.remove();
+        }, 2000);
+      }
+    }, 400);
   }
-
-  const handleSavePdf = () => {
-    if (pdfInstance) {
-      const safeTitle = (title || 'curriculo')
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
-        .replace(/[^a-zA-Z0-9-_]+/g, '-')
-        .replace(/^-+|-+$/g, '')
-        .toLowerCase();
-      (pdfInstance as { save: (filename: string) => void }).save(`${safeTitle || 'curriculo'}.pdf`);
-      closePreviewModal();
-    }
-  };
-
-  const handlePrintPdf = () => {
-    const iframe = document.getElementById('pdf-preview-iframe') as HTMLIFrameElement | null;
-    if (iframe) {
-      iframe.contentWindow?.print();
-    } else if (pdfPreviewUrl) {
-      window.open(pdfPreviewUrl)?.print();
-    }
-  };
-
-  const closePreviewModal = () => {
-    setIsPreviewModalOpen(false);
-    if (pdfPreviewUrl) {
-      URL.revokeObjectURL(pdfPreviewUrl);
-      setPdfPreviewUrl(null);
-    }
-    setPdfInstance(null);
-  };
 
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -278,6 +295,7 @@ export function ResumeEditor({
       end: '',
       current: false,
       description: '',
+      achievements: [],
     };
     setContent((c) => ({ ...c, experience: [...c.experience, item] }));
   }
@@ -337,6 +355,7 @@ export function ResumeEditor({
       id: generateId(),
       name: '',
       description: '',
+      achievements: [],
       tech: [],
       url: '',
     };
@@ -371,7 +390,7 @@ export function ResumeEditor({
   }
 
   function addCertification() {
-    const item: CertificationItem = { id: generateId(), name: '', issuer: '', date: '' };
+    const item: CertificationItem = { id: generateId(), name: '', issuer: '', date: '', credentialId: '', url: '' };
     setContent((c) => ({ ...c, certifications: [...c.certifications, item] }));
   }
 
@@ -410,8 +429,8 @@ export function ResumeEditor({
             <Button variant="primary" size="sm" onClick={handleDownloadPdf} isLoading={isExportingPdf}>
               <Download className="h-4 w-4" /> Baixar PDF
             </Button>
-            <Button variant="ghost" size="sm" onClick={() => setShowStylePanel((v) => !v)}>
-              <Settings2 className="h-4 w-4" /> Estilo
+            <Button variant={showStylePanel ? "primary" : "ghost"} size="sm" onClick={() => setShowStylePanel((v) => !v)}>
+              <Settings2 className="h-4 w-4" /> {showStylePanel ? "Fechar Estilo" : "Estilo"}
             </Button>
             <Button variant="secondary" size="sm" onClick={() => setFullscreen(false)}>
               <Minimize2 className="h-4 w-4" /> Sair
@@ -419,18 +438,20 @@ export function ResumeEditor({
           </div>
         </div>
         {showStylePanel && (
-          <StylePanel
-            templateId={templateId}
-            setTemplateId={setTemplateId}
-            style={style}
-            setStyle={setStyle}
-            onClose={() => setShowStylePanel(false)}
-            userPlan={userPlan}
-            onUpgradeRequired={(msg) => {
-              setModalMessage(msg);
-              setShowUpgradeModal(true);
-            }}
-          />
+          <div className="fixed right-6 top-16 bottom-6 w-full max-w-lg z-50 overflow-y-auto rounded-3xl bg-white p-6 shadow-2xl border border-slate-200 animate-in slide-in-from-right duration-200">
+            <StylePanel
+              templateId={templateId}
+              setTemplateId={setTemplateId}
+              style={style}
+              setStyle={setStyle}
+              onClose={() => setShowStylePanel(false)}
+              userPlan={userPlan}
+              onUpgradeRequired={(msg) => {
+                setModalMessage(msg);
+                setShowUpgradeModal(true);
+              }}
+            />
+          </div>
         )}
         <div className="flex-1 overflow-y-auto p-6 md:p-8 flex justify-center">
           <div
@@ -440,13 +461,6 @@ export function ResumeEditor({
           >
             <ResumePreview content={content} templateId={templateId} style={style} fullscreen userPlan={userPlan} />
           </div>
-        </div>
-        <div
-          aria-hidden="true"
-          className="resume-export-root pointer-events-none fixed -left-[10000px] top-0 bg-white"
-          style={{ width: '210mm', minHeight: '297mm' }}
-        >
-          <ResumePreview content={content} templateId={templateId} style={style} fullscreen userPlan={userPlan} />
         </div>
       </div>
     );
@@ -489,8 +503,12 @@ export function ResumeEditor({
           <Button variant="primary" size="sm" onClick={handleDownloadPdf} isLoading={isExportingPdf}>
             <Download className="h-4 w-4" /> Baixar PDF
           </Button>
-          <Button variant="secondary" size="sm" onClick={() => setShowStylePanel((v) => !v)}>
-            <Settings2 className="h-4 w-4" /> Estilo
+          <Button
+            variant={showStylePanel ? "primary" : "secondary"}
+            size="sm"
+            onClick={() => setShowStylePanel((v) => !v)}
+          >
+            <Settings2 className="h-4 w-4" /> {showStylePanel ? "Voltar ao Formulário" : "Estilo"}
           </Button>
           <Button variant="primary" size="sm" onClick={() => setFullscreen(true)}>
             <Maximize2 className="h-4 w-4" /> Tela cheia
@@ -498,79 +516,99 @@ export function ResumeEditor({
         </div>
       </div>
 
-      {showStylePanel && (
-        <StylePanel
-          templateId={templateId}
-          setTemplateId={setTemplateId}
-          style={style}
-          setStyle={setStyle}
-          onClose={() => setShowStylePanel(false)}
-          userPlan={userPlan}
-          onUpgradeRequired={(msg) => {
-            setModalMessage(msg);
-            setShowUpgradeModal(true);
-          }}
-        />
-      )}
+      <div
+        className={
+          showStylePanel
+            ? "grid gap-6 xl:grid-cols-[minmax(520px,1.3fr)_minmax(460px,1fr)] 2xl:grid-cols-[minmax(600px,1.3fr)_minmax(520px,1fr)] w-full items-start pb-20 xl:pb-0 transition-all duration-300"
+            : "grid gap-4 lg:grid-cols-[220px_1fr] xl:grid-cols-[240px_minmax(380px,1fr)_minmax(450px,1.2fr)] 2xl:grid-cols-[260px_minmax(450px,1fr)_minmax(600px,1.2fr)] w-full items-start pb-20 xl:pb-0"
+        }
+      >
+        {/* Esquerda: Tabs e Qualidade (oculto no modo de estilo para dar espaço total aos ajustes) */}
+        {!showStylePanel && (
+          <EditorSidebar
+            content={content}
+            tab={tab}
+            setTab={(t) => {
+              setTab(t);
+              setShowStylePanel(false);
+            }}
+            completeness={completeness}
+            showStylePanel={showStylePanel}
+            onToggleStyle={() => setShowStylePanel((v) => !v)}
+          />
+        )}
 
-      <div className="grid gap-4 lg:grid-cols-[220px_1fr] xl:grid-cols-[240px_minmax(380px,1fr)_minmax(450px,1.2fr)] 2xl:grid-cols-[260px_minmax(450px,1fr)_minmax(600px,1.2fr)] w-full items-start pb-20 xl:pb-0">
-        {/* Esquerda: Tabs e Qualidade */}
-        <EditorSidebar content={content} tab={tab} setTab={setTab} completeness={completeness} />
-
-        {/* Formulário do step */}
+        {/* Formulário do step OU Painel de Modificações de Estilo */}
         <div className="flex flex-col min-h-0 h-full">
           <Card className="flex-1 overflow-y-auto rounded-3xl border-none bg-white p-2 shadow-[0_8px_30px_rgba(0,0,0,0.04)] sm:p-4 xl:h-[calc(100vh-140px)]">
             <div className="p-4 sm:p-6">
-              {tab === 'personal' && (
-                <PersonalForm content={content} onChange={updatePersonal} resumeId={resumeId} />
-              )}
-              {tab === 'experience' && (
-                <ExperienceList
-                  items={content.experience}
-                  onAdd={addExperience}
-                  onUpdate={updateExperience}
-                  onRemove={removeExperience}
+              {showStylePanel ? (
+                <StylePanel
+                  templateId={templateId}
+                  setTemplateId={setTemplateId}
+                  style={style}
+                  setStyle={setStyle}
+                  onClose={() => setShowStylePanel(false)}
+                  userPlan={userPlan}
+                  onUpgradeRequired={(msg) => {
+                    setModalMessage(msg);
+                    setShowUpgradeModal(true);
+                  }}
                 />
-              )}
-              {tab === 'education' && (
-                <EducationList
-                  items={content.education}
-                  onAdd={addEducation}
-                  onUpdate={updateEducation}
-                  onRemove={removeEducation}
-                />
-              )}
-              {tab === 'skills' && (
-                <SkillsList
-                  items={content.skills}
-                  onAdd={addSkill}
-                  onUpdate={updateSkill}
-                  onRemove={removeSkill}
-                />
-              )}
-              {tab === 'projects' && (
-                <ProjectsList
-                  items={content.projects}
-                  onAdd={addProject}
-                  onUpdate={updateProject}
-                  onRemove={removeProject}
-                />
-              )}
-              {tab === 'languages' && (
-                <LanguagesList
-                  items={content.languages}
-                  onAdd={addLanguage}
-                  onUpdate={updateLanguage}
-                  onRemove={removeLanguage}
-                />
-              )}
-              {tab === 'certifications' && (
-                <CertificationsList
-                  items={content.certifications}
-                  onAdd={addCertification}
-                  onUpdate={updateCertification}
-                  onRemove={removeCertification}
-                />
+              ) : (
+                <>
+                  {tab === 'personal' && (
+                    <PersonalForm content={content} onChange={updatePersonal} resumeId={resumeId} />
+                  )}
+                  {tab === 'experience' && (
+                    <ExperienceList
+                      items={content.experience}
+                      onAdd={addExperience}
+                      onUpdate={updateExperience}
+                      onRemove={removeExperience}
+                    />
+                  )}
+                  {tab === 'education' && (
+                    <EducationList
+                      items={content.education}
+                      onAdd={addEducation}
+                      onUpdate={updateEducation}
+                      onRemove={removeEducation}
+                    />
+                  )}
+                  {tab === 'skills' && (
+                    <SkillsList
+                      items={content.skills}
+                      onAdd={addSkill}
+                      onUpdate={updateSkill}
+                      onRemove={removeSkill}
+                    />
+                  )}
+                  {tab === 'projects' && (
+                    <ProjectsList
+                      items={content.projects}
+                      onAdd={addProject}
+                      onUpdate={updateProject}
+                      onRemove={removeProject}
+                    />
+                  )}
+                  {tab === 'languages' && (
+                    <LanguagesList
+                      items={content.languages}
+                      onAdd={addLanguage}
+                      onUpdate={updateLanguage}
+                      onRemove={removeLanguage}
+                    />
+                  )}
+                  {tab === 'certifications' && (
+                    <CertificationsList
+                      items={content.certifications}
+                      onAdd={addCertification}
+                      onUpdate={updateCertification}
+                      onRemove={removeCertification}
+                    />
+                  )}
+                </>
               )}
             </div>
           </Card>
@@ -627,58 +665,6 @@ export function ResumeEditor({
           </div>
         </div>
       </div>
-      <div
-        aria-hidden="true"
-        className="resume-export-root pointer-events-none fixed -left-[10000px] top-0 bg-white"
-        style={{ width: '210mm', minHeight: '297mm' }}
-      >
-        <ResumePreview content={content} templateId={templateId} style={style} fullscreen userPlan={userPlan} />
-      </div>
-
-      {/* Preview PDF Modal */}
-      {isPreviewModalOpen && pdfPreviewUrl && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-sm">
-          <div className="flex w-full max-w-4xl flex-col rounded-3xl border border-slate-200 bg-white shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
-            {/* Header */}
-            <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4">
-              <div>
-                <h3 className="text-lg font-bold text-slate-900">Visualização do PDF</h3>
-                <p className="text-xs text-slate-500">Revise seu currículo antes de baixar ou imprimir</p>
-              </div>
-              <button
-                onClick={closePreviewModal}
-                className="rounded-full p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition-colors"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-
-            {/* Body */}
-            <div className="bg-slate-50 p-6 flex justify-center items-center">
-              <iframe
-                id="pdf-preview-iframe"
-                src={pdfPreviewUrl}
-                className="w-full h-[60vh] rounded-xl border border-slate-200 bg-white shadow-inner"
-              />
-            </div>
-
-            {/* Footer */}
-            <div className="flex items-center justify-between border-t border-slate-100 bg-slate-50/50 px-6 py-4">
-              <Button variant="secondary" onClick={closePreviewModal}>
-                Cancelar
-              </Button>
-              <div className="flex gap-2">
-                <Button variant="secondary" onClick={handlePrintPdf}>
-                  Imprimir
-                </Button>
-                <Button variant="primary" onClick={handleSavePdf}>
-                  Baixar PDF
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Upgrade Limit Modal */}
       {showUpgradeModal && (

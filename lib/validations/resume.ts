@@ -12,6 +12,7 @@ export const personalInfoSchema = z.object({
   linkedin: strField,
   github: strField,
   website: strField,
+  portfolio: strField,
   summary: strField,
   photo: strField,
 });
@@ -24,6 +25,7 @@ export const experienceItemSchema = z.object({
   end: strField,
   current: boolField,
   description: strField,
+  achievements: z.preprocess((v) => (v === null || v === undefined ? [] : v), z.array(z.string())),
 });
 
 export const educationItemSchema = z.object({
@@ -49,6 +51,7 @@ export const projectItemSchema = z.object({
   id: z.string(),
   name: strField,
   description: strField,
+  achievements: z.preprocess((v) => (v === null || v === undefined ? [] : v), z.array(z.string())),
   tech: z.preprocess((v) => (v === null || v === undefined ? [] : v), z.array(z.string())),
   url: strField,
 });
@@ -69,6 +72,8 @@ export const certificationItemSchema = z.object({
   name: strField,
   issuer: strField,
   date: strField,
+  credentialId: strField,
+  url: strField,
 });
 
 export const resumeContentSchema = z.object({
@@ -116,6 +121,7 @@ export function emptyResumeContent(): ResumeContent {
       linkedin: '',
       github: '',
       website: '',
+      portfolio: '',
       summary: '',
       photo: '',
     },

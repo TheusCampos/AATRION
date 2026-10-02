@@ -2,7 +2,7 @@ import React from "react";
 import { Mail, MapPin, Phone, Linkedin, Github } from "lucide-react";
 import type { LayoutProps } from "./types";
 import { DEFAULT_STYLE } from "./types";
-import { ResumeAvatar } from "./shared";
+import {  ResumeAvatar , LANGUAGE_LEVEL_MAP } from "./shared";
 
 // ============== CREATIVE ==============
 export function CreativeLayout(p: LayoutProps) {
@@ -76,7 +76,7 @@ export function CreativeLayout(p: LayoutProps) {
                 {p.languages.map((lang) => (
                   <li key={lang.id} className="flex justify-between">
                     <span>{lang.language}</span>
-                    <span className="opacity-75">{lang.level}</span>
+                    <span className="opacity-75">{LANGUAGE_LEVEL_MAP[lang.level] || lang.level}</span>
                   </li>
                 ))}
               </ul>
@@ -128,6 +128,13 @@ export function CreativeLayout(p: LayoutProps) {
                         {exp.description}
                       </p>
                     )}
+                    {exp.achievements && exp.achievements.length > 0 && (
+                      <ul className="list-disc list-inside text-[0.85em] text-slate-700 mt-[calc(var(--resume-section-spacing)*0.25)]">
+                        {exp.achievements.map((ach, i) => (
+                          <li key={i}>{ach}</li>
+                        ))}
+                      </ul>
+                    )}
                   </div>
                 ))}
               </div>
@@ -171,6 +178,13 @@ export function CreativeLayout(p: LayoutProps) {
                       <p className="text-[0.85em] text-slate-600 mt-0.5">
                         {proj.description}
                       </p>
+                    )}
+                    {proj.achievements && proj.achievements.length > 0 && (
+                      <ul className="list-disc list-inside text-[0.75em] text-slate-700 mt-[calc(var(--resume-section-spacing)*0.25)]">
+                        {proj.achievements.map((ach, i) => (
+                          <li key={i}>{ach}</li>
+                        ))}
+                      </ul>
                     )}
                   </div>
                 ))}
@@ -275,7 +289,7 @@ export function CreativePhotoLayout(p: LayoutProps) {
                     className="flex justify-between text-[0.75em]"
                   >
                     <span>{lang.language}</span>
-                    <span className="opacity-75">{lang.level}</span>
+                    <span className="opacity-75">{LANGUAGE_LEVEL_MAP[lang.level] || lang.level}</span>
                   </li>
                 ))}
               </ul>
@@ -327,6 +341,13 @@ export function CreativePhotoLayout(p: LayoutProps) {
                         {exp.description}
                       </p>
                     )}
+                    {exp.achievements && exp.achievements.length > 0 && (
+                      <ul className="list-disc list-inside text-[0.85em] text-slate-700 mt-[calc(var(--resume-section-spacing)*0.25)]">
+                        {exp.achievements.map((ach, i) => (
+                          <li key={i}>{ach}</li>
+                        ))}
+                      </ul>
+                    )}
                   </div>
                 ))}
               </div>
@@ -370,6 +391,13 @@ export function CreativePhotoLayout(p: LayoutProps) {
                       <p className="text-[0.85em] text-slate-600 mt-0.5">
                         {proj.description}
                       </p>
+                    )}
+                    {proj.achievements && proj.achievements.length > 0 && (
+                      <ul className="list-disc list-inside text-[0.75em] text-slate-700 mt-[calc(var(--resume-section-spacing)*0.25)]">
+                        {proj.achievements.map((ach, i) => (
+                          <li key={i}>{ach}</li>
+                        ))}
+                      </ul>
                     )}
                   </div>
                 ))}
@@ -504,7 +532,7 @@ export function YellowHeaderLayout(p: LayoutProps) {
                     <div key={lang.id}>
                       <div className="flex justify-between mb-[calc(var(--resume-section-spacing)*0.25)]">
                         <span className="font-bold">{lang.language}:</span>
-                        <span>{lang.level}</span>
+                        <span>{LANGUAGE_LEVEL_MAP[lang.level] || lang.level}</span>
                       </div>
                       <div className="w-full bg-slate-300 h-1.5 rounded-full overflow-hidden">
                         <div
@@ -598,6 +626,14 @@ export function YellowHeaderLayout(p: LayoutProps) {
                           {proj.description}
                         </p>
                       )}
+                    {proj.achievements && proj.achievements.length > 0 && (
+                      <ul className="list-disc list-inside text-[0.75em] text-slate-700 mt-[calc(var(--resume-section-spacing)*0.25)]">
+                        {proj.achievements.map((ach, i) => (
+                          <li key={i}>{ach}</li>
+                        ))}
+                      </ul>
+                    )}
+
                     </div>
                   ))}
                 </div>

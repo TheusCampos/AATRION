@@ -2,7 +2,7 @@ import React from "react";
 import { Mail, MapPin, Phone, Linkedin, Github, Globe } from "lucide-react";
 import type { LayoutProps } from "./types";
 import { DEFAULT_STYLE } from "./types";
-import { ContactItems, ResumeAvatar } from "./shared";
+import {  ContactItems, ResumeAvatar , LANGUAGE_LEVEL_MAP } from "./shared";
 
 // ============== CLASSIC ==============
 export function ClassicLayout(p: LayoutProps) {
@@ -75,6 +75,13 @@ export function ClassicLayout(p: LayoutProps) {
                       {exp.description}
                     </p>
                   )}
+                    {exp.achievements && exp.achievements.length > 0 && (
+                      <ul className="list-disc list-inside text-[0.85em] text-slate-700 mt-[calc(var(--resume-section-spacing)*0.25)]">
+                        {exp.achievements.map((ach, i) => (
+                          <li key={i}>{ach}</li>
+                        ))}
+                      </ul>
+                    )}
                 </div>
               ))}
             </div>
@@ -148,7 +155,7 @@ export function ClassicLayout(p: LayoutProps) {
                       {lang.language || "Idioma"}
                     </span>
                     <span className="text-slate-500 capitalize">
-                      {lang.level || "Nível"}
+                      {LANGUAGE_LEVEL_MAP[lang.level] || lang.level || "Nível"}
                     </span>
                   </li>
                 ))}
@@ -188,6 +195,13 @@ export function ClassicLayout(p: LayoutProps) {
                       <p className="text-[0.75em] text-slate-700 mb-[calc(var(--resume-section-spacing)*0.25)] whitespace-pre-wrap">
                         {proj.description}
                       </p>
+                    )}
+                    {proj.achievements && proj.achievements.length > 0 && (
+                      <ul className="list-disc list-inside text-[0.75em] text-slate-700 mt-[calc(var(--resume-section-spacing)*0.25)]">
+                        {proj.achievements.map((ach, i) => (
+                          <li key={i}>{ach}</li>
+                        ))}
+                      </ul>
                     )}
                     {proj.tech.length > 0 && (
                       <p className="text-[0.7em] text-slate-500 italic">
@@ -344,6 +358,13 @@ export function ClassicPhotoLayout(p: LayoutProps) {
                       {exp.description}
                     </p>
                   )}
+                    {exp.achievements && exp.achievements.length > 0 && (
+                      <ul className="list-disc list-inside text-[0.85em] text-slate-700 mt-[calc(var(--resume-section-spacing)*0.25)]">
+                        {exp.achievements.map((ach, i) => (
+                          <li key={i}>{ach}</li>
+                        ))}
+                      </ul>
+                    )}
                 </div>
               ))}
             </div>
@@ -417,7 +438,7 @@ export function ClassicPhotoLayout(p: LayoutProps) {
                       {lang.language || "Idioma"}
                     </span>
                     <span className="text-slate-500 capitalize">
-                      {lang.level || "Nível"}
+                      {LANGUAGE_LEVEL_MAP[lang.level] || lang.level || "Nível"}
                     </span>
                   </li>
                 ))}
@@ -457,6 +478,13 @@ export function ClassicPhotoLayout(p: LayoutProps) {
                       <p className="text-[0.75em] text-slate-700 mb-[calc(var(--resume-section-spacing)*0.25)] whitespace-pre-wrap">
                         {proj.description}
                       </p>
+                    )}
+                    {proj.achievements && proj.achievements.length > 0 && (
+                      <ul className="list-disc list-inside text-[0.75em] text-slate-700 mt-[calc(var(--resume-section-spacing)*0.25)]">
+                        {proj.achievements.map((ach, i) => (
+                          <li key={i}>{ach}</li>
+                        ))}
+                      </ul>
                     )}
                     {proj.tech.length > 0 && (
                       <p className="text-[0.7em] text-slate-500 italic">
@@ -565,6 +593,13 @@ export function ExecutiveLayout(p: LayoutProps) {
                       <p className="text-[1em] text-slate-700 whitespace-pre-wrap mt-[calc(var(--resume-section-spacing)*0.25)]">
                         {exp.description}
                       </p>
+                    )}
+                    {exp.achievements && exp.achievements.length > 0 && (
+                      <ul className="list-disc list-inside text-[0.85em] text-slate-700 mt-[calc(var(--resume-section-spacing)*0.25)]">
+                        {exp.achievements.map((ach, i) => (
+                          <li key={i}>{ach}</li>
+                        ))}
+                      </ul>
                     )}
                   </div>
                 ))}
@@ -703,6 +738,13 @@ export function MinimalistLayout(p: LayoutProps) {
                       {exp.description}
                     </p>
                   )}
+                    {exp.achievements && exp.achievements.length > 0 && (
+                      <ul className="list-disc list-inside text-[0.85em] text-slate-700 mt-[calc(var(--resume-section-spacing)*0.25)]">
+                        {exp.achievements.map((ach, i) => (
+                          <li key={i}>{ach}</li>
+                        ))}
+                      </ul>
+                    )}
                 </div>
               ))}
             </div>
@@ -962,7 +1004,7 @@ export function MinimalGreyLayout(p: LayoutProps) {
                   {p.languages.map((lang) => (
                     <li key={lang.id} className="flex justify-between">
                       <span className="font-bold">{lang.language}</span>
-                      <span>{lang.level}</span>
+                      <span>{LANGUAGE_LEVEL_MAP[lang.level] || lang.level}</span>
                     </li>
                   ))}
                 </ul>

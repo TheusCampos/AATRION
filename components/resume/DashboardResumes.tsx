@@ -111,6 +111,13 @@ export function DashboardResumes({ resumes }: { resumes: ResumeListItem[] }) {
     }
   }
 
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
+  if (!mounted) {
+    return <div className="min-h-[400px]" />; // prevent hydration mismatch placeholder
+  }
+
   if (resumes.length === 0) {
     return (
       <motion.div {...(reduce ? {} : { initial: 'hidden', animate: 'visible', variants: fadeIn })}>
@@ -183,7 +190,7 @@ export function DashboardResumes({ resumes }: { resumes: ResumeListItem[] }) {
                     <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-slate-500 mb-1">
                       <span>Importado de PDF</span>
                       <span>•</span>
-                      <span>Atualizado em {new Date(resume.updatedAt).toLocaleDateString('pt-BR')}</span>
+                      <span suppressHydrationWarning>Atualizado em {new Date(resume.updatedAt).toLocaleDateString('pt-BR')}</span>
                       <span>•</span>
                       <span className="inline-flex items-center gap-1">
                         <span className={`h-1.5 w-1.5 rounded-full ${

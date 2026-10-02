@@ -23,7 +23,7 @@ export function calculateCompleteness(content: ResumeContent): number {
   if (languages.length >= 1) score += 5;
   if (personal.phone) score += 5;
   if (personal.linkedin) score += 5;
-  if (personal.website || personal.github) score += 5;
+  if (personal.website || personal.github || personal.portfolio) score += 5;
   if (certifications.length >= 1) score += 5;
   if (personal.summary && personal.summary.length >= 200) score += 5;
   if (experience.length >= 2) score += 5;

@@ -32,7 +32,7 @@ export async function logUserAction({ userId, action, details }: LogOptions) {
     let userAgent = null;
 
     try {
-      const headersList = headers();
+      const headersList = await headers();
       ipAddress = headersList.get('x-forwarded-for') || headersList.get('x-real-ip') || null;
       userAgent = headersList.get('user-agent') || null;
     } catch {

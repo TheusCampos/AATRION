@@ -59,11 +59,28 @@ export function CertificationsList({
                   />
                 </Field>
               </div>
-              <Field label="Data">
+              <div className="grid gap-3 sm:grid-cols-2">
+                <Field label="Data">
+                  <Input
+                    type="month"
+                    value={item.date}
+                    onChange={(e) => onUpdate(item.id, { date: e.target.value })}
+                  />
+                </Field>
+                <Field label="ID da Credencial">
+                  <Input
+                    value={item.credentialId}
+                    onChange={(e) => onUpdate(item.id, { credentialId: e.target.value })}
+                    placeholder="Ex: ABC-12345"
+                  />
+                </Field>
+              </div>
+              <Field label="URL do Certificado">
                 <Input
-                  type="month"
-                  value={item.date}
-                  onChange={(e) => onUpdate(item.id, { date: e.target.value })}
+                  type="url"
+                  value={item.url}
+                  onChange={(e) => onUpdate(item.id, { url: e.target.value })}
+                  placeholder="https://credential.net/..."
                 />
               </Field>
             </Card>

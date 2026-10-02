@@ -1,5 +1,4 @@
-import { redirect } from 'next/navigation';
-import { isRedirectError } from 'next/dist/client/components/redirect';
+import { redirect, unstable_rethrow } from 'next/navigation';
 import Link from 'next/link';
 import { Sparkles, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
@@ -18,7 +17,7 @@ export const dynamic = 'force-dynamic';
 export default async function DashboardPage({
   searchParams,
 }: {
-  searchParams: { [key: string]: string | string[] | undefined };
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }> | { [key: string]: string | string[] | undefined };
 }) {
   const user = await getCurrentUser();
   if (!user) redirect('/login');
@@ -28,7 +27,8 @@ export default async function DashboardPage({
     action: 'VIEWED_DASHBOARD',
   });
 
-  const sessionId = searchParams?.session_id as string | undefined;
+  const resolvedSearchParams = await searchParams;
+  const sessionId = resolvedSearchParams?.session_id as string | undefined;
   if (sessionId) {
     try {
       const session = await stripe.checkout.sessions.retrieve(sessionId, {
@@ -76,25 +76,59 @@ export default async function DashboardPage({
         redirect('/dashboard');
       }
     } catch (e) {
-      if (isRedirectError(e)) throw e;
+      // Next.js 15: rethrow internal errors like redirect()
+      unstable_rethrow(e);
       console.error('[Dashboard] Falha ao verificar session_id:', e);
     }
   }
 
-  const resumes = await prisma.resume.findMany({
-    where: { userId: user.id },
-    orderBy: { updatedAt: 'desc' },
-    select: {
-      id: true,
-      title: true,
-      templateId: true,
-      colorScheme: true,
-      atsScore: true,
-      content: true,
-      createdAt: true,
-      updatedAt: true,
-    },
-  });
+  let resumes: Array<{
+    id: string;
+    title: string;
+    templateId: string;
+    colorScheme: string;
+    atsScore: number | null;
+    content: string;
+    createdAt: Date;
+    updatedAt: Date;
+  }> = [];
+
+  try {
+    resumes = await prisma.resume.findMany({
+      where: { userId: user.id },
+      orderBy: { updatedAt: 'desc' },
+      select: {
+        id: true,
+        title: true,
+        templateId: true,
+        colorScheme: true,
+        atsScore: true,
+        content: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+  } catch (err) {
+    console.error('[Dashboard] Erro ao buscar currículos, tentando novamente:', err);
+    try {
+      resumes = await prisma.resume.findMany({
+        where: { userId: user.id },
+        orderBy: { updatedAt: 'desc' },
+        select: {
+          id: true,
+          title: true,
+          templateId: true,
+          colorScheme: true,
+          atsScore: true,
+          content: true,
+          createdAt: true,
+          updatedAt: true,
+        },
+      });
+    } catch (retryErr) {
+      console.error('[Dashboard] Falha definitiva ao buscar currículos:', retryErr);
+    }
+  }
 
   const lastResumeId = resumes[0]?.id;
 

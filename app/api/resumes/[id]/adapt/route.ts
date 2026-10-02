@@ -6,6 +6,7 @@ import { runAI, safeParseJSON } from '@/lib/ai';
 import { resumeContentSchema, type ResumeContent } from '@/lib/validations/resume';
 import { checkAIQuota, consumeAIUsage } from '@/lib/plan';
 import { checkRateLimit, RATE_LIMITS } from '@/lib/rate-limit';
+import { sanitizeForAI, hasPromptInjection } from '@/lib/sanitize';
 
 type AIAdapted = {
   personal: Partial<ResumeContent['personal']>;
@@ -18,7 +19,7 @@ type AIAdapted = {
     current: boolean;
     description: string;
   }>;
-  skills: Array<{ id: string; name: string; level: 'basic' | 'intermediate' | 'advanced' }>;
+  suggestedSkills: Array<{ name: string; level: 'basic' | 'intermediate' | 'advanced'; reason: string }>;
   projects: Array<{
     id: string;
     name: string;
@@ -95,17 +96,8 @@ function mergeAdapted(original: ResumeContent, ai: AIAdapted): ResumeContent {
     };
   });
 
-  // Skills: adiciona novas que vieram e mantem originais
-  const existingSkillNames = new Set(
-    original.skills.map((s) => s.name.trim().toLowerCase()).filter(Boolean)
-  );
-  const newSkills = (ai.skills || []).filter(
-    (s) => s.name && !existingSkillNames.has(s.name.trim().toLowerCase())
-  );
-  const mergedSkills = [
-    ...original.skills,
-    ...newSkills.map((s) => ({ id: `sk_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`, name: s.name, level: s.level })),
-  ];
+  // Skills: mantem originais, nao adiciona automaticamente
+  const mergedSkills = [...original.skills];
 
   // Projects: mapear por id
   const projMap = new Map((ai.projects || []).map((p) => [p.id, p]));
@@ -177,7 +169,21 @@ export async function POST(
     );
   }
 
-  const { jobDescription, jobTitle, company } = parsed.data;
+  const { jobDescription: rawJobDescription, jobTitle: rawJobTitle, company: rawCompany } = parsed.data;
+
+  // SEC-06: Detectar e bloquear Prompt Injection nos campos de input da vaga
+  const allInputs = [rawJobDescription, rawJobTitle, rawCompany].filter(Boolean).join(' ');
+  if (hasPromptInjection(allInputs)) {
+    return NextResponse.json(
+      { error: 'Conteúdo inválido detectado na descrição da vaga.' },
+      { status: 400 }
+    );
+  }
+
+  // SEC-06: Sanitizar inputs antes de usar nos prompts
+  const jobDescription = sanitizeForAI(rawJobDescription, 8_000);
+  const jobTitle = rawJobTitle ? sanitizeForAI(rawJobTitle, 200) : undefined;
+  const company = rawCompany ? sanitizeForAI(rawCompany, 200) : undefined;
 
   const resume = await prisma.resume.findUnique({
     where: { id },
@@ -249,14 +255,12 @@ REGRAS RÍGIDAS — NUNCA QUEBRE:
    * personal.jobTitle, apenas se o cargo pretendido estiver desalinhado com a vaga
    * description das experiências
    * description dos projetos
-   * skills, adicionando novas competências somente quando elas forem comprovadas pelo currículo original
+   * sugerir novas competências em "suggestedSkills"
 
-4. Nunca remova skills originais.
+4. ZERO ALUCINAÇÃO: Nunca invente resultados.
 
-   * Skills originais devem permanecer.
-   * Novas skills só podem ser adicionadas se forem claramente demonstradas em experiências, projetos ou formação.
-   * Para novas skills, use level "intermediate" quando houver uso prático claro.
-   * Use level "advanced" apenas quando houver forte evidência de domínio, liderança, senioridade ou uso recorrente.
+   * Nunca crie métricas quantificadas (ex: "reduzi chamados em 35%") que não estejam explicitamente escritas no currículo original.
+   * Não presuma impacto se ele não foi relatado. Em vez disso, melhore a descrição qualitativa das responsabilidades e processos que o candidato mencionou.
 
 5. Se uma experiência, projeto, formação, certificação ou skill vier sem "id", ignore o item.
 
@@ -274,64 +278,43 @@ REGRAS RÍGIDAS — NUNCA QUEBRE:
    * resultados numéricos sem base
    * tecnologias, ferramentas ou responsabilidades não demonstradas
 
-7. Resultados quantificados:
+7. Resultados quantificados e Impacto:
 
-   * Só inclua números, percentuais, volumes, prazos ou métricas se já existirem no currículo original.
+   * Só inclua números, percentuais, volumes, prazos ou métricas se já existirem no currículo original. Se o candidato não escreveu, não invente.
    * Caso não existam métricas, fortaleça o texto com impacto qualitativo, clareza e foco em responsabilidades.
 
 8. Adapte o tom conforme a vaga:
 
-   * Vagas executivas ou gestão: foco em liderança, estratégia, tomada de decisão, indicadores e resultado de negócio.
-   * Vagas técnicas ou operacionais: foco em domínio técnico, execução, processos, ferramentas e resolução de problemas.
-   * Vagas criativas ou marketing: foco em portfólio, comunicação, campanhas, marca, criação e resultados.
-   * Vagas júnior ou estágio: foco em formação, projetos, aprendizado rápido, iniciativa e fundamentos.
-   * Vagas comerciais: foco em relacionamento, negociação, metas, atendimento e geração de oportunidades.
-   * Vagas administrativas: foco em organização, processos, controle, comunicação e suporte às operações.
+   * Vagas executivas ou gestão: foco em liderança, estratégia, tomada de decisão.
+   * Vagas técnicas: foco em execução técnica.
 
 9. Linguagem:
 
    * Use português profissional, formal e acessível.
    * Evite frases genéricas como "sou proativo", "trabalho em equipe" ou "busco novos desafios".
-   * Prefira frases específicas, objetivas e orientadas ao valor profissional.
-   * Não use jargões desnecessários.
-   * Não mencione termos técnicos como "stack", "framework", "código" ou "deploy" a menos que o currículo ou a vaga use esses termos.
 
 10. ATS e palavras-chave:
 
 * Identifique palavras-chave relevantes da vaga.
-* Inclua essas palavras de forma natural no resumo, experiências, projetos e skills.
-* Não force palavras-chave fora de contexto.
-* Não repita termos excessivamente.
+* Inclua essas palavras de forma natural nas descrições de experiências e resumo.
 
 11. Resumo profissional:
 
 * Deve ter de 3 a 5 linhas.
-* Deve destacar área de atuação, nível profissional, principais competências e alinhamento com a vaga.
-* Deve ser direto, forte e sem exageros.
-* Não escreva em primeira pessoa excessiva.
-* Evite frases vazias.
+* Deve destacar alinhamento com a vaga usando fatos REAIS do currículo.
 
 12. Descrições de experiências:
 
 * Reescreva com verbos de ação fortes.
-* Destaque responsabilidades, contexto, ferramentas, processos e impacto.
 * Priorize requisitos da vaga que já estejam conectados ao histórico do candidato.
-* Mantenha coerência com o cargo original.
-* Não transforme uma função simples em uma função sênior se isso não estiver comprovado.
 
 13. Projetos:
 
-* Melhore a descrição destacando objetivo, solução criada, tecnologias/habilidades utilizadas e resultado prático.
-* Não altere o nome do projeto.
-* Não altere a URL.
-* Não adicione tecnologias que não estejam no projeto original.
+* Melhore a descrição sem inventar fatos ou tecnologias.
 
 14. Consistência:
 
-* O currículo final precisa parecer real, profissional e coerente.
-* Evite textos muito longos.
-* Cada descrição deve ser objetiva, com boa densidade de informação.
-* Não deixe campos obrigatórios vazios, exceto quando o dado original já estiver vazio.
+* O currículo final precisa ser 100% fiel à realidade do candidato.
 
 SAÍDA OBRIGATÓRIA:
 
@@ -355,11 +338,11 @@ Use exatamente esta estrutura:
 "description": string
 }
 ],
-"skills": [
+"suggestedSkills": [
 {
-"id": string,
 "name": string,
-"level": "basic" | "intermediate" | "advanced"
+"level": "basic" | "intermediate" | "advanced",
+"reason": "Por que esta habilidade é sugerida (com base em qual experiência/formação e como ela atende à vaga)."
 }
 ],
 "projects": [
@@ -466,6 +449,7 @@ Adapte o curriculo acima para esta vaga. Mantenha o que existe, ajuste linguagem
   return NextResponse.json({
     content: merged,
     changesLog: adaptedJson.changesLog || [],
+    suggestedSkills: adaptedJson.suggestedSkills || [],
     provider,
     model,
     usage: usage

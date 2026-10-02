@@ -5,10 +5,11 @@ import { getCurrentUser } from '@/lib/auth';
 import { checkAIQuota, consumeAIUsage } from '@/lib/plan';
 import { checkRateLimit, RATE_LIMITS } from '@/lib/rate-limit';
 import { startTimer, trackApiCall } from '@/lib/api-telemetry';
+import { sanitizeForAI, hasPromptInjection } from '@/lib/sanitize';
 
 export async function POST(
   req: Request,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   const getElapsed = startTimer();
   let currentUserId: string | null = null;
@@ -60,9 +61,9 @@ export async function POST(
     }
 
     const body = await req.json();
-    const { summary } = body;
+    const { summary: rawSummary } = body;
 
-    if (!summary) {
+    if (!rawSummary) {
       trackApiCall({
         req,
         routeName: '/api/resumes/[id]/enhance',
@@ -77,9 +78,21 @@ export async function POST(
       );
     }
 
+    // SEC-06: Detectar Prompt Injection no resumo enviado pelo usuário
+    if (hasPromptInjection(rawSummary)) {
+      return NextResponse.json(
+        { error: 'Conteúdo inválido detectado no resumo.' },
+        { status: 400 }
+      );
+    }
+
+    // SEC-06: Sanitizar antes de incluir no prompt
+    const summary = sanitizeForAI(rawSummary, 2_000);
+
     // Verificar se o usuário é dono do currículo
+    const { id } = await context.params;
     const resume = await prisma.resume.findFirst({
-      where: { id: params.id, userId: user.id },
+      where: { id, userId: user.id },
     });
 
     if (!resume) {
@@ -130,7 +143,7 @@ Retorne APENAS o texto do resumo melhorado, sem aspas adicionais, introduções 
       status: 200,
       durationMs: getElapsed(),
       userId: user.id,
-      details: { resumeId: params.id },
+      details: { resumeId: id },
     });
 
     return NextResponse.json({ summary: improvedSummary });

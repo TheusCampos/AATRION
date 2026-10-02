@@ -7,6 +7,10 @@ export type ResumeStyle = {
   letterSpacing: 'tight' | 'normal' | 'wide';
   primaryColor: string;
   sectionSpacing: 'compact' | 'normal' | 'relaxed' | number | string;
+  paperSize?: 'a4' | 'letter';
+  showPhoto?: boolean;
+  hiddenSections?: string[];
+  sectionOrder?: string[];
 };
 
 export const DEFAULT_STYLE: ResumeStyle = {
@@ -16,6 +20,10 @@ export const DEFAULT_STYLE: ResumeStyle = {
   letterSpacing: 'normal',
   primaryColor: '#1e40af',
   sectionSpacing: 24,
+  paperSize: 'a4',
+  showPhoto: true,
+  hiddenSections: [],
+  sectionOrder: ['summary', 'experience', 'education', 'skills', 'projects', 'languages', 'certifications'],
 };
 
 export type LayoutProps = {
@@ -23,6 +31,10 @@ export type LayoutProps = {
   containerStyle: React.CSSProperties;
   primary: string;
   sectionSpacing: string;
+  paperSize: 'a4' | 'letter';
+  showPhoto: boolean;
+  hiddenSections: string[];
+  sectionOrder: string[];
   personal: ResumeContent['personal'];
   experience: ResumeContent['experience'];
   education: ResumeContent['education'];

@@ -5,7 +5,8 @@ import { updateResumeSchema } from '@/lib/validations/resume';
 import { checkRateLimit, RATE_LIMITS } from '@/lib/rate-limit';
 import { revalidatePath } from 'next/cache';
 
-type Params = { params: { id: string } };
+// Next.js 15: params é agora uma Promise
+type Params = { params: Promise<{ id: string }> };
 
 /**
  * GET /api/resumes/:id
@@ -21,8 +22,9 @@ export async function GET(_req: NextRequest, { params }: Params) {
   const rl = await checkRateLimit(`resumes:${user.id}`, RATE_LIMITS.general);
   if (!rl.allowed) return rl.response;
 
+  const { id } = await params;
   const resume = await prisma.resume.findFirst({
-    where: { id: params.id, userId: user.id },
+    where: { id, userId: user.id },
   });
 
   if (!resume) {
@@ -62,9 +64,11 @@ export async function PUT(req: NextRequest, { params }: Params) {
     );
   }
 
+  const { id } = await params;
+
   // Verificar propriedade
   const existing = await prisma.resume.findFirst({
-    where: { id: params.id, userId: user.id },
+    where: { id, userId: user.id },
     select: { id: true },
   });
   if (!existing) {
@@ -78,7 +82,7 @@ export async function PUT(req: NextRequest, { params }: Params) {
   if (parsed.data.colorScheme !== undefined) data.colorScheme = parsed.data.colorScheme;
 
   const resume = await prisma.resume.update({
-    where: { id: params.id },
+    where: { id },
     data,
     select: { id: true, title: true, updatedAt: true },
   });
@@ -102,17 +106,20 @@ export async function DELETE(_req: NextRequest, { params }: Params) {
   const rl = await checkRateLimit(`resumes:${user.id}`, RATE_LIMITS.general);
   if (!rl.allowed) return rl.response;
 
+  const { id } = await params;
+
   const existing = await prisma.resume.findFirst({
-    where: { id: params.id, userId: user.id },
+    where: { id, userId: user.id },
     select: { id: true },
   });
   if (!existing) {
     return NextResponse.json({ error: 'Currículo não encontrado' }, { status: 404 });
   }
 
-  await prisma.resume.delete({ where: { id: params.id } });
+  await prisma.resume.delete({ where: { id } });
   
   revalidatePath('/dashboard');
   
   return NextResponse.json({ ok: true });
 }
+

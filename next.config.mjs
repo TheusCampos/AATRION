@@ -2,18 +2,19 @@
 const nextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
+  // SEC-02: serverExternalPackages substituiu serverComponentsExternalPackages no Next.js 15
+  serverExternalPackages: [
+    'pdf-parse',
+    '@opentelemetry/sdk-node',
+    '@opentelemetry/resources',
+    '@opentelemetry/instrumentation',
+    '@opentelemetry/exporter-logs-otlp-http',
+    '@opentelemetry/exporter-trace-otlp-http',
+    '@traceloop/instrumentation-google-generativeai',
+    'require-in-the-middle',
+  ],
   experimental: {
-    serverComponentsExternalPackages: [
-      'pdf-parse',
-      '@opentelemetry/sdk-node',
-      '@opentelemetry/resources',
-      '@opentelemetry/instrumentation',
-      '@opentelemetry/exporter-logs-otlp-http',
-      '@opentelemetry/exporter-trace-otlp-http',
-      '@traceloop/instrumentation-google-generativeai',
-      'require-in-the-middle',
-    ],
-    instrumentationHook: true,
+    // instrumentationHook foi removido do experimental no Next.js 15 (agora é estável por padrão)
   },
   images: {
     remotePatterns: [
@@ -36,6 +37,9 @@ const nextConfig = {
             key: 'Strict-Transport-Security',
             value: 'max-age=31536000; includeSubDomains',
           },
+          // SEC-02: Headers adicionais de isolamento cross-origin (CORP/COEP/COOP)
+          { key: 'Cross-Origin-Resource-Policy', value: 'same-origin' },
+          { key: 'Cross-Origin-Opener-Policy', value: 'same-origin' },
           {
             key: 'Content-Security-Policy',
             value: [

@@ -6,7 +6,7 @@ import { checkRateLimit, RATE_LIMITS } from '@/lib/rate-limit';
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { key: string[] } }
+  context: { params: Promise<{ key: string[] }> }
 ) {
   try {
     // SEC-007: Verificar autenticação antes de servir arquivos
@@ -19,6 +19,7 @@ export async function GET(
     const rl = await checkRateLimit(`files:${user.id}`, RATE_LIMITS.general);
     if (!rl.allowed) return rl.response;
 
+    const params = await context.params;
     if (!params.key || params.key.length === 0) {
       return new NextResponse('Caminho do arquivo não fornecido', { status: 400 });
     }

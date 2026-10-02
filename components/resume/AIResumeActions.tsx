@@ -46,6 +46,11 @@ type Props = {
 };
 
 type AnalyzeResult = {
+  scores?: {
+    leitura: number;
+    qualidade: number;
+    aderencia: number;
+  };
   overallScore: number;
   summary: string;
   strengths: string[];
@@ -54,6 +59,7 @@ type AnalyzeResult = {
   examples: Array<{ area: string; from: string; to: string; rationale: string }>;
   keywordGaps: string[];
   atsTips: string[];
+  requirementsMatrix?: Array<{ requirement: string; found: boolean; evidence?: string }>;
 };
 
 export function AIResumeActions({ resumeId, content, onApplyAdapted, initialAction, userPlan = 'FREE' }: Props) {
@@ -89,6 +95,7 @@ export function AIResumeActions({ resumeId, content, onApplyAdapted, initialActi
   const [jobDescription, setJobDescription] = useState('');
   const [adaptedContent, setAdaptedContent] = useState<ResumeContent | null>(null);
   const [adaptedChanges, setAdaptedChanges] = useState<string[]>([]);
+  const [suggestedSkills, setSuggestedSkills] = useState<Array<{ name: string; level: 'basic' | 'intermediate' | 'advanced'; reason: string; selected: boolean }>>([]);
 
   async function handleAnalyze() {
     setAnalyzing(true);
@@ -126,6 +133,7 @@ export function AIResumeActions({ resumeId, content, onApplyAdapted, initialActi
     setAdapting(true);
     setAdaptedContent(null);
     setAdaptedChanges([]);
+    setSuggestedSkills([]);
     try {
       const res = await fetch(`/api/resumes/${resumeId}/adapt`, {
         method: 'POST',
@@ -142,6 +150,7 @@ export function AIResumeActions({ resumeId, content, onApplyAdapted, initialActi
       }
       setAdaptedContent(data.content as ResumeContent);
       setAdaptedChanges(data.changesLog || []);
+      setSuggestedSkills((data.suggestedSkills || []).map((s: any) => ({ ...s, selected: true })));
     } catch (err) {
       console.error(err);
       const msg = err instanceof Error ? err.message : 'Erro ao adaptar o currículo.';
@@ -158,10 +167,24 @@ export function AIResumeActions({ resumeId, content, onApplyAdapted, initialActi
 
   function applyAdapted() {
     if (!adaptedContent) return;
-    onApplyAdapted(adaptedContent);
+    
+    // Add selected suggested skills
+    const skillsToAdd = suggestedSkills.filter(s => s.selected).map(s => ({
+      id: `sk_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+      name: s.name,
+      level: s.level
+    }));
+    
+    const finalContent = {
+      ...adaptedContent,
+      skills: [...adaptedContent.skills, ...skillsToAdd]
+    };
+    
+    onApplyAdapted(finalContent);
     setAdaptOpen(false);
     setAdaptedContent(null);
     setJobDescription('');
+    setSuggestedSkills([]);
   }
 
   const scoreColor =
@@ -225,17 +248,35 @@ export function AIResumeActions({ resumeId, content, onApplyAdapted, initialActi
 
             {analyzeResult && (
               <div className="space-y-4 pt-2">
-                <Card className="flex items-center justify-between bg-gradient-to-r from-indigo-50 to-blue-50 border-indigo-200 p-4">
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-wider text-indigo-700">
-                      Nota geral
-                    </p>
-                    <p className="text-sm text-slate-700 mt-1">{analyzeResult.summary}</p>
+                <Card className="flex flex-col gap-4 bg-gradient-to-r from-indigo-50 to-blue-50 border-indigo-200 p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-wider text-indigo-700">
+                        Nota geral (Evidências)
+                      </p>
+                      <p className="text-sm text-slate-700 mt-1">{analyzeResult.summary}</p>
+                    </div>
+                    <div className={`text-5xl font-extrabold ${scoreColor}`}>
+                      {analyzeResult.overallScore}
+                      <span className="text-base font-medium text-muted-foreground">/100</span>
+                    </div>
                   </div>
-                  <div className={`text-5xl font-extrabold ${scoreColor}`}>
-                    {analyzeResult.overallScore}
-                    <span className="text-base font-medium text-muted-foreground">/100</span>
-                  </div>
+                  {analyzeResult.scores && (
+                    <div className="grid grid-cols-3 gap-2 mt-2 pt-4 border-t border-indigo-100">
+                      <div className="text-center">
+                        <p className="text-xs text-indigo-600 font-medium uppercase tracking-wider">Leitura</p>
+                        <p className="text-xl font-bold text-slate-800">{analyzeResult.scores.leitura}<span className="text-xs text-slate-500">/100</span></p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-xs text-indigo-600 font-medium uppercase tracking-wider">Qualidade</p>
+                        <p className="text-xl font-bold text-slate-800">{analyzeResult.scores.qualidade}<span className="text-xs text-slate-500">/100</span></p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-xs text-indigo-600 font-medium uppercase tracking-wider">Aderência</p>
+                        <p className="text-xl font-bold text-slate-800">{analyzeResult.scores.aderencia}<span className="text-xs text-slate-500">/100</span></p>
+                      </div>
+                    </div>
+                  )}
                 </Card>
 
                 <Section icon={<CheckCircle2 className="h-4 w-4 text-emerald-600" />} title="Pontos fortes">
@@ -319,6 +360,26 @@ export function AIResumeActions({ resumeId, content, onApplyAdapted, initialActi
                     </ul>
                   </Section>
                 )}
+
+                {analyzeResult.requirementsMatrix && analyzeResult.requirementsMatrix.length > 0 && (
+                  <Section icon={<Briefcase className="h-4 w-4 text-slate-700" />} title="Matriz de Requisitos (Aderência)">
+                    <div className="space-y-3">
+                      {analyzeResult.requirementsMatrix.map((req, i) => (
+                        <div key={i} className={`rounded-md border p-3 text-sm ${req.found ? 'border-emerald-200 bg-emerald-50' : 'border-rose-200 bg-rose-50'}`}>
+                          <div className="flex items-start gap-2">
+                            {req.found ? <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" /> : <X className="h-4 w-4 text-rose-600 shrink-0 mt-0.5" />}
+                            <div>
+                              <p className={`font-semibold ${req.found ? 'text-emerald-800' : 'text-rose-800'}`}>{req.requirement}</p>
+                              {req.evidence && (
+                                <p className={`mt-1 text-xs ${req.found ? 'text-emerald-700' : 'text-rose-700'}`}>{req.evidence}</p>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </Section>
+                )}
               </div>
             )}
           </div>
@@ -395,6 +456,37 @@ export function AIResumeActions({ resumeId, content, onApplyAdapted, initialActi
                         </li>
                       ))}
                     </ul>
+                  </div>
+                )}
+
+                {suggestedSkills.length > 0 && (
+                  <div className="rounded-md border border-emerald-200 bg-white p-3 text-sm">
+                    <p className="text-xs font-semibold uppercase tracking-wider text-emerald-700 mb-2">
+                      Habilidades Sugeridas
+                    </p>
+                    <p className="text-xs text-slate-500 mb-3">
+                      A IA identificou estas habilidades na sua trajetória (ou na vaga) e sugere incluí-las. Confirme quais deseja adicionar:
+                    </p>
+                    <div className="space-y-2">
+                      {suggestedSkills.map((s, i) => (
+                        <label key={i} className="flex items-start gap-2 p-2 rounded hover:bg-slate-50 cursor-pointer border border-transparent hover:border-slate-100">
+                          <input
+                            type="checkbox"
+                            className="mt-1 accent-emerald-600"
+                            checked={s.selected}
+                            onChange={(e) => {
+                              const newList = [...suggestedSkills];
+                              newList[i].selected = e.target.checked;
+                              setSuggestedSkills(newList);
+                            }}
+                          />
+                          <div>
+                            <span className="font-semibold text-slate-800">{s.name}</span> <span className="text-[10px] uppercase text-slate-500 border rounded px-1">{s.level}</span>
+                            <p className="text-xs text-slate-600 mt-0.5">{s.reason}</p>
+                          </div>
+                        </label>
+                      ))}
+                    </div>
                   </div>
                 )}
 
@@ -570,16 +662,6 @@ function AdaptDiff({ original, adapted }: { original: ResumeContent; adapted: Re
       });
     }
   });
-  const newSkills = adapted.skills.filter(
-    (s) => !original.skills.some((o) => o.name.trim().toLowerCase() === s.name.trim().toLowerCase())
-  );
-  if (newSkills.length) {
-    changes.push({
-      area: 'Habilidades adicionadas',
-      before: '(nenhuma)',
-      after: newSkills.map((s) => s.name).join(', '),
-    });
-  }
 
   if (changes.length === 0) {
     return (

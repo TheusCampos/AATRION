@@ -6,6 +6,7 @@ import { checkAIQuota, consumeAIUsage } from '@/lib/plan';
 import { runAI, safeParseJSON } from '@/lib/ai';
 import type { AuditResult } from '@/lib/linkedin-analyzer';
 import { checkRateLimit, RATE_LIMITS } from '@/lib/rate-limit';
+import { sanitizeForAI, hasPromptInjection, sanitizeHtml } from '@/lib/sanitize';
 
 export async function GET() {
   const user = await getCurrentUser();
@@ -66,7 +67,21 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const { profileText, profileUrl, area, targetJob } = parsed.data;
+  const { profileText: rawProfileText, profileUrl, area: rawArea, targetJob: rawTargetJob } = parsed.data;
+
+  // SEC-06: Detectar Prompt Injection no conteudo do perfil LinkedIn
+  const injectionCheck = [rawProfileText, rawTargetJob, rawArea].filter(Boolean).join(' ');
+  if (hasPromptInjection(injectionCheck)) {
+    return NextResponse.json(
+      { error: 'Conteúdo inválido detectado no perfil enviado.' },
+      { status: 400 }
+    );
+  }
+
+  // SEC-06: Sanitizar inputs para uso seguro nos prompts de IA
+  const profileText = sanitizeHtml(sanitizeForAI(rawProfileText, 30_000));
+  const targetJob = rawTargetJob ? sanitizeForAI(rawTargetJob, 500) : undefined;
+  const area = rawArea ? sanitizeForAI(rawArea, 200) : undefined;
 
   const systemInstruction = `Você é um Consultor de Carreira Sênior e Especialista em Recrutamento Tech.
 Analise detalhadamente o perfil do LinkedIn fornecido e retorne APENAS um JSON válido que siga ESTRITAMENTE a estrutura abaixo:

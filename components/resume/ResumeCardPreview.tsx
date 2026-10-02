@@ -28,27 +28,36 @@ export function ResumeCardPreview({ content, templateId, colorScheme, className 
             style={{ width: '210mm', minHeight: '297mm' }}
           >
             {(() => {
-              let parsedStyle = DEFAULT_STYLE;
-              if (colorScheme && colorScheme.startsWith('{')) {
-                try {
+              try {
+                let parsedStyle = DEFAULT_STYLE;
+                if (colorScheme && colorScheme.startsWith('{')) {
+                  try {
+                    parsedStyle = {
+                      ...DEFAULT_STYLE,
+                      ...JSON.parse(colorScheme),
+                    };
+                  } catch {}
+                } else if (colorScheme) {
                   parsedStyle = {
                     ...DEFAULT_STYLE,
-                    ...JSON.parse(colorScheme),
+                    primaryColor: colorScheme,
                   };
-                } catch {}
-              } else if (colorScheme) {
-                parsedStyle = {
-                  ...DEFAULT_STYLE,
-                  primaryColor: colorScheme,
-                };
+                }
+                return (
+                  <ResumePreview
+                    content={content}
+                    templateId={templateId || 'classic'}
+                    style={parsedStyle}
+                  />
+                );
+              } catch (e) {
+                console.error('[ResumeCardPreview] Falha ao renderizar miniatura:', e);
+                return (
+                  <div className="flex h-64 w-full items-center justify-center p-4 text-xs text-slate-400">
+                    Miniatura indisponível
+                  </div>
+                );
               }
-              return (
-                <ResumePreview
-                  content={content}
-                  templateId={templateId || 'classic'}
-                  style={parsedStyle}
-                />
-              );
             })()}
           </div>
         </div>

@@ -2,7 +2,7 @@ import React from "react";
 import { Mail, MapPin, Phone, Linkedin } from "lucide-react";
 import type { LayoutProps } from "./types";
 import { DEFAULT_STYLE } from "./types";
-import { ResumeAvatar } from "./shared";
+import {  ResumeAvatar , LANGUAGE_LEVEL_MAP } from "./shared";
 
 // ============== CORPORATE ==============
 export function CorporateLayout(p: LayoutProps) {
@@ -144,6 +144,14 @@ export function CorporateLayout(p: LayoutProps) {
                             {proj.description}
                           </p>
                         )}
+                    {proj.achievements && proj.achievements.length > 0 && (
+                      <ul className="list-disc list-inside text-[0.75em] text-slate-700 mt-[calc(var(--resume-section-spacing)*0.25)]">
+                        {proj.achievements.map((ach, i) => (
+                          <li key={i}>{ach}</li>
+                        ))}
+                      </ul>
+                    )}
+
                       </div>
                     ))}
                   </div>
@@ -219,7 +227,7 @@ export function CorporateLayout(p: LayoutProps) {
                         <span className="font-bold text-slate-700">
                           {lang.language}
                         </span>
-                        <span className="text-slate-500">{lang.level}</span>
+                        <span className="text-slate-500">{LANGUAGE_LEVEL_MAP[lang.level] || lang.level}</span>
                       </li>
                     ))}
                   </ul>
@@ -375,6 +383,13 @@ export function ExecutiveProLayout(p: LayoutProps) {
                         {exp.description}
                       </p>
                     )}
+                    {exp.achievements && exp.achievements.length > 0 && (
+                      <ul className="list-disc list-inside text-[0.85em] text-slate-700 mt-[calc(var(--resume-section-spacing)*0.25)]">
+                        {exp.achievements.map((ach, i) => (
+                          <li key={i}>{ach}</li>
+                        ))}
+                      </ul>
+                    )}
                   </div>
                 </div>
               ))}
@@ -439,6 +454,13 @@ export function ExecutiveProLayout(p: LayoutProps) {
                         {proj.description}
                       </p>
                     )}
+                    {proj.achievements && proj.achievements.length > 0 && (
+                      <ul className="list-disc list-inside text-[0.75em] text-slate-700 mt-[calc(var(--resume-section-spacing)*0.25)]">
+                        {proj.achievements.map((ach, i) => (
+                          <li key={i}>{ach}</li>
+                        ))}
+                      </ul>
+                    )}
                   </div>
                 ))}
               </div>
@@ -469,7 +491,7 @@ export function ExecutiveProLayout(p: LayoutProps) {
                 {p.languages.map((lang) => (
                   <li key={lang.id}>
                     {lang.language} -{" "}
-                    <span className="text-slate-500">{lang.level}</span>
+                    <span className="text-slate-500">{LANGUAGE_LEVEL_MAP[lang.level] || lang.level}</span>
                   </li>
                 ))}
               </ul>

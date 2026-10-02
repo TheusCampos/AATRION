@@ -1,20 +1,28 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { Card } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
-import { FileText, UploadCloud, Check, ArrowLeft, FileOutput, Sparkles, Lock } from 'lucide-react';
-import Link from 'next/link';
-import { ResumeCardPreview } from '@/components/resume/ResumeCardPreview';
-import type { ResumeContent } from '@/lib/validations/resume';
-import { AILoader } from '@/components/ui/AILoader';
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { Card } from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
+import {
+  FileText,
+  UploadCloud,
+  Check,
+  ArrowLeft,
+  FileOutput,
+  Sparkles,
+  Lock,
+} from "lucide-react";
+import Link from "next/link";
+import { ResumeCardPreview } from "@/components/resume/ResumeCardPreview";
+import type { ResumeContent } from "@/lib/validations/resume";
+import { AILoader } from "@/components/ui/AILoader";
 
 const IMPORT_STEPS = [
-  'Enviando arquivo de currículo...',
-  'Extraindo texto bruto do documento...',
-  'IA estruturando dados (experiências, educação, skills)...',
-  'Salvando no banco de dados e preparando editor...',
+  "Enviando arquivo de currículo...",
+  "Extraindo texto bruto do documento...",
+  "IA estruturando dados (experiências, educação, skills)...",
+  "Salvando no banco de dados e preparando editor...",
 ];
 
 const DUMMY_CONTENT: ResumeContent = {
@@ -27,7 +35,9 @@ const DUMMY_CONTENT: ResumeContent = {
     linkedin: "linkedin.com/in/nome",
     github: "",
     website: "",
-    summary: "Resumo profissional direto ao ponto destacando suas principais habilidades, experiências relevantes e objetivos de carreira. Ideal para causar uma boa primeira impressão.",
+    portfolio: "",
+    summary:
+      "Resumo profissional direto ao ponto destacando suas principais habilidades, experiências relevantes e objetivos de carreira. Ideal para causar uma boa primeira impressão.",
     photo: "",
   },
   experience: [
@@ -38,7 +48,12 @@ const DUMMY_CONTENT: ResumeContent = {
       start: "2021-01",
       end: "",
       current: true,
-      description: "• Liderança e execução de projetos estratégicos.\n• Colaboração em equipes multidisciplinares.\n• Foco em entrega de resultados e qualidade.",
+      description:
+        "• Liderança e execução de projetos estratégicos.\n• Colaboração em equipes multidisciplinares.\n• Foco em entrega de resultados e qualidade.",
+      achievements: [
+        "Aumento de 25% na produtividade operacional.",
+        "Liderança na implantação da nova arquitetura de dados."
+      ],
     },
     {
       id: "2",
@@ -47,8 +62,12 @@ const DUMMY_CONTENT: ResumeContent = {
       start: "2018-03",
       end: "2020-12",
       current: false,
-      description: "• Desenvolvimento de soluções e melhoria de processos.\n• Aumento de eficiência em 30% no setor.",
-    }
+      description:
+        "• Desenvolvimento de soluções e melhoria de processos.\n• Aumento de eficiência em 30% no setor.",
+      achievements: [
+        "Redução de custos operacionais em 15%."
+      ],
+    },
   ],
   education: [
     {
@@ -58,63 +77,158 @@ const DUMMY_CONTENT: ResumeContent = {
       level: "Graduação",
       start: "2014-02",
       end: "2017-12",
-    }
+    },
   ],
   skills: [
     { id: "1", name: "Habilidade Técnica 1", level: "advanced" },
     { id: "2", name: "Habilidade Técnica 2", level: "advanced" },
-    { id: "3", name: "Liderança", level: "intermediate" }
+    { id: "3", name: "Liderança", level: "intermediate" },
   ],
   projects: [],
   languages: [],
-  certifications: []
+  certifications: [],
 };
 
 const TEMPLATES = [
-  { id: 'classic', name: 'Clássico', desc: 'Tradicional corporativo', image: '/templates/classic.png' },
-  { id: 'classic-photo', name: 'Clássico com Foto', desc: 'Corporativo com foto', image: '/templates/classic-photo.png' },
-  { id: 'modern', name: 'Moderno', desc: 'Cabeçalho colorido', image: '/templates/modern.png' },
-  { id: 'modern-photo', name: 'Moderno com Foto', desc: 'Colorido com foto', image: '/templates/modern-photo.png' },
-  { id: 'creative-photo', name: 'Criativo com Foto', desc: 'Foto e sidebar', image: '/templates/creative-photo.png' },
-  { id: 'minimalist', name: 'Minimalista', desc: 'Clean e direto', image: '/templates/minimalist.png' },
-  { id: 'creative', name: 'Criativo', desc: 'Sidebar colorida', image: '/templates/creative.png' },
-  { id: 'executive', name: 'Executivo', desc: 'Serifado elegante', image: '/templates/executive.png' },
-  { id: 'tech', name: 'Tech', desc: 'Estilo terminal/code', image: '/templates/tech.png' },
-  { id: 'brown-sidebar', name: 'Marrom Executivo', desc: 'Sidebar bege claro e título marrom', image: '/templates/classic.png' },
-  { id: 'minimal-grey', name: 'Cinza Minimalista', desc: 'Clean, focado em texto', image: '/templates/minimalist.png' },
-  { id: 'yellow-header', name: 'Amarelo Criativo', desc: 'Destaque no cabeçalho com foto', image: '/templates/creative-photo.png' },
-  { id: 'blue-right-sidebar', name: 'Azul Profissional', desc: 'Sidebar na direita', image: '/templates/creative.png' },
+  {
+    id: "classic",
+    name: "Clássico",
+    desc: "Tradicional corporativo",
+    image: "/templates/classic.png",
+  },
+  {
+    id: "classic-photo",
+    name: "Clássico com Foto",
+    desc: "Corporativo com foto",
+    image: "/templates/classic-photo.png",
+  },
+  {
+    id: "modern",
+    name: "Moderno",
+    desc: "Cabeçalho colorido",
+    image: "/templates/modern.png",
+  },
+  {
+    id: "modern-photo",
+    name: "Moderno com Foto",
+    desc: "Colorido com foto",
+    image: "/templates/modern-photo.png",
+  },
+  {
+    id: "creative-photo",
+    name: "Criativo com Foto",
+    desc: "Foto e sidebar",
+    image: "/templates/creative-photo.png",
+  },
+  {
+    id: "minimalist",
+    name: "Minimalista",
+    desc: "Clean e direto",
+    image: "/templates/minimalist.png",
+  },
+  {
+    id: "creative",
+    name: "Criativo",
+    desc: "Sidebar colorida",
+    image: "/templates/creative.png",
+  },
+  {
+    id: "executive",
+    name: "Executivo",
+    desc: "Serifado elegante",
+    image: "/templates/executive.png",
+  },
+  {
+    id: "tech",
+    name: "Tech",
+    desc: "Estilo terminal/code",
+    image: "/templates/tech.png",
+  },
+  {
+    id: "brown-sidebar",
+    name: "Marrom Executivo",
+    desc: "Sidebar bege claro e título marrom",
+    image: "/templates/classic.png",
+  },
+  {
+    id: "minimal-grey",
+    name: "Cinza Minimalista",
+    desc: "Clean, focado em texto",
+    image: "/templates/minimalist.png",
+  },
+  {
+    id: "yellow-header",
+    name: "Amarelo Criativo",
+    desc: "Destaque no cabeçalho com foto",
+    image: "/templates/creative-photo.png",
+  },
+  {
+    id: "blue-right-sidebar",
+    name: "Azul Profissional",
+    desc: "Sidebar na direita",
+    image: "/templates/creative.png",
+  },
+  {
+    id: "corporate",
+    name: "Corporativo (Elegante)",
+    desc: "Design estruturado e profissional",
+    image: "/templates/classic.png",
+  },
+  {
+    id: "executive-pro",
+    name: "Executivo Pro",
+    desc: "Focado em executivos",
+    image: "/templates/minimalist.png",
+  },
+  {
+    id: "elegant",
+    name: "Elegância Minimalista",
+    desc: "Barra lateral decorativa com foto",
+    image: "/templates/creative-photo.png",
+  },
+  {
+    id: "impact",
+    name: "Impacto Corporativo",
+    desc: "Brutalismo leve, tipografia forte",
+    image: "/templates/minimalist.png",
+  },
+  {
+    id: "modern-blocks",
+    name: "Blocos Modernos",
+    desc: "Duas colunas e header colorido",
+    image: "/templates/modern.png",
+  },
 ] as const;
 
 export default function NewResumePage() {
   const router = useRouter();
-  const [mode, setMode] = useState<'select' | 'scratch' | 'import'>('select');
-  const [selectedTemplate, setSelectedTemplate] = useState('classic');
+  const [mode, setMode] = useState<"select" | "scratch" | "import">("select");
+  const [selectedTemplate, setSelectedTemplate] = useState("classic");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
-  const [modalMessage, setModalMessage] = useState('');
-  const [userPlan, setUserPlan] = useState<'FREE' | 'PRO' | 'MAX'>('FREE');
+  const [modalMessage, setModalMessage] = useState("");
+  const [userPlan, setUserPlan] = useState<"FREE" | "PRO" | "MAX">("FREE");
 
   useEffect(() => {
-    fetch('/api/user/settings')
+    fetch("/api/user/settings")
       .then((res) => res.json())
       .then((data) => {
         if (data?.plan?.code) {
           setUserPlan(data.plan.code);
         }
       })
-      .catch((err) => console.error('Failed to load user plan', err));
+      .catch((err) => console.error("Failed to load user plan", err));
   }, []);
 
   async function handleCreateFromScratch(overrideTemplateId?: string) {
     setIsSubmitting(true);
     try {
-      const res = await fetch('/api/resumes', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch("/api/resumes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          title: 'Meu novo currículo',
+          title: "Meu novo currículo",
           templateId: overrideTemplateId || selectedTemplate,
         }),
       });
@@ -122,12 +236,12 @@ export default function NewResumePage() {
       if (res.ok) {
         router.push(`/editor/${data.resume.id}`);
       } else {
-        const errorMsg = data.error || 'Erro ao criar currículo';
+        const errorMsg = data.error || "Erro ao criar currículo";
         setModalMessage(errorMsg);
         setShowUpgradeModal(true);
       }
     } catch {
-      setModalMessage('Erro de rede. Verifique sua conexão e tente novamente.');
+      setModalMessage("Erro de rede. Verifique sua conexão e tente novamente.");
       setShowUpgradeModal(true);
     } finally {
       setIsSubmitting(false);
@@ -138,14 +252,14 @@ export default function NewResumePage() {
     if (!file) return;
     setIsSubmitting(true);
     const formData = new FormData();
-    formData.append('file', file);
+    formData.append("file", file);
 
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 60_000);
 
     try {
-      const res = await fetch('/api/resumes/import', {
-        method: 'POST',
+      const res = await fetch("/api/resumes/import", {
+        method: "POST",
         body: formData,
         signal: controller.signal,
       });
@@ -157,13 +271,14 @@ export default function NewResumePage() {
         return;
       }
 
-      let message = 'Erro ao importar currículo.';
+      let message = "Erro ao importar currículo.";
       if (data && data.error) {
         message = data.error;
       } else if (res.status === 413) {
-        message = 'Arquivo muito grande. Limite: 5MB.';
+        message = "Arquivo muito grande. Limite: 5MB.";
       } else if (res.status >= 500) {
-        message = 'Erro interno no servidor. Tente novamente em alguns instantes.';
+        message =
+          "Erro interno no servidor. Tente novamente em alguns instantes.";
       }
       if (res.status === 403) {
         setModalMessage(message);
@@ -173,12 +288,16 @@ export default function NewResumePage() {
       }
     } catch (err) {
       clearTimeout(timeoutId);
-      if (err instanceof DOMException && err.name === 'AbortError') {
-        setModalMessage('A importação demorou demais. Tente com um arquivo menor ou mais simples.');
+      if (err instanceof DOMException && err.name === "AbortError") {
+        setModalMessage(
+          "A importação demorou demais. Tente com um arquivo menor ou mais simples.",
+        );
       } else if (err instanceof TypeError) {
-        setModalMessage('Erro de rede. Verifique sua conexão e tente novamente.');
+        setModalMessage(
+          "Erro de rede. Verifique sua conexão e tente novamente.",
+        );
       } else {
-        setModalMessage('Erro inesperado ao importar. Tente novamente.');
+        setModalMessage("Erro inesperado ao importar. Tente novamente.");
       }
       setShowUpgradeModal(true);
     } finally {
@@ -188,7 +307,7 @@ export default function NewResumePage() {
 
   return (
     <>
-      {mode === 'select' && (
+      {mode === "select" && (
         <div className="max-w-4xl mx-auto space-y-8">
           <div className="flex items-center gap-3">
             <Link
@@ -198,14 +317,18 @@ export default function NewResumePage() {
               <ArrowLeft className="h-4 w-4" />
             </Link>
             <div>
-              <h1 className="text-3xl font-bold tracking-tight">Criar Currículo</h1>
-              <p className="text-muted-foreground mt-1">Como você prefere começar?</p>
+              <h1 className="text-3xl font-bold tracking-tight">
+                Criar Currículo
+              </h1>
+              <p className="text-muted-foreground mt-1">
+                Como você prefere começar?
+              </p>
             </div>
           </div>
 
           <div className="grid md:grid-cols-2 gap-6">
             <button
-              onClick={() => setMode('scratch')}
+              onClick={() => setMode("scratch")}
               className="text-left group rounded-xl border border-border bg-card p-8 shadow-sm transition-all hover:border-primary hover:shadow-md"
             >
               <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10 text-primary">
@@ -215,13 +338,14 @@ export default function NewResumePage() {
                 Criar do zero
               </h2>
               <p className="text-sm text-muted-foreground">
-                Comece com um documento em branco. Escolha um dos nossos 6 templates profissionais
-                e preencha suas informações passo a passo.
+                Comece com um documento em branco. Escolha um dos nossos 6
+                templates profissionais e preencha suas informações passo a
+                passo.
               </p>
             </button>
 
             <button
-              onClick={() => setMode('import')}
+              onClick={() => setMode("import")}
               className="text-left group rounded-xl border border-border bg-card p-8 shadow-sm transition-all hover:border-primary hover:shadow-md"
             >
               <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-lg bg-blue-500/10 text-blue-600">
@@ -231,43 +355,55 @@ export default function NewResumePage() {
                 Importar arquivo
               </h2>
               <p className="text-sm text-muted-foreground">
-                Faça upload do seu currículo atual (PDF ou DOCX). A inteligência artificial
-                vai ler e preencher os campos automaticamente para você.
+                Faça upload do seu currículo atual (PDF ou DOCX). A inteligência
+                artificial vai ler e preencher os campos automaticamente para
+                você.
               </p>
             </button>
           </div>
         </div>
       )}
 
-      {mode === 'scratch' && (
+      {mode === "scratch" && (
         <div className="max-w-5xl mx-auto space-y-8">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <button
-                onClick={() => setMode('select')}
+                onClick={() => setMode("select")}
                 className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-border bg-card transition-colors hover:bg-accent"
               >
                 <ArrowLeft className="h-4 w-4" />
               </button>
               <div>
-                <h1 className="text-3xl font-bold tracking-tight">Escolha um Template</h1>
-                <p className="text-muted-foreground mt-1">Você pode trocar o template depois se quiser.</p>
+                <h1 className="text-3xl font-bold tracking-tight">
+                  Escolha um Template
+                </h1>
+                <p className="text-muted-foreground mt-1">
+                  Você pode trocar o template depois se quiser.
+                </p>
               </div>
             </div>
-            <Button onClick={() => handleCreateFromScratch()} isLoading={isSubmitting} disabled={isSubmitting}>
-              Continuar com {TEMPLATES.find((t) => t.id === selectedTemplate)?.name}
+            <Button
+              onClick={() => handleCreateFromScratch()}
+              isLoading={isSubmitting}
+              disabled={isSubmitting}
+            >
+              Continuar com{" "}
+              {TEMPLATES.find((t) => t.id === selectedTemplate)?.name}
             </Button>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {TEMPLATES.map((tpl, index) => {
-              const isLocked = userPlan === 'FREE' && index >= 3;
+              const isLocked = userPlan === "FREE" && index >= 3;
               return (
                 <Card
                   key={tpl.id}
                   onClick={() => {
                     if (isLocked) {
-                      setModalMessage('Este modelo de currículo está disponível apenas nos planos Pro e Max. Faça o upgrade agora para ter acesso a todos os modelos e recursos!');
+                      setModalMessage(
+                        "Este modelo de currículo está disponível apenas nos planos Pro e Max. Faça o upgrade agora para ter acesso a todos os modelos e recursos!",
+                      );
                       setShowUpgradeModal(true);
                       return;
                     }
@@ -278,13 +414,17 @@ export default function NewResumePage() {
                     setSelectedTemplate(tpl.id);
                     handleCreateFromScratch(tpl.id);
                   }}
-                  className={`cursor-pointer overflow-hidden transition-all group relative ${!isLocked && selectedTemplate === tpl.id
-                      ? 'ring-2 ring-primary border-transparent'
-                      : 'hover:border-primary/50'
-                    }`}
+                  className={`cursor-pointer overflow-hidden transition-all group relative ${
+                    !isLocked && selectedTemplate === tpl.id
+                      ? "ring-2 ring-primary border-transparent"
+                      : "hover:border-primary/50"
+                  }`}
                 >
-                  <div className={isLocked ? 'opacity-70 grayscale-[20%]' : ''}>
-                    <ResumeCardPreview content={DUMMY_CONTENT} templateId={tpl.id} />
+                  <div className={isLocked ? "opacity-70 grayscale-[20%]" : ""}>
+                    <ResumeCardPreview
+                      content={DUMMY_CONTENT}
+                      templateId={tpl.id}
+                    />
                   </div>
                   {isLocked && (
                     <div className="absolute top-3 right-3 bg-slate-900/80 backdrop-blur-sm text-white p-1.5 rounded-full shadow-md z-10">
@@ -301,7 +441,9 @@ export default function NewResumePage() {
                           </span>
                         )}
                       </h3>
-                      <p className="text-xs text-muted-foreground mt-0.5">{tpl.desc}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        {tpl.desc}
+                      </p>
                     </div>
                     {!isLocked && selectedTemplate === tpl.id && (
                       <div className="h-5 w-5 rounded-full bg-primary flex items-center justify-center text-primary-foreground flex-shrink-0">
@@ -316,12 +458,12 @@ export default function NewResumePage() {
         </div>
       )}
 
-      {mode === 'import' && (
+      {mode === "import" && (
         <div className="max-w-2xl mx-auto space-y-8">
           <div className="flex items-center gap-3">
             <button
               onClick={() => {
-                setMode('select');
+                setMode("select");
                 setFile(null);
               }}
               className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-border bg-card transition-colors hover:bg-accent"
@@ -329,15 +471,23 @@ export default function NewResumePage() {
               <ArrowLeft className="h-4 w-4" />
             </button>
             <div>
-              <h1 className="text-3xl font-bold tracking-tight">Importar Currículo</h1>
-              <p className="text-muted-foreground mt-1">Faça upload de um arquivo PDF ou DOCX</p>
+              <h1 className="text-3xl font-bold tracking-tight">
+                Importar Currículo
+              </h1>
+              <p className="text-muted-foreground mt-1">
+                Faça upload de um arquivo PDF ou DOCX
+              </p>
             </div>
           </div>
 
           <Card className="p-10 border-dashed border-2 flex flex-col items-center justify-center text-center bg-secondary/20">
             <FileOutput className="h-12 w-12 text-muted-foreground mb-4" />
-            <h3 className="text-lg font-semibold mb-2">Arraste seu arquivo ou clique para buscar</h3>
-            <p className="text-sm text-muted-foreground mb-6">Suporta PDF e DOCX (Máx. 5MB)</p>
+            <h3 className="text-lg font-semibold mb-2">
+              Arraste seu arquivo ou clique para buscar
+            </h3>
+            <p className="text-sm text-muted-foreground mb-6">
+              Suporta PDF e DOCX (Máx. 5MB)
+            </p>
 
             <input
               type="file"
@@ -352,9 +502,14 @@ export default function NewResumePage() {
                 <FileText className="h-8 w-8 text-blue-500 flex-shrink-0" />
                 <div className="min-w-0 flex-1 text-left">
                   <p className="text-sm font-medium truncate">{file.name}</p>
-                  <p className="text-xs text-muted-foreground">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
+                  <p className="text-xs text-muted-foreground">
+                    {(file.size / 1024 / 1024).toFixed(2)} MB
+                  </p>
                 </div>
-                <button onClick={() => setFile(null)} className="text-xs text-destructive hover:underline">
+                <button
+                  onClick={() => setFile(null)}
+                  className="text-xs text-destructive hover:underline"
+                >
                   Remover
                 </button>
               </div>
@@ -369,7 +524,11 @@ export default function NewResumePage() {
           </Card>
 
           <div className="flex justify-end">
-            <Button onClick={handleImport} disabled={!file || isSubmitting} isLoading={isSubmitting}>
+            <Button
+              onClick={handleImport}
+              disabled={!file || isSubmitting}
+              isLoading={isSubmitting}
+            >
               Extrair dados e continuar
             </Button>
           </div>
@@ -385,21 +544,26 @@ export default function NewResumePage() {
                 <Sparkles className="h-6 w-6" />
               </div>
               <div>
-                <h3 className="text-lg font-bold text-slate-900">Limite de Plano Atingido</h3>
-                <p className="text-xs text-slate-500">Aproveite o máximo do ATRION</p>
+                <h3 className="text-lg font-bold text-slate-900">
+                  Limite de Plano Atingido
+                </h3>
+                <p className="text-xs text-slate-500">
+                  Aproveite o máximo do ATRION
+                </p>
               </div>
             </div>
             <p className="text-sm text-slate-600 mb-6 leading-relaxed">
               {modalMessage}
             </p>
             <div className="flex justify-end gap-2">
-              <Button variant="secondary" onClick={() => setShowUpgradeModal(false)}>
+              <Button
+                variant="secondary"
+                onClick={() => setShowUpgradeModal(false)}
+              >
                 Depois
               </Button>
               <Link href="/pricing" onClick={() => setShowUpgradeModal(false)}>
-                <Button variant="primary">
-                  Ver Planos de Upgrade
-                </Button>
+                <Button variant="primary">Ver Planos de Upgrade</Button>
               </Link>
             </div>
           </div>
@@ -407,7 +571,7 @@ export default function NewResumePage() {
       )}
 
       <AILoader
-        isOpen={isSubmitting && mode === 'import'}
+        isOpen={isSubmitting && mode === "import"}
         title="Importando Currículo"
         steps={IMPORT_STEPS}
       />

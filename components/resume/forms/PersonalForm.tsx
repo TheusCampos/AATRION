@@ -239,8 +239,15 @@ export function PersonalForm({
           <Field label="Telefone">
             <Input
               value={content.personal.phone}
-              onChange={(e) => onChange('phone', e.target.value)}
+              onChange={(e) => {
+                let v = e.target.value.replace(/\D/g, '');
+                if (v.length > 11) v = v.slice(0, 11);
+                if (v.length > 2) v = `(${v.slice(0, 2)}) ${v.slice(2)}`;
+                if (v.length > 10) v = `${v.slice(0, 10)}-${v.slice(10)}`;
+                onChange('phone', v);
+              }}
               placeholder="(11) 99999-9999"
+              maxLength={15}
             />
           </Field>
         </div>
@@ -255,7 +262,7 @@ export function PersonalForm({
 
       <div className="space-y-5">
         <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest border-b border-slate-100 pb-2">Links</h3>
-        <div className="grid gap-5 sm:grid-cols-3">
+        <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
           <Field label="LinkedIn">
             <Input
               value={content.personal.linkedin}
@@ -268,6 +275,13 @@ export function PersonalForm({
               value={content.personal.github}
               onChange={(e) => onChange('github', e.target.value)}
               placeholder="github.com/seu-user"
+            />
+          </Field>
+          <Field label="Portfólio">
+            <Input
+              value={content.personal.portfolio}
+              onChange={(e) => onChange('portfolio', e.target.value)}
+              placeholder="seuportfolio.com"
             />
           </Field>
           <Field label="Website">

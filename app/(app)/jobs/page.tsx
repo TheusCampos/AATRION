@@ -6,13 +6,61 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 
 
+/**
+ * SEC-01: Sanitiza HTML de fontes externas (API Adzuna) para prevenir XSS.
+ * Remove todas as tags HTML, atributos de evento e conteúdo perigoso.
+ * Decodifica entidades HTML para exibição segura como texto puro.
+ */
 function stripHtml(html: string): string {
   if (!html) return '';
-  return html
-    .replace(/<script\b[^<]*>([\s\S]*?)<\/script>/gi, '')
-    .replace(/<style\b[^<]*>([\s\S]*?)<\/style>/gi, '')
-    .replace(/<[^>]*>/g, '')
-    .trim();
+
+  // 1. Remove blocos script/style/iframe e seu conteúdo completamente
+  let text = html
+    .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '')
+    .replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, '')
+    .replace(/<iframe\b[^>]*>[\s\S]*?<\/iframe>/gi, '')
+    .replace(/<object\b[^>]*>[\s\S]*?<\/object>/gi, '')
+    .replace(/<embed\b[^>]*>/gi, '')
+    .replace(/<link\b[^>]*>/gi, '');
+
+  // 2. Remove on* event handlers inline (ex: onerror=, onload=, onclick=)
+  text = text.replace(/\s+on\w+\s*=\s*["'][^"']*["']/gi, '');
+  text = text.replace(/\s+on\w+\s*=\s*[^\s>]*/gi, '');
+
+  // 3. Remove javascript: e data: URIs
+  text = text.replace(/javascript\s*:/gi, '');
+  text = text.replace(/data\s*:/gi, '');
+
+  // 4. Remove todas as tags HTML restantes
+  text = text.replace(/<[^>]+>/g, ' ');
+
+  // 5. Decodifica entidades HTML comuns
+  text = text
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&apos;/g, "'");
+
+  // 6. Limpa espaços múltiplos
+  return text.replace(/\s+/g, ' ').trim();
+}
+
+/**
+ * SEC-01b: Sanitiza URLs externas para prevenir javascript: e data: URI injection.
+ * Aceita apenas https:// e http:// — qualquer outra coisa retorna '#'.
+ */
+function sanitizeUrl(url: string): string {
+  if (!url) return '#';
+  try {
+    const parsed = new URL(url);
+    if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') return '#';
+    return url;
+  } catch {
+    return '#';
+  }
 }
 
 interface JobResult {
@@ -165,7 +213,7 @@ export default function JobsPage() {
                   </div>
 
                   <div className="shrink-0 mt-2 sm:mt-0">
-                    <a href={job.redirect_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center gap-2 rounded-md font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50 border border-border bg-card text-foreground hover:bg-accent shadow-sm h-10 px-4 text-sm">
+                    <a href={sanitizeUrl(job.redirect_url)} target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center gap-2 rounded-md font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50 border border-border bg-card text-foreground hover:bg-accent shadow-sm h-10 px-4 text-sm">
                       Ver Vaga
                       <ExternalLink className="h-3.5 w-3.5" />
                     </a>

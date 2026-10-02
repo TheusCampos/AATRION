@@ -40,6 +40,13 @@ export const SPACING_MAP: Record<ResumeStyle["sectionSpacing"], string> = {
   relaxed: "2rem",
 };
 
+export const LANGUAGE_LEVEL_MAP: Record<string, string> = {
+  basic: "Básico",
+  intermediate: "Intermediário",
+  advanced: "Avançado",
+  native: "Nativo",
+};
+
 export function ContactItems({
   personal,
 }: {

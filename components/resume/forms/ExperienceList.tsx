@@ -60,18 +60,19 @@ export function ExperienceList({
                 </Field>
                 <Field label="Início">
                   <Input
-                    type="month"
+                    type="text"
                     value={item.start}
                     onChange={(e) => onUpdate(item.id, { start: e.target.value })}
+                    placeholder="Ex: 2020"
                   />
                 </Field>
                 <Field label="Fim">
                   <Input
-                    type="month"
+                    type="text"
                     value={item.end}
                     onChange={(e) => onUpdate(item.id, { end: e.target.value })}
                     disabled={item.current}
-                    placeholder={item.current ? 'Atual' : ''}
+                    placeholder={item.current ? 'Atual' : 'Ex: 2024'}
                   />
                 </Field>
               </div>
@@ -88,7 +89,15 @@ export function ExperienceList({
                 <Textarea
                   value={item.description}
                   onChange={(e) => onUpdate(item.id, { description: e.target.value })}
-                  placeholder="Descreva suas responsabilidades e conquistas. Use verbos de ação e métricas."
+                  placeholder="Visão geral do cargo e responsabilidades."
+                  rows={2}
+                />
+              </Field>
+              <Field label="Métricas e Conquistas (uma por linha)">
+                <Textarea
+                  value={item.achievements?.join('\n') || ''}
+                  onChange={(e) => onUpdate(item.id, { achievements: e.target.value.split('\n').filter(Boolean) })}
+                  placeholder="- Reduzi o tempo de carregamento em 40%\n- Liderou equipe de 5 desenvolvedores"
                   rows={4}
                 />
               </Field>

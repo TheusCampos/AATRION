@@ -1,5 +1,6 @@
 import { openrouterChat } from './openrouter';
 import { captureServerEvent } from './posthog-server';
+import { GoogleGenAI } from '@google/genai';
 
 export type AIProvider = 'openrouter';
 
@@ -39,6 +40,12 @@ export class AIError extends Error {
 function hasOpenRouter(): boolean {
   return !!process.env.OPENROUTER_API_KEY;
 }
+
+function hasGeminiKey(): boolean {
+  return !!process.env.GEMINI_API_KEY;
+}
+
+const geminiAi = hasGeminiKey() ? new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY }) : null;
 
 export function safeParseJSON<T = unknown>(text: string): T | null {
   if (!text) return null;
@@ -100,10 +107,10 @@ export async function runAI(req: AIRequest): Promise<AIResponse> {
   const startTime = performance.now();
   const selectedModel = req.model || 'google/gemini-2.5-flash';
 
-  if (!hasOpenRouter()) {
-    const err = new AIError('OPENROUTER_API_KEY não está configurada.');
+  if (!hasOpenRouter() && !hasGeminiKey()) {
+    const err = new AIError('API Keys da IA não configuradas (OpenRouter/Gemini).');
     captureServerEvent(null, 'ai_request_failed', {
-      provider: 'openrouter',
+      provider: 'unknown',
       model: selectedModel,
       error: err.message,
     });
@@ -122,37 +129,89 @@ export async function runAI(req: AIRequest): Promise<AIResponse> {
   }
 
   try {
-    const r = await openrouterChat({
-      model: req.model,
-      messages: [
-        ...(req.systemInstruction
-          ? [{ role: 'system' as const, content: req.systemInstruction }]
-          : []),
-        { role: 'user' as const, content: req.userText },
-      ],
-      temperature: req.temperature,
-      max_tokens: req.maxOutputTokens,
-      response_format: req.responseJson ? { type: 'json_object' } : undefined,
-    });
+    const isGemini = selectedModel.startsWith('google/');
+    let responseText = '';
+    let usageData: AIResponse['usage'] = undefined;
+    
+    if (isGemini && geminiAi) {
+      // Usar SDK Nativo do Google
+      const modelName = selectedModel.replace('google/', ''); // ex: gemini-2.5-flash
+      
+      const config: any = {
+        temperature: req.temperature,
+        maxOutputTokens: req.maxOutputTokens,
+      };
+      
+      if (req.systemInstruction) {
+        config.systemInstruction = req.systemInstruction;
+      }
+      
+      if (req.responseJson) {
+        config.responseMimeType = 'application/json';
+      }
+      
+      const result = await geminiAi.models.generateContent({
+        model: modelName,
+        contents: req.userText,
+        config
+      });
+      
+      responseText = result.text || '';
+      if (result.usageMetadata) {
+        usageData = {
+          prompt_tokens: result.usageMetadata.promptTokenCount,
+          completion_tokens: result.usageMetadata.candidatesTokenCount,
+          total_tokens: result.usageMetadata.totalTokenCount,
+        };
+      }
+    } else {
+      // Fallback para OpenRouter
+      if (!hasOpenRouter()) {
+        const err = new AIError('Nenhum provider de IA configurado (OpenRouter ou Gemini).');
+        captureServerEvent(null, 'ai_request_failed', {
+          provider: 'openrouter',
+          model: selectedModel,
+          error: err.message,
+        });
+        throw err;
+      }
+      
+      const r = await openrouterChat({
+        model: req.model,
+        messages: [
+          ...(req.systemInstruction
+            ? [{ role: 'system' as const, content: req.systemInstruction }]
+            : []),
+          { role: 'user' as const, content: req.userText },
+        ],
+        temperature: req.temperature,
+        max_tokens: req.maxOutputTokens,
+        response_format: req.responseJson ? { type: 'json_object' } : undefined,
+      });
+      
+      responseText = r.content;
+      usageData = r.usage;
+    }
 
     const durationMs = Math.round(performance.now() - startTime);
 
     // Registrar metricas da IA no PostHog
+    const actualProvider = (isGemini && geminiAi) ? 'gemini_native' : 'openrouter';
     captureServerEvent(null, 'ai_request_completed', {
-      provider: 'openrouter',
-      model: r.model || selectedModel,
+      provider: actualProvider,
+      model: selectedModel,
       duration_ms: durationMs,
-      prompt_tokens: r.usage?.prompt_tokens,
-      completion_tokens: r.usage?.completion_tokens,
-      total_tokens: r.usage?.total_tokens,
+      prompt_tokens: usageData?.prompt_tokens,
+      completion_tokens: usageData?.completion_tokens,
+      total_tokens: usageData?.total_tokens,
       response_json: !!req.responseJson,
     });
 
     return {
-      text: r.content,
-      provider: 'openrouter',
-      model: r.model,
-      usage: r.usage,
+      text: responseText,
+      provider: 'openrouter', // mantendo tipagem original do retorno para compatibilidade
+      model: selectedModel,
+      usage: usageData,
     };
   } catch (err) {
     const durationMs = Math.round(performance.now() - startTime);

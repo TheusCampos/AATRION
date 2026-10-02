@@ -1,6 +1,7 @@
 import 'server-only';
 import { auth, currentUser, type User as ClerkUser } from '@clerk/nextjs/server';
 import { cache } from 'react';
+import { unstable_rethrow } from 'next/navigation';
 import { prisma } from './prisma';
 import {
   ensureFreshUsagePeriod,
@@ -206,6 +207,7 @@ export const getCurrentUser = cache(async (): Promise<AuthUser | null> => {
       },
     };
   } catch (error: unknown) {
+    unstable_rethrow(error);
     console.error('getCurrentUser ERROR:', error);
     return null;
   }

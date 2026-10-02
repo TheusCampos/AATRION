@@ -52,7 +52,15 @@ export function ProjectsList({
                 <Textarea
                   value={item.description}
                   onChange={(e) => onUpdate(item.id, { description: e.target.value })}
-                  placeholder="O que o projeto faz e qual foi seu papel"
+                  placeholder="Visão geral do que o projeto faz e qual foi seu papel"
+                  rows={2}
+                />
+              </Field>
+              <Field label="Métricas e Conquistas (uma por linha)">
+                <Textarea
+                  value={item.achievements?.join('\n') || ''}
+                  onChange={(e) => onUpdate(item.id, { achievements: e.target.value.split('\n').filter(Boolean) })}
+                  placeholder="- 10.000 usuários ativos\n- Processamento 3x mais rápido"
                   rows={3}
                 />
               </Field>

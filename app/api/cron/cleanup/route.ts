@@ -15,7 +15,7 @@ export async function GET(request: Request) {
   
   // No build do Next.js, o `request` pode vir vazio em avaliações estáticas.
   // Usar next/headers garante que ele opte pela renderização dinâmica.
-  const headersList = headers();
+  const headersList = await headers();
   const authHeader = headersList.get('authorization') || (request?.headers ? request.headers.get('authorization') : null);
 
   if (!process.env.CRON_SECRET || authHeader !== `Bearer ${process.env.CRON_SECRET}`) {

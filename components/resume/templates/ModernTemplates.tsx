@@ -1,7 +1,7 @@
 import React from "react";
 import { Mail, MapPin, Phone, Linkedin, Github } from "lucide-react";
 import type { LayoutProps } from "./types";
-import { ResumeAvatar } from "./shared";
+import {  ResumeAvatar , LANGUAGE_LEVEL_MAP } from "./shared";
 
 // ============== MODERN ==============
 export function ModernLayout(p: LayoutProps) {
@@ -99,6 +99,13 @@ export function ModernLayout(p: LayoutProps) {
                           {exp.description}
                         </p>
                       )}
+                    {exp.achievements && exp.achievements.length > 0 && (
+                      <ul className="list-disc list-inside text-[0.85em] text-slate-700 mt-[calc(var(--resume-section-spacing)*0.25)]">
+                        {exp.achievements.map((ach, i) => (
+                          <li key={i}>{ach}</li>
+                        ))}
+                      </ul>
+                    )}
                     </div>
                   ))}
                 </div>
@@ -123,6 +130,13 @@ export function ModernLayout(p: LayoutProps) {
                           {proj.description}
                         </p>
                       )}
+                    {proj.achievements && proj.achievements.length > 0 && (
+                      <ul className="list-disc list-inside text-[0.75em] text-slate-700 mt-[calc(var(--resume-section-spacing)*0.25)]">
+                        {proj.achievements.map((ach, i) => (
+                          <li key={i}>{ach}</li>
+                        ))}
+                      </ul>
+                    )}
                       {proj.tech.length > 0 && (
                         <p className="text-[0.7em] text-slate-500 italic mt-0.5">
                           {proj.tech.join(", ")}
@@ -198,7 +212,7 @@ export function ModernLayout(p: LayoutProps) {
                     >
                       <span>{lang.language}</span>
                       <span className="text-slate-500 capitalize">
-                        {lang.level}
+                        {LANGUAGE_LEVEL_MAP[lang.level] || lang.level}
                       </span>
                     </li>
                   ))}
@@ -341,6 +355,13 @@ export function ModernPhotoLayout(p: LayoutProps) {
                           {exp.description}
                         </p>
                       )}
+                    {exp.achievements && exp.achievements.length > 0 && (
+                      <ul className="list-disc list-inside text-[0.85em] text-slate-700 mt-[calc(var(--resume-section-spacing)*0.25)]">
+                        {exp.achievements.map((ach, i) => (
+                          <li key={i}>{ach}</li>
+                        ))}
+                      </ul>
+                    )}
                     </div>
                   ))}
                 </div>
@@ -365,6 +386,13 @@ export function ModernPhotoLayout(p: LayoutProps) {
                           {proj.description}
                         </p>
                       )}
+                    {proj.achievements && proj.achievements.length > 0 && (
+                      <ul className="list-disc list-inside text-[0.75em] text-slate-700 mt-[calc(var(--resume-section-spacing)*0.25)]">
+                        {proj.achievements.map((ach, i) => (
+                          <li key={i}>{ach}</li>
+                        ))}
+                      </ul>
+                    )}
                       {proj.tech.length > 0 && (
                         <p className="text-[0.7em] text-slate-500 italic mt-0.5">
                           {proj.tech.join(", ")}
@@ -440,7 +468,7 @@ export function ModernPhotoLayout(p: LayoutProps) {
                     >
                       <span>{lang.language}</span>
                       <span className="text-slate-500 capitalize">
-                        {lang.level}
+                        {LANGUAGE_LEVEL_MAP[lang.level] || lang.level}
                       </span>
                     </li>
                   ))}
@@ -592,6 +620,13 @@ export function TechLayout(p: LayoutProps) {
                         {exp.description}
                       </p>
                     )}
+                    {exp.achievements && exp.achievements.length > 0 && (
+                      <ul className="list-disc list-inside text-[0.85em] text-slate-700 mt-[calc(var(--resume-section-spacing)*0.25)]">
+                        {exp.achievements.map((ach, i) => (
+                          <li key={i}>{ach}</li>
+                        ))}
+                      </ul>
+                    )}
                   </div>
                 ))}
               </div>
@@ -618,6 +653,13 @@ export function TechLayout(p: LayoutProps) {
                       <p className="text-[0.85em] opacity-90 mt-0.5 whitespace-pre-wrap">
                         {proj.description}
                       </p>
+                    )}
+                    {proj.achievements && proj.achievements.length > 0 && (
+                      <ul className="list-disc list-inside text-[0.75em] text-slate-700 mt-[calc(var(--resume-section-spacing)*0.25)]">
+                        {proj.achievements.map((ach, i) => (
+                          <li key={i}>{ach}</li>
+                        ))}
+                      </ul>
                     )}
                     {proj.tech.length > 0 && (
                       <p className="text-[0.7em] opacity-60 mt-0.5">

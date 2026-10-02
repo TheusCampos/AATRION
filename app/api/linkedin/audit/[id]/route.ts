@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getCurrentUser } from '@/lib/auth';
 
-type Params = { params: { id: string } };
+type Params = { params: Promise<{ id: string }> };
 
 /**
  * GET /api/linkedin/audit/:id
@@ -14,8 +14,9 @@ export async function GET(_req: NextRequest, { params }: Params) {
     return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
   }
 
+  const { id } = await params;
   const audit = await prisma.linkedInAudit.findFirst({
-    where: { id: params.id, userId: user.id },
+    where: { id, userId: user.id },
   });
 
   if (!audit) {
@@ -53,14 +54,15 @@ export async function DELETE(_req: NextRequest, { params }: Params) {
     return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
   }
 
+  const { id } = await params;
   const existing = await prisma.linkedInAudit.findFirst({
-    where: { id: params.id, userId: user.id },
+    where: { id, userId: user.id },
     select: { id: true },
   });
   if (!existing) {
     return NextResponse.json({ error: 'Auditoria não encontrada' }, { status: 404 });
   }
 
-  await prisma.linkedInAudit.delete({ where: { id: params.id } });
+  await prisma.linkedInAudit.delete({ where: { id } });
   return NextResponse.json({ ok: true });
 }

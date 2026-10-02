@@ -1,11 +1,12 @@
+import { Suspense } from 'react';
 import { redirect } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
 import { getCurrentUser } from '@/lib/auth';
 import { emptyResumeContent } from '@/lib/validations/resume';
 import { ResumeEditor } from '@/components/resume/ResumeEditor';
 
-type Params = { id: string };
-type SearchParams = { action?: string };
+type Params = Promise<{ id: string }>;
+type SearchParams = Promise<{ action?: string }>;
 
 export default async function EditorPage({
   params,
@@ -14,36 +15,38 @@ export default async function EditorPage({
   params: Params;
   searchParams?: SearchParams;
 }) {
+  const { id } = await params;
+  const resolvedSearchParams = await searchParams;
+  const action = resolvedSearchParams?.action;
+
   const user = await getCurrentUser();
   if (!user) redirect('/login');
 
-  const action = searchParams?.action;
-
-  if (params.id === 'new') {
-    const res = await fetch(
-      `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/resumes`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title: 'Meu novo currículo' }),
-        cache: 'no-store',
+  if (id === 'new') {
+    const { maxResumes } = user.limits;
+    if (maxResumes !== -1) {
+      const count = await prisma.resume.count({ where: { userId: user.id } });
+      if (count >= maxResumes) {
+        redirect('/dashboard?error=limit_reached');
       }
-    );
-
-    if (!res.ok) {
-      redirect('/dashboard');
     }
 
-    const data = await res.json();
-    const createdId = data.resume?.id;
-    if (!createdId) redirect('/dashboard');
+    const created = await prisma.resume.create({
+      data: {
+        userId: user.id,
+        title: 'Meu novo currículo',
+        templateId: 'classic',
+        content: JSON.stringify(emptyResumeContent()),
+        colorScheme: 'blue',
+      },
+    });
 
-    const redirectUrl = action ? `/editor/${createdId}?action=${action}` : `/editor/${createdId}`;
+    const redirectUrl = action ? `/editor/${created.id}?action=${action}` : `/editor/${created.id}`;
     redirect(redirectUrl);
   }
 
   const resume = await prisma.resume.findFirst({
-    where: { id: params.id, userId: user.id },
+    where: { id, userId: user.id },
   });
 
   if (!resume) redirect('/dashboard');
@@ -57,15 +60,17 @@ export default async function EditorPage({
 
   return (
     <div className="w-full">
-      <ResumeEditor
-        resumeId={resume.id}
-        initialTitle={resume.title}
-        initialContent={content}
-        initialTemplateId={resume.templateId}
-        initialColorScheme={resume.colorScheme}
-        userPlan={user.plan}
-        initialAction={action}
-      />
+      <Suspense fallback={<div className="flex h-[80vh] items-center justify-center text-muted-foreground">Carregando editor...</div>}>
+        <ResumeEditor
+          resumeId={resume.id}
+          initialTitle={resume.title}
+          initialContent={content}
+          initialTemplateId={resume.templateId}
+          initialColorScheme={resume.colorScheme}
+          userPlan={user.plan}
+          initialAction={action}
+        />
+      </Suspense>
     </div>
   );
 }

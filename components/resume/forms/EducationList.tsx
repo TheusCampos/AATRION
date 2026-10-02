@@ -68,16 +68,18 @@ export function EducationList({
                 <div className="grid grid-cols-2 gap-3">
                   <Field label="Início">
                     <Input
-                      type="month"
+                      type="text"
                       value={item.start}
                       onChange={(e) => onUpdate(item.id, { start: e.target.value })}
+                      placeholder="Ex: 2020"
                     />
                   </Field>
                   <Field label="Fim">
                     <Input
-                      type="month"
+                      type="text"
                       value={item.end}
                       onChange={(e) => onUpdate(item.id, { end: e.target.value })}
+                      placeholder="Ex: 2024"
                     />
                   </Field>
                 </div>

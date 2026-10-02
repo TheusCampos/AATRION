@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { LayoutDashboard, Linkedin, Briefcase, Settings as SettingsIcon } from 'lucide-react';
-import { UserButton } from '@clerk/nextjs';
+import { UserNavButton } from '@/components/auth/UserNavButton';
 import Image from 'next/image';
 import { getCurrentUser } from '@/lib/auth';
 import { HeaderWrapper } from '@/components/layout/HeaderWrapper';
@@ -52,16 +52,7 @@ export default async function AppLayout({
               {user.name}
             </span>
             <MobileMenu />
-            <UserButton
-              afterSignOutUrl="/"
-              appearance={{
-                elements: {
-                  userButtonPopoverCard: 'shadow-2xl border border-border',
-                  userButtonAvatarBox: 'h-9 w-9 ring-1 ring-border',
-                },
-              }}
-              showName={false}
-            />
+            <UserNavButton />
           </div>
         </div>
       </HeaderWrapper>

@@ -38,6 +38,7 @@ const DUMMY_CONTENT: ResumeContent = {
     linkedin: "linkedin.com/in/nome",
     github: "",
     website: "",
+    portfolio: "",
     summary: "Resumo profissional direto ao ponto destacando suas principais habilidades, experiências relevantes e objetivos de carreira. Ideal para causar uma boa primeira impressão.",
     photo: "",
   },
@@ -50,6 +51,9 @@ const DUMMY_CONTENT: ResumeContent = {
       end: "",
       current: true,
       description: "• Liderança e execução de projetos estratégicos.\n• Colaboração em equipes multidisciplinares.\n• Foco em entrega de resultados e qualidade.",
+      achievements: [
+        "Liderança em projetos estratégicos com foco em resultados mensuráveis.",
+      ],
     }
   ],
   education: [

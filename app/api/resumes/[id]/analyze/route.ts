@@ -7,8 +7,14 @@ import { resumeContentSchema, type ResumeContent } from '@/lib/validations/resum
 import { calculateCompleteness } from '@/lib/completeness';
 import { checkAIQuota, consumeAIUsage } from '@/lib/plan';
 import { checkRateLimit, RATE_LIMITS } from '@/lib/rate-limit';
+import { sanitizeForAI, hasPromptInjection } from '@/lib/sanitize';
 
 type AIAnalysis = {
+  scores: {
+    leitura: number;
+    qualidade: number;
+    aderencia: number;
+  };
   overallScore: number; // 0-100
   summary: string;
   strengths: string[];
@@ -17,6 +23,7 @@ type AIAnalysis = {
   examples: Array<{ area: string; from: string; to: string; rationale: string }>;
   keywordGaps: string[];
   atsTips: string[];
+  requirementsMatrix?: Array<{ requirement: string; found: boolean; evidence?: string }>;
 };
 
 function buildResumeText(content: ResumeContent): string {
@@ -77,9 +84,13 @@ function heuristicFallback(content: ResumeContent, targetJob?: string): AIAnalys
   if (content.experience.length < 2) improvements.push('Adicione mais experiencias relevantes.');
   if (content.skills.length < 8) improvements.push('Liste ao menos 8-12 habilidades tecnicas relevantes.');
 
-  const overallScore = Math.min(100, Math.round(completeness * 0.7 + (hasNumbers ? 15 : 0) + (hasBullets ? 10 : 0)));
+  const leitura = Math.min(100, Math.round((hasBullets ? 50 : 30) + (content.personal.summary ? 50 : 20)));
+  const qualidade = Math.min(100, Math.round(completeness * 0.7 + (hasNumbers ? 30 : 0)));
+  const aderencia = targetJob ? 50 : 0; // heuristic can't really tell adherence
+  const overallScore = Math.round((leitura + qualidade + aderencia) / 3);
 
   return {
+    scores: { leitura, qualidade, aderencia },
     overallScore,
     summary:
       overallScore >= 75
@@ -102,6 +113,7 @@ function heuristicFallback(content: ResumeContent, targetJob?: string): AIAnalys
       'Evite tabelas, colunas complexas e imagens na descricao.',
       'Salve o PDF em texto selecionavel (nao escaneado).',
     ],
+    requirementsMatrix: []
   };
 }
 
@@ -145,7 +157,17 @@ export async function POST(
           { status: 400 }
         );
       }
-      targetJob = parsed.data.targetJob;
+      if (parsed.data.targetJob) {
+        // SEC-06: Detecção e bloqueio de Prompt Injection
+        if (hasPromptInjection(parsed.data.targetJob)) {
+          return NextResponse.json(
+            { error: 'Conteúdo inválido detectado no campo de cargo alvo.' },
+            { status: 400 }
+          );
+        }
+        // SEC-06: Sanitizar input antes de usar no prompt
+        targetJob = sanitizeForAI(parsed.data.targetJob, 500);
+      }
     }
   } catch {
     // sem body -> ok
@@ -289,30 +311,26 @@ REGRAS RÍGIDAS:
 
 10. Se o currículo estiver sem cargo-alvo, avalie a coerência com base no histórico profissional e indique essa limitação.
 
-COMO DEFINIR A NOTA GERAL:
+COMO DEFINIR A NOTA GERAL E AS DIMENSÕES:
 
-O campo “overallScore” deve ser um número inteiro de 0 a 100.
+Você deve retornar um objeto "scores" contendo as notas de 0 a 100 para três dimensões:
+1. "leitura": Facilidade de leitura, clareza, formatação amigável para ATS (títulos, estrutura).
+2. "qualidade": Profundidade do conteúdo, métricas quantificadas, conquistas claras, verbos fortes e completude.
+3. "aderencia": Alinhamento com a vaga alvo (se fornecida) ou com a área provável de atuação (caso não forneça vaga).
 
-Use esta referência:
+O campo "overallScore" deve ser a média simples dessas 3 dimensões (número inteiro de 0 a 100).
 
-* 90 a 100: currículo forte, claro, competitivo e bem alinhado.
-* 75 a 89: bom currículo, com melhorias pontuais.
-* 60 a 74: currículo mediano, precisa melhorar clareza, impacto ou alinhamento.
-* 40 a 59: currículo fraco, genérico, incompleto ou pouco competitivo.
-* 0 a 39: currículo muito incompleto, confuso ou sem informações suficientes.
-
-Não dê nota alta se:
-
-* O currículo não tiver resumo profissional.
-* As experiências forem genéricas.
-* Não houver resultados ou impacto.
-* Faltarem seções importantes.
-* O cargo-alvo estiver desalinhado.
+Nota ATS como MEDIDOR DE EVIDÊNCIAS: A nota não significa "probabilidade de contratação", mas sim o quanto o currículo APRESENTA EVIDÊNCIAS claras das habilidades do candidato. 
 
 ESTRUTURA DE SAÍDA OBRIGATÓRIA:
 
 {
-"overallScore": numero inteiro de 0 a 100,
+"scores": {
+  "leitura": numero inteiro,
+  "qualidade": numero inteiro,
+  "aderencia": numero inteiro
+},
+"overallScore": numero inteiro de 0 a 100 (média de leitura, qualidade e aderencia),
 "summary": "Resumo do currículo em até 2 frases, destacando perfil geral, área provável e nível de competitividade.",
 "strengths": [
 "Ponto forte específico 1.",
@@ -321,8 +339,7 @@ ESTRUTURA DE SAÍDA OBRIGATÓRIA:
 ],
 "improvements": [
 "Melhoria priorizada, prática e acionável 1.",
-"Melhoria priorizada, prática e acionável 2.",
-"Melhoria priorizada, prática e acionável 3."
+"Melhoria priorizada, prática e acionável 2."
 ],
 "corrections": [
 {
@@ -335,20 +352,23 @@ ESTRUTURA DE SAÍDA OBRIGATÓRIA:
 "examples": [
 {
 "area": "Seção do currículo.",
-"from": "Exemplo de formulação fraca, genérica ou pouco estratégica.",
+"from": "Exemplo de formulação fraca.",
 "to": "Exemplo de formulação melhorada e alinhada à área.",
 "rationale": "Explicação curta sobre por que a nova versão é melhor."
 }
 ],
 "keywordGaps": [
-"Palavra-chave relevante 1",
-"Palavra-chave relevante 2",
-"Palavra-chave relevante 3"
+"Palavra-chave relevante 1"
 ],
 "atsTips": [
-"Dica prática de ATS 1.",
-"Dica prática de ATS 2.",
-"Dica prática de ATS 3."
+"Dica prática de ATS 1."
+],
+"requirementsMatrix": [
+{
+"requirement": "Requisito extraído da vaga (ou essencial da área)",
+"found": true ou false,
+"evidence": "Evidência de onde foi encontrado no currículo (se true) ou sugestão do que falta (se false)"
+}
 ]
 }
 

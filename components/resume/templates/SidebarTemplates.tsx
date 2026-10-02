@@ -2,7 +2,7 @@ import React from "react";
 import { Mail, MapPin, Phone, Linkedin } from "lucide-react";
 import type { LayoutProps } from "./types";
 import { DEFAULT_STYLE } from "./types";
-import { ResumeAvatar } from "./shared";
+import {  ResumeAvatar , LANGUAGE_LEVEL_MAP } from "./shared";
 
 // ============== BROWN SIDEBAR ==============
 export function BrownSidebarLayout(p: LayoutProps) {
@@ -128,7 +128,7 @@ export function BrownSidebarLayout(p: LayoutProps) {
                 {p.languages.map((lang) => (
                   <li key={lang.id} className="flex justify-between">
                     <span className="font-bold">{lang.language}</span>
-                    <span>{lang.level}</span>
+                    <span>{LANGUAGE_LEVEL_MAP[lang.level] || lang.level}</span>
                   </li>
                 ))}
               </ul>
@@ -180,6 +180,13 @@ export function BrownSidebarLayout(p: LayoutProps) {
                           {exp.description}
                         </p>
                       )}
+                    {exp.achievements && exp.achievements.length > 0 && (
+                      <ul className="list-disc list-inside text-[0.85em] text-slate-700 mt-[calc(var(--resume-section-spacing)*0.25)]">
+                        {exp.achievements.map((ach, i) => (
+                          <li key={i}>{ach}</li>
+                        ))}
+                      </ul>
+                    )}
                     </div>
                   ))}
                 </div>
@@ -208,6 +215,13 @@ export function BrownSidebarLayout(p: LayoutProps) {
                           {proj.description}
                         </p>
                       )}
+                    {proj.achievements && proj.achievements.length > 0 && (
+                      <ul className="list-disc list-inside text-[0.75em] text-slate-700 mt-[calc(var(--resume-section-spacing)*0.25)]">
+                        {proj.achievements.map((ach, i) => (
+                          <li key={i}>{ach}</li>
+                        ))}
+                      </ul>
+                    )}
                     </div>
                   ))}
                 </div>
@@ -361,6 +375,14 @@ export function BlueRightSidebarLayout(p: LayoutProps) {
                           {proj.description}
                         </p>
                       )}
+                    {proj.achievements && proj.achievements.length > 0 && (
+                      <ul className="list-disc list-inside text-[0.75em] text-slate-700 mt-[calc(var(--resume-section-spacing)*0.25)]">
+                        {proj.achievements.map((ach, i) => (
+                          <li key={i}>{ach}</li>
+                        ))}
+                      </ul>
+                    )}
+
                     </div>
                   ))}
                 </div>
@@ -433,7 +455,7 @@ export function BlueRightSidebarLayout(p: LayoutProps) {
                   <li key={lang.id} className="flex justify-between">
                     <span>{lang.language}</span>
                     <span className="font-semibold text-white/90">
-                      {lang.level}
+                      {LANGUAGE_LEVEL_MAP[lang.level] || lang.level}
                     </span>
                   </li>
                 ))}
@@ -457,6 +479,276 @@ export function BlueRightSidebarLayout(p: LayoutProps) {
             </section>
           )}
         </aside>
+      </div>
+    </div>
+  );
+}
+
+// ============== ELEGANT SIDEBAR ==============
+export function ElegantSidebarLayout(p: LayoutProps) {
+  const accent =
+    p.primary !== DEFAULT_STYLE.primaryColor ? p.primary : "#6366f1";
+
+  return (
+    <div className={p.containerClass} style={p.containerStyle}>
+      <div className="flex-1 flex overflow-y-auto print:overflow-visible">
+        {/* Decorative Left Sidebar */}
+        <aside
+          className="w-[34%] p-6 flex flex-col gap-[calc(var(--resume-section-spacing)*1.5)] text-white"
+          style={{ backgroundColor: accent }}
+        >
+          {p.personal.photo && (
+            <div className="flex justify-center mb-[calc(var(--resume-section-spacing)*0.5)]">
+              <ResumeAvatar
+                photo={p.personal.photo}
+                name={p.personal.name}
+                size="110px"
+                borderColor="rgba(255,255,255,0.5)"
+                shape="circle"
+              />
+            </div>
+          )}
+
+          <section>
+            <h2 className="text-[0.85em] font-bold uppercase tracking-widest mb-[calc(var(--resume-section-spacing)*0.75)] text-white/80">
+              Contato
+            </h2>
+            <div className="space-y-2 text-[0.8em]">
+              {p.personal.phone && (
+                <div className="flex items-center leading-none gap-2">
+                  <Phone className="w-3 h-3 flex-shrink-0 text-white/60" /> {p.personal.phone}
+                </div>
+              )}
+              {p.personal.email && (
+                <div className="flex items-center leading-none gap-2">
+                  <Mail className="w-3 h-3 flex-shrink-0 text-white/60" /> {p.personal.email}
+                </div>
+              )}
+              {p.personal.location && (
+                <div className="flex items-center leading-none gap-2">
+                  <MapPin className="w-3 h-3 flex-shrink-0 text-white/60" /> {p.personal.location}
+                </div>
+              )}
+              {p.personal.linkedin && (
+                <div className="flex items-center leading-none gap-2">
+                  <Linkedin className="w-3 h-3 flex-shrink-0 text-white/60" /> {p.personal.linkedin}
+                </div>
+              )}
+              {p.personal.portfolio && (
+                <div className="flex items-center leading-none gap-2 text-white/90">
+                  Portfólio: {p.personal.portfolio}
+                </div>
+              )}
+            </div>
+          </section>
+
+          {p.skills.length > 0 && (
+            <section>
+              <h2 className="text-[0.85em] font-bold uppercase tracking-widest mb-[calc(var(--resume-section-spacing)*0.75)] text-white/80">
+                Habilidades
+              </h2>
+              <ul className="flex flex-wrap gap-1.5">
+                {p.skills.map((skill) => (
+                  <li
+                    key={skill.id}
+                    className="text-[0.75em] bg-white/20 px-2 py-0.5 rounded-full"
+                  >
+                    {skill.name}
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+
+          {p.languages.length > 0 && (
+            <section>
+              <h2 className="text-[0.85em] font-bold uppercase tracking-widest mb-[calc(var(--resume-section-spacing)*0.75)] text-white/80">
+                Idiomas
+              </h2>
+              <ul className="space-y-1 text-[0.8em]">
+                {p.languages.map((lang) => (
+                  <li key={lang.id} className="flex justify-between">
+                    <span>{lang.language}</span>
+                    <span className="text-white/70">
+                      {LANGUAGE_LEVEL_MAP[lang.level] || lang.level}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+
+          {p.certifications.length > 0 && (
+            <section>
+              <h2 className="text-[0.85em] font-bold uppercase tracking-widest mb-[calc(var(--resume-section-spacing)*0.75)] text-white/80">
+                Certificações
+              </h2>
+              <ul className="space-y-2 text-[0.75em] text-white/90">
+                {p.certifications.map((cert) => (
+                  <li key={cert.id}>
+                    <p className="font-semibold">{cert.name}</p>
+                    <p className="text-white/60 mt-0.5">{cert.issuer}</p>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+        </aside>
+
+        {/* Main Content */}
+        <main
+          className="flex-1 p-8 flex flex-col"
+          style={{ gap: p.sectionSpacing }}
+        >
+          <header className="pb-[var(--resume-section-spacing)] border-b-2" style={{ borderColor: accent }}>
+            <h1
+              className="text-[2.25em] font-bold tracking-tight"
+              style={{ color: accent }}
+            >
+              {p.personal.name || "Seu Nome Completo"}
+            </h1>
+            {p.personal.jobTitle && (
+              <p className="text-[1.1em] font-medium text-slate-500 mt-1 tracking-wide uppercase">
+                {p.personal.jobTitle}
+              </p>
+            )}
+          </header>
+
+          {p.personal.summary && (
+            <section>
+              <h2
+                className="text-[1em] font-bold uppercase tracking-wider mb-[calc(var(--resume-section-spacing)*0.5)]"
+                style={{ color: accent }}
+              >
+                Resumo Profissional
+              </h2>
+              <p className="whitespace-pre-wrap text-slate-700">
+                {p.personal.summary}
+              </p>
+            </section>
+          )}
+
+          {p.experience.length > 0 && (
+            <section>
+              <h2
+                className="text-[1em] font-bold uppercase tracking-wider mb-[calc(var(--resume-section-spacing)*0.75)]"
+                style={{ color: accent }}
+              >
+                Experiência Profissional
+              </h2>
+              <div className="space-y-4">
+                {p.experience.map((exp) => (
+                  <div key={exp.id}>
+                    <div className="flex justify-between items-start mb-[calc(var(--resume-section-spacing)*0.25)]">
+                      <div>
+                        <h3 className="font-semibold text-slate-800 whitespace-pre-wrap">
+                          {exp.role || "Cargo"}
+                        </h3>
+                        <p className="text-[0.85em] font-medium text-slate-600 whitespace-pre-wrap">
+                          {exp.company || "Empresa"}
+                        </p>
+                      </div>
+                      <span className="text-[0.85em] text-slate-500 whitespace-nowrap">
+                        {exp.start || "Início"} —{" "}
+                        {exp.current ? "Atual" : exp.end || "Fim"}
+                      </span>
+                    </div>
+                    {exp.description && (
+                      <p className="text-slate-700 whitespace-pre-wrap mt-[calc(var(--resume-section-spacing)*0.25)]">
+                        {exp.description}
+                      </p>
+                    )}
+                    {exp.achievements && exp.achievements.length > 0 && (
+                      <ul className="list-disc list-inside text-[0.85em] text-slate-700 mt-[calc(var(--resume-section-spacing)*0.25)]">
+                        {exp.achievements.map((ach, i) => (
+                          <li key={i}>{ach}</li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {p.education.length > 0 && (
+            <section>
+              <h2
+                className="text-[1em] font-bold uppercase tracking-wider mb-[calc(var(--resume-section-spacing)*0.75)]"
+                style={{ color: accent }}
+              >
+                Formação Acadêmica
+              </h2>
+              <div className="space-y-3">
+                {p.education.map((edu) => (
+                  <div key={edu.id} className="flex justify-between items-start">
+                    <div>
+                      <h3 className="font-semibold text-slate-800 whitespace-pre-wrap">
+                        {edu.course || "Curso"} {edu.level && `- ${edu.level}`}
+                      </h3>
+                      <p className="text-[0.85em] font-medium text-slate-600 whitespace-pre-wrap">
+                        {edu.institution || "Instituição"}
+                      </p>
+                    </div>
+                    <span className="text-[0.85em] text-slate-500 whitespace-nowrap">
+                      {edu.start || "Início"} — {edu.end || "Fim"}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {p.projects.length > 0 && (
+            <section>
+              <h2
+                className="text-[1em] font-bold uppercase tracking-wider mb-[calc(var(--resume-section-spacing)*0.75)]"
+                style={{ color: accent }}
+              >
+                Projetos
+              </h2>
+              <div className="space-y-3">
+                {p.projects.map((proj) => (
+                  <div key={proj.id}>
+                    <div className="flex justify-between items-baseline mb-0.5">
+                      <h3 className="font-semibold text-slate-800 text-[0.85em]">
+                        {proj.name || "Projeto"}
+                      </h3>
+                      {proj.url && (
+                        <a
+                          href={proj.url}
+                          className="text-[0.7em] hover:underline"
+                          style={{ color: accent }}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          Link
+                        </a>
+                      )}
+                    </div>
+                    {proj.description && (
+                      <p className="text-[0.75em] text-slate-700 mb-[calc(var(--resume-section-spacing)*0.25)] whitespace-pre-wrap">
+                        {proj.description}
+                      </p>
+                    )}
+                    {proj.achievements && proj.achievements.length > 0 && (
+                      <ul className="list-disc list-inside text-[0.75em] text-slate-700 mt-[calc(var(--resume-section-spacing)*0.25)]">
+                        {proj.achievements.map((ach, i) => (
+                          <li key={i}>{ach}</li>
+                        ))}
+                      </ul>
+                    )}
+                    {proj.tech.length > 0 && (
+                      <p className="text-[0.7em] text-slate-500 italic">
+                        Tecnologias: {proj.tech.join(", ")}
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+        </main>
       </div>
     </div>
   );

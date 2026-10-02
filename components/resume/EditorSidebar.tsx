@@ -1,6 +1,6 @@
 import React from 'react';
 import { Card } from '@/components/ui/Card';
-import { CheckCircle2, Circle, User, Briefcase, GraduationCap, Code, Folder, Globe, Flag } from 'lucide-react';
+import { CheckCircle2, Circle, User, Briefcase, GraduationCap, Code, Folder, Globe, Flag, Palette, Sparkles } from 'lucide-react';
 import type { ResumeContent } from '@/lib/validations/resume';
 
 export const TABS = [
@@ -20,9 +20,18 @@ interface EditorSidebarProps {
   tab: TabId;
   setTab: (tab: TabId) => void;
   completeness: number;
+  showStylePanel?: boolean;
+  onToggleStyle?: () => void;
 }
 
-export function EditorSidebar({ content, tab, setTab, completeness }: EditorSidebarProps) {
+export function EditorSidebar({
+  content,
+  tab,
+  setTab,
+  completeness,
+  showStylePanel,
+  onToggleStyle,
+}: EditorSidebarProps) {
   return (
     <div className="flex flex-col gap-5 w-full">
       {/* Cards Tabs */}
@@ -30,7 +39,7 @@ export function EditorSidebar({ content, tab, setTab, completeness }: EditorSide
         <div className="flex flex-col space-y-1">
           {TABS.map((t) => {
             const Icon = t.icon;
-            const isActive = tab === t.id;
+            const isActive = !showStylePanel && tab === t.id;
             let isComplete = false;
             if (t.id === 'personal') isComplete = !!(content.personal.name && content.personal.email && content.personal.jobTitle);
             else if (t.id === 'experience') isComplete = content.experience.length > 0;
@@ -62,6 +71,26 @@ export function EditorSidebar({ content, tab, setTab, completeness }: EditorSide
               </button>
             );
           })}
+
+          {onToggleStyle && (
+            <div className="pt-2 border-t border-slate-200/60 mt-1">
+              <button
+                type="button"
+                onClick={onToggleStyle}
+                className={`group flex items-center justify-between w-full rounded-xl px-4 py-3 text-sm font-semibold transition-all duration-200 ${
+                  showStylePanel
+                    ? 'bg-indigo-600 text-white shadow-md shadow-indigo-200'
+                    : 'text-indigo-600 hover:bg-indigo-50/80 hover:text-indigo-700'
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <Palette className={`h-5 w-5 transition-colors ${showStylePanel ? 'text-white' : 'text-indigo-600'}`} />
+                  <span>Estilo & Visual</span>
+                </div>
+                <Sparkles className={`h-4 w-4 ${showStylePanel ? 'text-indigo-200' : 'text-indigo-400'}`} />
+              </button>
+            </div>
+          )}
         </div>
       </Card>
 
